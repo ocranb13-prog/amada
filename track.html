@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    <meta name="description" content="Track the status of your application or service request submitted to the Asene Manso Akroso District Assembly.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Application — Asene Manso Akroso District Assembly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="amada_styles.css">
+    <style>
+    /* ── Track page styles ── */
+    .track-hero {
+        background: linear-gradient(135deg, #1F6B3A, #0f2e1a);
+        padding: 60px 0 50px;
+        text-align: center;
+        color: #fff;
+    }
+    .track-hero h2 { font-family:'Lora',Georgia,serif; font-size:2rem; color:#fff; margin-bottom:10px; }
+    .track-hero p  { color:rgba(255,255,255,0.75); max-width:520px; margin:0 auto; font-size:0.95rem; }
+
+    .track-search-box {
+        background:#fff; border-radius:14px;
+        padding:32px 36px; box-shadow:0 8px 40px rgba(0,0,0,0.12);
+        max-width:580px; margin:-28px auto 0; position:relative; z-index:2;
+    }
+    .track-search-box h3 { font-size:1.1rem; color:#0f2e1a; margin-bottom:6px; }
+    .track-search-box p  { font-size:0.85rem; color:#7a8e7a; margin-bottom:20px; }
+    .track-input-row { display:flex; gap:10px; }
+    .track-input {
+        flex:1; padding:12px 16px; border:2px solid #e0e8e0; border-radius:8px;
+        font-size:1rem; font-family:monospace; color:#0f2e1a; font-weight:700;
+        letter-spacing:0.05em; text-transform:uppercase; transition:border-color 0.2s;
+        background:#f9fbf9;
+    }
+    .track-input:focus { outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 3px rgba(31,107,58,0.1); }
+    .track-input::placeholder { font-family:inherit; font-weight:400; letter-spacing:0; text-transform:none; color:#b0bdb0; }
+    .track-btn { padding:12px 22px; background:var(--primary); color:#fff; border:none; border-radius:8px; font-size:0.92rem; font-weight:700; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+    .track-btn:hover { background:#0f2e1a; transform:translateY(-1px); }
+
+    .track-section { padding: 40px 0 60px; }
+
+    /* ── Result card ── */
+    .track-result { max-width:680px; margin:32px auto 0; display:none; }
+    .track-result.visible { display:block; }
+
+    .result-card {
+        background:#fff; border-radius:12px; overflow:hidden;
+        box-shadow:0 4px 24px rgba(0,0,0,0.1); border:1px solid #e0e8e0;
+    }
+    .result-header {
+        background:linear-gradient(135deg, var(--primary), #0f2e1a);
+        padding:20px 24px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .result-header-left h4 { color:#fff; margin:0 0 4px; font-size:1rem; }
+    .result-header-left p  { color:rgba(255,255,255,0.7); margin:0; font-size:0.82rem; }
+    .result-tracking { font-family:monospace; font-size:1rem; font-weight:900; color:var(--accent); letter-spacing:0.08em; }
+    .result-body { padding:24px; }
+
+    /* Status timeline */
+    .status-track { display:flex; gap:0; margin:0 0 24px; position:relative; }
+    .status-track::before { content:''; position:absolute; top:18px; left:0; right:0; height:3px; background:#e0e8e0; z-index:0; }
+    .status-step {
+        flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; position:relative; z-index:1;
+    }
+    .status-dot {
+        width:36px; height:36px; border-radius:50%;
+        background:#e0e8e0; color:#b0bdb0;
+        display:flex; align-items:center; justify-content:center;
+        font-size:0.85rem; font-weight:700; border:3px solid #e0e8e0;
+        transition:all 0.3s;
+    }
+    .status-step.done   .status-dot { background:#28a745; color:#fff; border-color:#28a745; }
+    .status-step.active .status-dot { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 0 0 4px rgba(31,107,58,0.2); }
+    .status-step.pending .status-dot { background:#fff; color:#b0bdb0; border-color:#ddd; }
+    .status-label { font-size:0.72rem; font-weight:700; text-align:center; color:#9aa89a; text-transform:uppercase; letter-spacing:0.05em; }
+    .status-step.done   .status-label { color:#28a745; }
+    .status-step.active .status-label { color:var(--primary); }
+
+    /* Info table */
+    .result-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+    .result-info-item { background:#f4f6f4; border-radius:8px; padding:12px 14px; }
+    .result-info-item .rii-label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:#7a8e7a; margin-bottom:4px; }
+    .result-info-item .rii-value { font-size:0.92rem; font-weight:700; color:#0f2e1a; }
+
+    /* Status message box */
+    .status-message-box { border-radius:10px; padding:16px 18px; margin-bottom:16px; display:flex; align-items:flex-start; gap:12px; }
+    .status-message-box.submitted { background:rgba(13,91,167,0.08); border:1px solid rgba(13,91,167,0.25); }
+    .status-message-box.processing { background:rgba(201,162,39,0.1); border:1px solid rgba(201,162,39,0.4); }
+    .status-message-box.verification { background:rgba(253,126,20,0.08); border:1px solid rgba(253,126,20,0.3); }
+    .status-message-box.approved { background:rgba(40,167,69,0.08); border:1px solid rgba(40,167,69,0.3); }
+    .status-message-box.completed { background:rgba(40,167,69,0.12); border:1px solid #28a745; }
+    .smb-icon { font-size:1.4rem; flex-shrink:0; margin-top:2px; }
+    .smb-title { font-weight:700; color:#0f2e1a; font-size:0.92rem; margin-bottom:4px; }
+    .smb-text  { font-size:0.84rem; color:#5a6e5a; line-height:1.6; margin:0; }
+
+    /* Not found card */
+    .not-found { text-align:center; padding:40px 20px; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.08); border:1px solid #f0e0e0; }
+    .not-found i { font-size:3.5rem; color:#dc3545; margin-bottom:16px; display:block; }
+    .not-found h4 { color:#0f2e1a; margin-bottom:8px; }
+    .not-found p  { color:#7a8e7a; font-size:0.88rem; margin-bottom:20px; }
+
+    /* Tips box */
+    .track-tips { max-width:680px; margin:24px auto 0; background:#f4f6f4; border-radius:10px; padding:18px 22px; }
+    .track-tips h4 { font-size:0.85rem; font-weight:700; color:var(--primary); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+    .track-tips ul { list-style:none; padding:0; margin:0; }
+    .track-tips ul li { font-size:0.83rem; color:#5a6e5a; padding:5px 0; display:flex; align-items:flex-start; gap:8px; border-bottom:1px solid #e8ede8; }
+    .track-tips ul li:last-child { border-bottom:none; }
+    .track-tips ul li i { color:var(--accent); flex-shrink:0; margin-top:2px; font-size:0.8rem; }
+
+    @media (max-width:560px) {
+        .track-search-box { padding:22px 18px; margin:0 14px; }
+        .track-input-row { flex-direction:column; }
+        .result-info-grid { grid-template-columns:1fr; }
+        .status-label { font-size:0.62rem; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="top-bar"><div class="container"><div class="top-bar-content">
+        <span><i class="fas fa-phone-alt"></i> +233 552 455 666</span>
+        <span id="liveClock"><i class="fas fa-clock"></i></span>
+    </div></div></div>
+    <nav class="navbar"><div class="container nav-container">
+        <a href="index.html" class="logo">
+            <div class="logo-icon"><img src="LOGO.jpg" alt="AMADA Logo"></div>
+            <div class="logo-text"><h1>Asene Manso Akroso District Assembly</h1><p>Local Government Service, Ghana</p></div>
+        </a>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="leadership.html">Leadership</a></li>
+            <li><a href="departments.html">Departments</a></li>
+            <li><a href="publications.html">Publications</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </div></nav>
+</header>
+
+<!-- HERO -->
+<div class="track-hero">
+    <div class="container">
+        <h2><i class="fas fa-search" style="margin-right:12px;font-size:1.6rem;vertical-align:middle;"></i>Track Your Application</h2>
+        <p>Enter your tracking number to check the current status of your application submitted to the Asene Manso Akroso District Assembly.</p>
+    </div>
+</div>
+
+<!-- SEARCH + RESULTS -->
+<div class="track-section">
+    <div class="container">
+
+        <!-- Search box -->
+        <div class="track-search-box">
+            <h3><i class="fas fa-barcode" style="color:var(--primary);margin-right:8px;"></i>Enter Your Tracking Number</h3>
+            <p>Your tracking number was provided on your acknowledgement slip after submission (e.g. <strong>AMADA-2026-K2N7XO</strong>)</p>
+            <div class="track-input-row">
+                <input type="text" class="track-input" id="trackInput" placeholder="e.g. AMADA-2026-K2N7XO" maxlength="20" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')trackApplication()">
+                <button class="track-btn" onclick="trackApplication()"><i class="fas fa-search"></i> Track</button>
+            </div>
+            <div id="trackError" style="display:none;color:#dc3545;font-size:0.83rem;margin-top:8px;"></div>
+        </div>
+
+        <!-- Result area -->
+        <div class="track-result" id="trackResult"></div>
+
+        <!-- Tips -->
+        <div class="track-tips">
+            <h4><i class="fas fa-lightbulb"></i> How to find your tracking number</h4>
+            <ul>
+                <li><i class="fas fa-file-alt"></i>Your tracking number is on the <strong>Acknowledgement Slip</strong> you received after submitting your application online.</li>
+                <li><i class="fas fa-envelope"></i>It is formatted as <strong>AMADA-YYYY-XXXXXX</strong> (e.g. AMADA-2026-K2N7XO).</li>
+                <li><i class="fas fa-phone-alt"></i>Can't find your tracking number? Call us on <strong>+233 552 455 666</strong> (Mon–Fri, 8AM–5PM).</li>
+                <li><i class="fas fa-map-marker-alt"></i>You may also visit the Assembly office at PMB, Akim Manso (GPS: EB-0702-1681) for in-person assistance.</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-top"><div class="container">
+        <div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div>
+        <div class="footer-divider"></div>
+        <div class="footer-grid">
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div>
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div>
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div>
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div>
+        </div>
+    </div></div>
+    <div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit</p></div></div>
+</footer>
+<a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" target="_blank" rel="noopener noreferrer" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+<script src="amada_shared.js"></script>
+<script>
+/* ════════════════════════════════════════════════════
+   APPLICATION TRACKER
+   Reads from localStorage key "amada_applications"
+   which is saved by services.html when an application
+   is submitted.
+   Also handles demo/sample tracking numbers.
+════════════════════════════════════════════════════ */
+
+/* ── Status stages ── */
+var STATUS_STAGES = [
+    { key:'submitted',    label:'Submitted',    icon:'fas fa-paper-plane' },
+    { key:'received',     label:'Received',     icon:'fas fa-inbox' },
+    { key:'processing',   label:'Processing',   icon:'fas fa-cogs' },
+    { key:'verification', label:'Verification', icon:'fas fa-user-check' },
+    { key:'completed',    label:'Completed',    icon:'fas fa-check-circle' }
+];
+
+var STATUS_MESSAGES = {
+    submitted: {
+        cls:'submitted', icon:'fas fa-paper-plane', iconColor:'#0d5ba7',
+        title:'Application Submitted Successfully',
+        text:'Your application has been received by our online portal. Please bring your acknowledgement slip and original documents to the District Assembly office for physical verification.'
+    },
+    received: {
+        cls:'received', icon:'fas fa-inbox', iconColor:'#0d5ba7',
+        title:'Application Received at District Office',
+        text:'Your application has been received and logged at the Asene Manso Akroso District Assembly office. Our team will review it shortly.'
+    },
+    processing: {
+        cls:'processing', icon:'fas fa-cogs', iconColor:'#C9A227',
+        title:'Application Under Review',
+        text:'Your application is currently being reviewed by the relevant department. You may be contacted for additional documents or clarification.'
+    },
+    verification: {
+        cls:'verification', icon:'fas fa-user-check', iconColor:'#fd7e14',
+        title:'Physical Verification Required',
+        text:'You are required to visit the District Assembly office for physical verification. Please come with your acknowledgement slip and all original supporting documents.'
+    },
+    approved: {
+        cls:'approved', icon:'fas fa-thumbs-up', iconColor:'#28a745',
+        title:'Application Approved',
+        text:'Your application has been approved. Please visit the District Assembly office to collect your certificate or permit. Bring your acknowledgement slip.'
+    },
+    completed: {
+        cls:'completed', icon:'fas fa-check-circle', iconColor:'#28a745',
+        title:'Application Completed',
+        text:'Your application has been fully processed and completed. Thank you for using the AMADA Online Application Portal.'
+    }
+};
+
+/* ── Get all saved applications from localStorage ── */
+function getSavedApplications() {
+    try {
+        var raw = localStorage.getItem('amada_applications');
+        return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+}
+
+/* ── Track an application by tracking number ── */
+function trackApplication() {
+    var raw = document.getElementById('trackInput').value.trim().toUpperCase();
+    var errEl = document.getElementById('trackError');
+    var resultEl = document.getElementById('trackResult');
+
+    errEl.style.display = 'none';
+    resultEl.classList.remove('visible');
+    resultEl.innerHTML = '';
+
+    if (!raw) {
+        errEl.textContent = 'Please enter a tracking number.';
+        errEl.style.display = 'block';
+        return;
+    }
+    if (!raw.startsWith('AMADA-')) {
+        errEl.textContent = 'Invalid format. Tracking numbers start with AMADA- (e.g. AMADA-2026-K2N7XO)';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    var apps = getSavedApplications();
+    var app  = apps[raw];
+
+    /* If not found locally, check if the format is valid and show a "submitted" demo */
+    if (!app) {
+        /* Check if it looks like a valid tracking number */
+        var parts = raw.split('-');
+        if (parts.length === 3 && parts[0]==='AMADA' && parts[1].match(/^\d{4}$/) && parts[2].length >= 4) {
+            /* Show "Application submitted — not yet processed" state */
+            app = {
+                tracking: raw,
+                service: 'Application',
+                dateSubmitted: 'Unknown — slip required',
+                status: 'submitted',
+                statusHistory: [
+                    { status:'submitted', date: new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}), note:'Application submitted via online portal' }
+                ]
+            };
+        } else {
+            showNotFound(raw);
+            return;
+        }
+    }
+
+    showResult(app);
+}
+
+function showNotFound(tracking) {
+    var resultEl = document.getElementById('trackResult');
+    resultEl.innerHTML = '<div class="not-found">'
+        + '<i class="fas fa-search-minus"></i>'
+        + '<h4>Application Not Found</h4>'
+        + '<p>No application found with tracking number <strong>' + tracking + '</strong>.<br>'
+        + 'Please check the number on your acknowledgement slip and try again.</p>'
+        + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">'
+        + '<a href="services.html" class="btn btn-small"><i class="fas fa-plus"></i> New Application</a>'
+        + '<a href="contact.html" class="btn btn-small btn-secondary"><i class="fas fa-phone-alt"></i> Contact Us</a>'
+        + '</div>'
+        + '</div>';
+    resultEl.classList.add('visible');
+    resultEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function showResult(app) {
+    var resultEl = document.getElementById('trackResult');
+    var statusOrder = ['submitted','received','processing','verification','approved','completed'];
+    var currentIdx  = statusOrder.indexOf(app.status || 'submitted');
+    if (currentIdx < 0) currentIdx = 0;
+
+    /* ── Status timeline ── */
+    var timelineHTML = '<div class="status-track">';
+    STATUS_STAGES.forEach(function(stage, i) {
+        var stageIdx = statusOrder.indexOf(stage.key);
+        var cls = stageIdx < currentIdx ? 'done' : stageIdx === currentIdx ? 'active' : 'pending';
+        var icon = cls === 'done' ? 'fas fa-check' : cls === 'active' ? stage.icon : 'fas fa-circle';
+        timelineHTML += '<div class="status-step ' + cls + '">'
+            + '<div class="status-dot"><i class="' + icon + '" style="font-size:0.8rem;"></i></div>'
+            + '<span class="status-label">' + stage.label + '</span>'
+            + '</div>';
+    });
+    timelineHTML += '</div>';
+
+    /* ── Status message ── */
+    var msgConf = STATUS_MESSAGES[app.status] || STATUS_MESSAGES['submitted'];
+    var msgHTML = '<div class="status-message-box ' + msgConf.cls + '">'
+        + '<i class="' + msgConf.icon + ' smb-icon" style="color:' + msgConf.iconColor + ';"></i>'
+        + '<div><div class="smb-title">' + msgConf.title + '</div><p class="smb-text">' + msgConf.text + '</p></div>'
+        + '</div>';
+
+    /* ── Info grid ── */
+    var infoHTML = '<div class="result-info-grid">'
+        + '<div class="result-info-item"><div class="rii-label">Tracking Number</div><div class="rii-value" style="font-family:monospace;color:var(--primary);">' + app.tracking + '</div></div>'
+        + '<div class="result-info-item"><div class="rii-label">Service Applied For</div><div class="rii-value">' + app.service + '</div></div>'
+        + '<div class="result-info-item"><div class="rii-label">Date Submitted</div><div class="rii-value">' + (app.dateSubmitted || '—') + '</div></div>'
+        + '<div class="result-info-item"><div class="rii-label">Current Status</div><div class="rii-value" style="color:' + msgConf.iconColor + ';">' + (app.status ? app.status.charAt(0).toUpperCase()+app.status.slice(1) : 'Submitted') + '</div></div>'
+        + '</div>';
+
+    /* ── Status history log ── */
+    var histHTML = '';
+    if (app.statusHistory && app.statusHistory.length) {
+        histHTML = '<div style="margin-top:16px;">'
+            + '<div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#7a8e7a;margin-bottom:10px;"><i class="fas fa-history" style="margin-right:6px;"></i>Status History</div>'
+            + '<div style="border:1px solid #e8ede8;border-radius:8px;overflow:hidden;">';
+        app.statusHistory.forEach(function(h, i) {
+            var dotColor = h.status==='completed'||h.status==='approved' ? '#28a745' : h.status==='submitted'||h.status==='received' ? '#0d5ba7' : '#C9A227';
+            histHTML += '<div style="display:flex;gap:14px;padding:12px 16px;background:' + (i%2===0?'#fff':'#f9fbf9') + ';border-bottom:1px solid #f0f4f0;">'
+                + '<div style="width:10px;height:10px;border-radius:50%;background:'+dotColor+';flex-shrink:0;margin-top:4px;"></div>'
+                + '<div style="flex:1;"><div style="font-size:0.85rem;font-weight:600;color:#0f2e1a;">' + (h.note || h.status) + '</div>'
+                + '<div style="font-size:0.76rem;color:#9aa89a;margin-top:2px;">' + (h.date || '') + '</div></div>'
+                + '</div>';
+        });
+        histHTML += '</div></div>';
+    }
+
+    /* ── Next steps ── */
+    var nextHTML = '<div style="background:#f4f6f4;border-radius:8px;padding:14px 16px;margin-top:16px;">'
+        + '<div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--primary);margin-bottom:10px;"><i class="fas fa-list-ol" style="margin-right:6px;"></i>Next Steps</div>'
+        + '<ol style="margin:0;padding-left:18px;font-size:0.84rem;color:#5a6e5a;line-height:1.8;">'
+        + '<li>Bring your <strong>printed acknowledgement slip</strong> to the District Assembly office</li>'
+        + '<li>Present all <strong>original supporting documents</strong> required for your service</li>'
+        + '<li>Visit the relevant department at the Assembly office (Mon–Fri, 8AM–5PM)</li>'
+        + '<li>Quote your tracking number: <strong style="font-family:monospace;color:var(--primary);">' + app.tracking + '</strong></li>'
+        + '</ol>'
+        + '</div>';
+
+    /* ── Actions ── */
+    var actionsHTML = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">'
+        + '<a href="services.html" class="btn btn-small"><i class="fas fa-plus"></i> New Application</a>'
+        + '<a href="contact.html" class="btn btn-small btn-secondary"><i class="fas fa-phone-alt"></i> Contact Assembly</a>'
+        + '</div>';
+
+    resultEl.innerHTML = '<div class="result-card">'
+        + '<div class="result-header"><div class="result-header-left"><h4><i class="fas fa-clipboard-list" style="margin-right:8px;"></i>Application Status</h4><p>Asene Manso Akroso District Assembly</p></div><span class="result-tracking">' + app.tracking + '</span></div>'
+        + '<div class="result-body">'
+        + timelineHTML
+        + msgHTML
+        + infoHTML
+        + histHTML
+        + nextHTML
+        + actionsHTML
+        + '</div></div>';
+
+    resultEl.classList.add('visible');
+    setTimeout(function(){ resultEl.scrollIntoView({ behavior:'smooth', block:'nearest' }); }, 100);
+}
+
+/* ── Pre-fill from URL param: track.html?ref=AMADA-2026-XXXXX ── */
+(function(){
+    var params = new URLSearchParams(window.location.search);
+    var ref = params.get('ref');
+    if (ref) {
+        document.getElementById('trackInput').value = ref.toUpperCase();
+        trackApplication();
+    }
+})();
+</script>
+
+<a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+</body>
+</html>

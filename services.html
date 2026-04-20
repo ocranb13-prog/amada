@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    <meta name="description" content="Access official services offered by the Asene Manso Akroso District Assembly including permits, applications, certificates, and community support programmes.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services — Asene Manso Akroso District Assembly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="amada_styles.css">
+    <style>
+    /* ══ PORTAL MODAL ══ */
+    .portal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+        display: none; justify-content: center; align-items: flex-start;
+        z-index: 3000; padding: 20px; overflow-y: auto;
+    }
+    .portal-overlay.open { display: flex; }
+    .portal-box {
+        background: #fff; border-radius: 12px; width: 100%; max-width: 720px;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.35); margin: auto;
+        animation: portalIn 0.3s ease; overflow: hidden;
+    }
+    @keyframes portalIn { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Step header bar ── */
+    .portal-steps {
+        display: flex; background: #f4f6f4;
+        border-bottom: 2px solid #e0e8e0; padding: 0;
+    }
+    .portal-step {
+        flex: 1; display: flex; flex-direction: column; align-items: center;
+        padding: 14px 8px; gap: 4px; border-bottom: 3px solid transparent;
+        font-size: 0.75rem; font-weight: 600; color: #9aa89a;
+    }
+    .portal-step.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(31,107,58,0.05); }
+    .portal-step.done   { color: #28a745; border-bottom-color: #28a745; }
+    .portal-step-num {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: #e0e8e0; color: #9aa89a;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; font-weight: 800;
+    }
+    .portal-step.active .portal-step-num { background: var(--primary); color: #fff; }
+    .portal-step.done   .portal-step-num { background: #28a745; color: #fff; }
+
+    /* ── Portal header ── */
+    .portal-header {
+        background: linear-gradient(135deg, var(--primary), #0f2e1a);
+        padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .portal-header h3 { color: #fff; margin: 0; font-size: 1.1rem; }
+    .portal-header p  { color: rgba(255,255,255,0.7); margin: 3px 0 0; font-size: 0.82rem; }
+    .portal-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; transition: background 0.2s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .portal-close:hover { background: rgba(255,255,255,0.3); }
+
+    /* ── Portal body ── */
+    .portal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+    .portal-panel { display: none; }
+    .portal-panel.active { display: block; }
+
+    /* ── Notice box ── */
+    .notice-box { background: #fff8e6; border: 1px solid #C9A227; border-left: 4px solid #C9A227; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
+    .notice-box p { margin: 0; font-size: 0.87rem; color: #3d4e3d; line-height: 1.6; }
+    .notice-box strong { color: #0f2e1a; }
+
+    /* ── Service selector cards ── */
+    .service-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .service-select-card {
+        border: 2px solid #e0e8e0; border-radius: 10px; padding: 16px 14px;
+        cursor: pointer; transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px;
+        background: #fff;
+    }
+    .service-select-card:hover { border-color: var(--primary); background: rgba(31,107,58,0.03); transform: translateY(-2px); }
+    .service-select-card.selected { border-color: var(--primary); background: rgba(31,107,58,0.07); }
+    .ssc-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #fff; flex-shrink: 0; }
+    .ssc-info h4 { font-size: 0.88rem; font-weight: 700; color: #0f2e1a; margin: 0 0 3px; }
+    .ssc-info p  { font-size: 0.76rem; color: #7a8e7a; margin: 0; line-height: 1.4; }
+
+    /* ── Form field ── */
+    .app-form .form-group { margin-bottom: 16px; }
+    .app-form label { font-size: 0.87rem; font-weight: 600; color: #0f2e1a; display: block; margin-bottom: 5px; }
+    .app-form label .req { color: #dc3545; }
+    .app-form .form-control { width: 100%; padding: 10px 13px; border: 1.5px solid #d0d8d0; border-radius: 8px; font-size: 0.9rem; color: #333; font-family: inherit; transition: border-color 0.2s; background: #fff; }
+    .app-form .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,107,58,0.1); }
+    .app-form select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231F6B3A' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .form-section-title { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 6px; margin: 20px 0 14px; }
+    .declaration-box { background: #f4f6f4; border-radius: 8px; padding: 14px 16px; margin-top: 16px; }
+    .declaration-box label { font-size: 0.85rem; font-weight: 400; color: #3d4e3d; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; line-height: 1.5; }
+    .declaration-box input[type="checkbox"] { margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; }
+
+    /* ── Review panel ── */
+    .review-header { background: linear-gradient(135deg, var(--primary), #0f2e1a); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+    .review-header h4 { color: #fff; margin: 0 0 4px; font-size: 1rem; }
+    .review-header p  { color: rgba(255,255,255,0.7); margin: 0; font-size: 0.82rem; }
+    .review-tracking { background: var(--accent); color: #1a1a1a; padding: 8px 16px; border-radius: 6px; margin-top: 10px; display: inline-block; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.06em; }
+    .review-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    .review-table tr { border-bottom: 1px solid #f0f4f0; }
+    .review-table tr:last-child { border-bottom: none; }
+    .review-table td { padding: 9px 12px; font-size: 0.87rem; vertical-align: top; }
+    .review-table td:first-child { font-weight: 600; color: #7a8e7a; width: 38%; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .review-table td:last-child { color: #0f2e1a; font-weight: 500; }
+    .review-section-title { font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); padding: 10px 12px 4px; background: rgba(31,107,58,0.05); border-radius: 6px 6px 0 0; margin-top: 14px; }
+
+    /* ── Portal footer ── */
+    .portal-footer {
+        padding: 16px 24px; border-top: 1px solid #e8ede8; background: #f9fbf9;
+        display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .portal-footer-info { font-size: 0.78rem; color: #9aa89a; }
+
+    /* ══ ACKNOWLEDGEMENT SLIP (print target) ══ */
+    .slip-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+        display: none; justify-content: center; align-items: flex-start;
+        z-index: 4000; padding: 24px; overflow-y: auto;
+    }
+    .slip-overlay.open { display: flex; }
+    .slip-wrapper { background: #fff; border-radius: 10px; width: 100%; max-width: 720px; margin: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.4); overflow: hidden; }
+    .slip-actions { background: #0f2e1a; padding: 14px 20px; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .slip-actions span { color: rgba(255,255,255,0.7); font-size: 0.82rem; }
+    .slip-actions-btns { display: flex; gap: 10px; }
+    .slip-btn { padding: 9px 18px; border-radius: 6px; border: none; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.2s; }
+    .slip-btn.print { background: rgba(255,255,255,0.15); color: #fff; }
+    .slip-btn.print:hover { background: rgba(255,255,255,0.25); }
+    .slip-btn.download { background: var(--accent); color: #1a1a1a; }
+    .slip-btn.download:hover { background: #e0b42a; }
+    .slip-btn.close-slip { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+
+    /* ── Slip printable content ── */
+    #slipContent { padding: 0; }
+    .slip-letterhead { background: linear-gradient(135deg, #1F6B3A, #0f2e1a); padding: 28px 32px; display: flex; align-items: center; gap: 20px; }
+    .slip-logo { width: 72px; height: 72px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; padding: 4px; }
+    .slip-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .slip-org { color: #fff; }
+    .slip-org h2 { font-size: 1.1rem; font-weight: 800; margin: 0 0 3px; }
+    .slip-org p  { font-size: 0.78rem; color: rgba(255,255,255,0.7); margin: 0; }
+    .slip-title-bar { background: var(--accent); padding: 10px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .slip-title-bar h3 { font-size: 0.9rem; font-weight: 800; color: #1a1a1a; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+    .slip-tracking { font-size: 1.1rem; font-weight: 900; color: #1a1a1a; letter-spacing: 0.1em; font-family: monospace; }
+    .slip-body { padding: 24px 32px; }
+    .slip-status-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(40,167,69,0.1); border: 1.5px solid #28a745; color: #28a745; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; }
+    .slip-detail-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #e0e8e0; border-radius: 8px; overflow: hidden; }
+    .slip-detail-table th { background: #f4f6f4; padding: 10px 14px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7a8e7a; text-align: left; border-bottom: 1px solid #e0e8e0; }
+    .slip-detail-table td { padding: 10px 14px; font-size: 0.88rem; color: #0f2e1a; border-bottom: 1px solid #f0f4f0; font-weight: 500; }
+    .slip-detail-table tr:last-child td { border-bottom: none; }
+    .slip-detail-table td.label { font-weight: 700; color: #7a8e7a; font-size: 0.82rem; width: 36%; }
+    .slip-disclaimer { background: #fff8e6; border: 1px solid var(--accent); border-radius: 8px; padding: 14px 16px; margin-top: 16px; font-size: 0.83rem; color: #3d4e3d; line-height: 1.65; }
+    .slip-disclaimer strong { color: #0f2e1a; }
+    .slip-footer-bar { background: #f4f6f4; border-top: 1px dashed #e0e8e0; padding: 14px 32px; text-align: center; font-size: 0.76rem; color: #9aa89a; }
+    .slip-footer-bar strong { color: #7a8e7a; }
+
+    /* ══ Print styles ══ */
+    @media print {
+        body * { visibility: hidden !important; }
+        .slip-overlay, .slip-overlay * { visibility: visible !important; }
+        .slip-overlay { position: absolute !important; left: 0 !important; top: 0 !important; padding: 0 !important; background: #fff !important; }
+        .slip-wrapper { box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; width: 100% !important; }
+        .slip-actions { display: none !important; }
+        #slipContent { display: block !important; }
+    }
+
+    /* ══ Responsive ══ */
+    @media (max-width: 600px) {
+        .service-cards-grid { grid-template-columns: 1fr; }
+        .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
+        .portal-step span { display: none; }
+        .slip-letterhead { padding: 20px; gap: 14px; }
+        .slip-body { padding: 18px 20px; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="top-bar"><div class="container"><div class="top-bar-content">
+        <span><i class="fas fa-phone-alt"></i> +233 552 455 666</span>
+        <span id="liveClock"><i class="fas fa-clock"></i></span>
+    </div></div></div>
+    <nav class="navbar"><div class="container nav-container">
+        <a href="index.html" class="logo">
+            <div class="logo-icon"><img src="LOGO.jpg" alt="AMADA Logo"></div>
+            <div class="logo-text"><h1>Asene Manso Akroso District Assembly</h1><p>Local Government Service, Ghana</p></div>
+        </a>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="leadership.html">Leadership</a></li>
+            <li><a href="departments.html">Departments</a></li>
+            <li><a href="publications.html">Publications</a></li>
+            <li><a href="track.html"><i class="fas fa-search" style="font-size:0.75rem;margin-right:4px;"></i>Track</a></li>
+            <li><a href="services.html" class="active">Services</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </div></nav>
+</header>
+
+<!-- PAGE BANNER -->
+<div class="page-banner">
+    <div class="container">
+        <h2>Our Services</h2>
+        <p>Access official Assembly services — download forms, submit online applications, and track your requests.</p>
+    </div>
+</div>
+
+<!-- SERVICE OVERVIEW CARDS -->
+<div class="section section-alt"><div class="container">
+    <div class="services-overview-grid">
+        <div class="service-overview-card" onclick="document.getElementById('formsSection').scrollIntoView({behavior:'smooth'})">
+            <div class="service-overview-icon"><i class="fas fa-file-download"></i></div>
+            <h3>Downloadable Forms</h3>
+            <p>Download and print official forms for registration, permits and applications.</p>
+            <span class="service-overview-btn">Browse Forms <i class="fas fa-arrow-down"></i></span>
+        </div>
+        <div class="service-overview-card" onclick="openPortal()">
+            <div class="service-overview-icon"><i class="fas fa-laptop-code"></i></div>
+            <h3>Online Applications</h3>
+            <p>Fill and submit applications online for permits, registration and enquiries.</p>
+            <span class="service-overview-btn">Apply Online <i class="fas fa-arrow-right"></i></span>
+        </div>
+        <div class="service-overview-card" style="cursor:default;">
+            <div class="service-overview-icon"><i class="fas fa-credit-card"></i></div>
+            <h3>Online Payments</h3>
+            <p>Pay property rates, business licenses and other Assembly fees securely.</p>
+            <span class="service-overview-btn" style="opacity:0.45;cursor:default;">Coming Soon</span>
+        </div>
+    </div>
+</div></div>
+
+<!-- DOWNLOADABLE FORMS -->
+<div class="section" id="formsSection"><div class="container">
+    <h2 class="section-title">Downloadable Forms</h2>
+    <p style="color:#5a6e5a;margin-bottom:28px;max-width:680px;font-size:0.9rem;">Download, print and fill out the forms below. Submit at the Assembly office or via the Online Application portal above.</p>
+    <div class="publications-filter">
+        <button class="filter-btn active" onclick="filterForms('all',this)">All Forms</button>
+        <button class="filter-btn" onclick="filterForms('registration',this)">Registration</button>
+        <button class="filter-btn" onclick="filterForms('permit',this)">Permits</button>
+        <button class="filter-btn" onclick="filterForms('general',this)">General</button>
+    </div>
+    <div class="forms-grid" id="formsGrid">
+        <div class="form-card" data-form-cat="registration">
+            <div class="form-card-icon" style="background:linear-gradient(135deg,#1F6B3A,#0f2e1a);"><i class="fas fa-ring"></i></div>
+            <div class="form-card-info"><span class="form-card-category">Registration</span><h4 class="form-card-title">Marriage Registration Form</h4><p class="form-card-desc">Official form for registering a marriage. Includes Groom, Bride, Witness and Marriage details.</p><div class="form-card-meta"><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF &nbsp;|&nbsp; 2 Pages</span><span><i class="fas fa-check-circle" style="color:#28a745;"></i> Available</span></div><a href="MARRIAGE_REGISTRATION_FORM.pdf" download class="form-download-btn"><i class="fas fa-download"></i> Download PDF</a></div>
+        </div>
+        <div class="form-card form-card-soon" data-form-cat="registration">
+            <div class="form-card-icon" style="background:linear-gradient(135deg,#0d5ba7,#1a365d);"><i class="fas fa-baby"></i></div>
+            <div class="form-card-info"><span class="form-card-category">Registration</span><h4 class="form-card-title">Birth Registration Form</h4><p class="form-card-desc">Official form for registering a birth with the Births &amp; Deaths Registry.</p><div class="form-card-meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-clock" style="color:#C9A227;"></i> Coming Soon</span></div><span class="form-download-btn form-soon-btn"><i class="fas fa-clock"></i> Coming Soon</span></div>
+        </div>
+        <div class="form-card form-card-soon" data-form-cat="registration">
+            <div class="form-card-icon" style="background:linear-gradient(135deg,#3d3d3d,#1a1a1a);"><i class="fas fa-scroll"></i></div>
+            <div class="form-card-info"><span class="form-card-category">Registration</span><h4 class="form-card-title">Death Registration Form</h4><p class="form-card-desc">Official form for registering a death with the Births &amp; Deaths Registry.</p><div class="form-card-meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-clock" style="color:#C9A227;"></i> Coming Soon</span></div><span class="form-download-btn form-soon-btn"><i class="fas fa-clock"></i> Coming Soon</span></div>
+        </div>
+        <div class="form-card form-card-soon" data-form-cat="permit">
+            <div class="form-card-icon" style="background:linear-gradient(135deg,#C9A227,#8a6b10);"><i class="fas fa-store"></i></div>
+            <div class="form-card-info"><span class="form-card-category">Permit</span><h4 class="form-card-title">Business Operating Permit Form</h4><p class="form-card-desc">Application form for obtaining a business operating permit from the Assembly.</p><div class="form-card-meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-clock" style="color:#C9A227;"></i> Coming Soon</span></div><span class="form-download-btn form-soon-btn"><i class="fas fa-clock"></i> Coming Soon</span></div>
+        </div>
+        <div class="form-card form-card-soon" data-form-cat="permit">
+            <div class="form-card-icon" style="background:linear-gradient(135deg,#dc3545,#8b0000);"><i class="fas fa-hard-hat"></i></div>
+            <div class="form-card-info"><span class="form-card-category">Permit</span><h4 class="form-card-title">Building Permit Application Form</h4><p class="form-card-desc">Application form required before commencing any building or construction activity.</p><div class="form-card-meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-clock" style="color:#C9A227;"></i> Coming Soon</span></div><span class="form-download-btn form-soon-btn"><i class="fas fa-clock"></i> Coming Soon</span></div>
+        </div>
+        <div class="form-card form-card-soon" data-form-cat="permit">
+            <div class="form-card-icon" style="background:linear-gradient(135deg,#6f42c1,#3d1a6e);"><i class="fas fa-sign"></i></div>
+            <div class="form-card-info"><span class="form-card-category">Permit</span><h4 class="form-card-title">Signage Permit Application Form</h4><p class="form-card-desc">Application form for approval of business signage and billboards within the district.</p><div class="form-card-meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-clock" style="color:#C9A227;"></i> Coming Soon</span></div><span class="form-download-btn form-soon-btn"><i class="fas fa-clock"></i> Coming Soon</span></div>
+        </div>
+        <div class="form-card form-card-soon" data-form-cat="general">
+            <div class="form-card-icon" style="background:linear-gradient(135deg,#17a2b8,#0a5e6e);"><i class="fas fa-question-circle"></i></div>
+            <div class="form-card-info"><span class="form-card-category">General</span><h4 class="form-card-title">General Enquiry Form</h4><p class="form-card-desc">Use this form to submit a general enquiry or request to the District Assembly.</p><div class="form-card-meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-clock" style="color:#C9A227;"></i> Coming Soon</span></div><span class="form-download-btn form-soon-btn"><i class="fas fa-clock"></i> Coming Soon</span></div>
+        </div>
+    </div>
+    <div class="info-box" style="margin-top:28px;">
+        <i class="fas fa-info-circle"></i>
+        <p><strong>Note:</strong> Download and print the required form, fill it out completely, and submit it at the Assembly office or use the <a href="#" onclick="openPortal();return false;" style="color:var(--primary);font-weight:700;">Online Application Portal</a> above. For assistance call <strong>+233 552 455 666</strong> (Mon–Fri, 8:00 AM – 5:00 PM).</p>
+    </div>
+</div></div>
+
+<!-- FOOTER -->
+<footer><div class="footer-top"><div class="container">
+    <div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div>
+    <div class="footer-divider"></div>
+    <div class="footer-grid">
+        <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div>
+        <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div>
+        <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div>
+        <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div>
+    </div>
+</div></div><div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit</p></div></div></footer>
+<a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" target="_blank" rel="noopener noreferrer" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+
+<!-- ═══════════════════════════════════════════════
+     ONLINE APPLICATION PORTAL (3-step)
+     Step 1: Select Service
+     Step 2: Fill Form
+     Step 3: Review & Submit
+═══════════════════════════════════════════════ -->
+<div class="portal-overlay" id="appPortal">
+<div class="portal-box">
+
+    <!-- Portal Header -->
+    <div class="portal-header">
+        <div>
+            <h3 id="portalTitle"><i class="fas fa-laptop-code" style="margin-right:8px;"></i>Online Application Portal</h3>
+            <p id="portalSubtitle">Asene Manso Akroso District Assembly — Official Services</p>
+        </div>
+        <button class="portal-close" onclick="closePortal()">&times;</button>
+    </div>
+
+    <!-- Step Indicators -->
+    <div class="portal-steps">
+        <div class="portal-step active" id="step-ind-1"><div class="portal-step-num">1</div><span>Select Service</span></div>
+        <div class="portal-step" id="step-ind-2"><div class="portal-step-num">2</div><span>Fill Form</span></div>
+        <div class="portal-step" id="step-ind-3"><div class="portal-step-num">3</div><span>Review &amp; Submit</span></div>
+    </div>
+
+    <!-- Portal Body -->
+    <div class="portal-body">
+
+        <!-- STEP 1: Select Service -->
+        <div class="portal-panel active" id="portal-step1">
+            <div class="notice-box">
+                <p><strong>IMPORTANT NOTICE TO APPLICANTS</strong><br>
+                The Asene Manso Akroso District Assembly (AMADA) provides the following services through this portal. Please review the requirements carefully before proceeding.<br>
+                <small>Submission does not replace physical verification. Applicants may be required to appear in person for further processing.</small></p>
+            </div>
+            <p style="font-size:0.88rem;color:#5a6e5a;margin-bottom:16px;font-weight:600;">Select the service you wish to apply for:</p>
+            <div class="service-cards-grid">
+                <div class="service-select-card" onclick="selectService('Marriage Registration')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#1F6B3A,#0f2e1a);"><i class="fas fa-ring"></i></div>
+                    <div class="ssc-info"><h4>Marriage Registration</h4><p>Register a marriage with the District Assembly</p></div>
+                </div>
+                <div class="service-select-card" onclick="selectService('Birth Registration')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#0d5ba7,#1a365d);"><i class="fas fa-baby"></i></div>
+                    <div class="ssc-info"><h4>Birth Registration</h4><p>Register a birth with the Births &amp; Deaths Registry</p></div>
+                </div>
+                <div class="service-select-card" onclick="selectService('Death Registration')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#3d3d3d,#1a1a1a);"><i class="fas fa-scroll"></i></div>
+                    <div class="ssc-info"><h4>Death Registration</h4><p>Register a death with the Births &amp; Deaths Registry</p></div>
+                </div>
+                <div class="service-select-card" onclick="selectService('Business Operating Permit')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#C9A227,#8a6b10);"><i class="fas fa-store"></i></div>
+                    <div class="ssc-info"><h4>Business Operating Permit</h4><p>Apply for a business operating permit</p></div>
+                </div>
+                <div class="service-select-card" onclick="selectService('Building Permit')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#dc3545,#8b0000);"><i class="fas fa-hard-hat"></i></div>
+                    <div class="ssc-info"><h4>Building Permit</h4><p>Application before any construction activity</p></div>
+                </div>
+                <div class="service-select-card" onclick="selectService('Development Permit')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#0d5ba7,#1a365d);"><i class="fas fa-drafting-compass"></i></div>
+                    <div class="ssc-info"><h4>Development Permit</h4><p>Apply for a development / land use permit</p></div>
+                </div>
+                <div class="service-select-card" onclick="selectService('Signage Permit')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#6f42c1,#3d1a6e);"><i class="fas fa-sign"></i></div>
+                    <div class="ssc-info"><h4>Signage Permit</h4><p>Approval for business signage and billboards</p></div>
+                </div>
+                <div class="service-select-card" onclick="selectService('General Enquiry')">
+                    <div class="ssc-icon" style="background:linear-gradient(135deg,#17a2b8,#0a5e6e);"><i class="fas fa-question-circle"></i></div>
+                    <div class="ssc-info"><h4>General Enquiry</h4><p>Submit a general enquiry or request</p></div>
+                </div>
+            </div>
+        </div><!-- /step1 -->
+
+        <!-- STEP 2: Fill Form (dynamically built) -->
+        <div class="portal-panel" id="portal-step2">
+            <form class="app-form" id="appForm" onsubmit="goToReview(event)" novalidate>
+                <div id="formFields"><!-- dynamic --></div>
+                <div class="declaration-box">
+                    <label>
+                        <input type="checkbox" id="declCheck" required>
+                        I declare that all information provided in this application is true, accurate and complete to the best of my knowledge. I understand that providing false information may result in rejection or legal action.
+                    </label>
+                </div>
+            </form>
+        </div><!-- /step2 -->
+
+        <!-- STEP 3: Review -->
+        <div class="portal-panel" id="portal-step3">
+            <div class="review-header">
+                <h4><i class="fas fa-clipboard-check" style="margin-right:8px;"></i>Review Your Application</h4>
+                <p>Please verify all details carefully before submitting. Once submitted, you will receive an acknowledgement slip.</p>
+                <div class="review-tracking" id="reviewTracking">AMADA-2025-XXXXXX</div>
+            </div>
+            <div id="reviewContent"><!-- dynamic --></div>
+            <div class="notice-box" style="margin-top:14px;">
+                <p><strong>Before you submit:</strong> After successful submission, you will receive an acknowledgement slip with your tracking number. Print or download it and bring it to the District Assembly office for physical verification and further processing.</p>
+            </div>
+        </div><!-- /step3 -->
+
+    </div><!-- /portal-body -->
+
+    <!-- Portal Footer -->
+    <div class="portal-footer">
+        <div class="portal-footer-info" id="portalFooterInfo">Step 1 of 3 — Select your service to begin</div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-secondary btn-small" id="btnBack" style="display:none;" onclick="portalBack()"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn btn-small" id="btnNext" style="display:none;" onclick="portalNext()">Next <i class="fas fa-arrow-right"></i></button>
+            <button class="btn btn-small" id="btnSubmit" style="display:none;background:#28a745;" onclick="submitApplication()"><i class="fas fa-paper-plane"></i> Submit Application</button>
+        </div>
+    </div>
+
+</div><!-- /portal-box -->
+</div><!-- /portal-overlay -->
+
+
+<!-- ═══════════════════════════════════════════════
+     ACKNOWLEDGEMENT SLIP OVERLAY
+═══════════════════════════════════════════════ -->
+<div class="slip-overlay" id="slipOverlay">
+<div class="slip-wrapper">
+    <!-- Action buttons bar -->
+    <div class="slip-actions">
+        <span><i class="fas fa-check-circle" style="color:#C9A227;margin-right:6px;"></i>Application submitted successfully!</span>
+        <div class="slip-actions-btns">
+            <button class="slip-btn print" onclick="printSlip()"><i class="fas fa-print"></i> Print</button>
+            <button class="slip-btn download" onclick="downloadSlip()"><i class="fas fa-download"></i> Download</button>
+            <button class="slip-btn" onclick="goToTracker()" style="background:rgba(201,162,39,0.25);color:#C9A227;"><i class="fas fa-search"></i> Track</button>
+            <button class="slip-btn close-slip" onclick="closeSlip()"><i class="fas fa-times"></i> Close</button>
+        </div>
+    </div>
+    <!-- Printable slip -->
+    <div id="slipContent">
+        <!-- Letterhead -->
+        <div class="slip-letterhead">
+            <div class="slip-logo"><img src="LOGO.jpg" alt="AMADA" onerror="this.parentElement.innerHTML='<i class=\'fas fa-landmark\' style=\'font-size:2rem;color:#1F6B3A;\'></i>'"></div>
+            <div class="slip-org">
+                <h2>Asene Manso Akroso District Assembly</h2>
+                <p>PMB, Akim Manso, Eastern Region, Ghana &nbsp;|&nbsp; GPS: EB-0702-1681</p>
+                <p>Tel: +233 552 455 666 &nbsp;|&nbsp; Local Government Service, Ghana</p>
+            </div>
+        </div>
+        <!-- Title bar with tracking number -->
+        <div class="slip-title-bar">
+            <h3>Application Acknowledgement Slip</h3>
+            <span class="slip-tracking" id="slipTrackingNum">AMADA-2025-XXXXXX</span>
+        </div>
+        <!-- Slip body — fully dynamic, no static duplicates -->
+        <div class="slip-body">
+            <div id="slipDetailsContent"><!-- fully injected by submitApplication() --></div>
+        </div>
+        <div class="slip-footer-bar">
+            <strong>Asene Manso Akroso District Assembly</strong> &nbsp;|&nbsp; PMB, Akim Manso, Eastern Region, Ghana &nbsp;|&nbsp; GPS: EB-0702-1681 &nbsp;|&nbsp; Tel: +233 552 455 666
+        </div>
+    </div>
+</div>
+</div>
+
+
+<script src="amada_shared.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════
+   SERVICE FORM DEFINITIONS
+   Each service has: icon, notice, sections[], each with fields[]
+═══════════════════════════════════════════════════════ */
+var SERVICE_FORMS = {
+    'Marriage Registration': {
+        icon: 'fas fa-ring', color: '#1F6B3A',
+        notice: 'Applicants applying for Marriage Registration must provide accurate information for both parties. Both parties must be present at the time of physical registration.',
+        sections: [
+            { title: 'Husband\'s Information', fields: [
+                { id:'husband_name',  label:'Full Name of Husband',   type:'text',   req:true,  ph:'Enter full name', half:false },
+                { id:'husband_dob',   label:'Date of Birth',          type:'date',   req:true,  half:true },
+                { id:'husband_ghana', label:'Ghana Card Number',       type:'text',   req:true,  ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'husband_phone', label:'Contact Number',          type:'tel',    req:true,  ph:'+233 XXX XXX XXX', half:true },
+                { id:'husband_occ',   label:'Occupation',              type:'text',   req:true,  ph:'Enter occupation', half:true },
+                { id:'husband_addr',  label:'Residential Address',     type:'text',   req:true,  ph:'House / Town / District', half:false }
+            ]},
+            { title: 'Wife\'s Information', fields: [
+                { id:'wife_name',  label:'Full Name of Wife',   type:'text',   req:true,  ph:'Enter full name', half:false },
+                { id:'wife_dob',   label:'Date of Birth',       type:'date',   req:true,  half:true },
+                { id:'wife_ghana', label:'Ghana Card Number',   type:'text',   req:true,  ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'wife_phone', label:'Contact Number',      type:'tel',    req:true,  ph:'+233 XXX XXX XXX', half:true },
+                { id:'wife_occ',   label:'Occupation',          type:'text',   req:true,  ph:'Enter occupation', half:true },
+                { id:'wife_addr',  label:'Residential Address', type:'text',   req:true,  ph:'House / Town / District', half:false }
+            ]},
+            { title: 'Marriage Details', fields: [
+                { id:'marriage_type',  label:'Type of Marriage', type:'select', req:true, opts:['','Customary','Ordinance','Islamic'], half:true },
+                { id:'marriage_date',  label:'Date of Marriage', type:'date',   req:true, half:true },
+                { id:'marriage_place', label:'Place of Marriage',type:'text',   req:true, ph:'Town / Location', half:false },
+                { id:'officiating',    label:'Name of Officiating Authority', type:'text', req:true, ph:'Pastor / Chief / Imam', half:false },
+                { id:'witness1',       label:'Name of Witness 1', type:'text',  req:true, ph:'Full name', half:true },
+                { id:'witness2',       label:'Name of Witness 2', type:'text',  req:false,ph:'Full name', half:true }
+            ]}
+        ]
+    },
+    'Birth Registration': {
+        icon: 'fas fa-baby', color: '#0d5ba7',
+        notice: 'Birth registration should be done within 12 months of birth. Late registration (after 12 months) requires additional documentation.',
+        sections: [
+            { title: 'Child\'s Information', fields: [
+                { id:'child_name',     label:'Full Name of Child',   type:'text', req:true, ph:'Surname First Name', half:false },
+                { id:'child_sex',      label:'Sex',                  type:'select', req:true, opts:['','Male','Female'], half:true },
+                { id:'child_dob',      label:'Date of Birth',        type:'date',   req:true, half:true },
+                { id:'child_place',    label:'Place of Birth',       type:'text',   req:true, ph:'Hospital / Town', half:false }
+            ]},
+            { title: 'Father\'s Information', fields: [
+                { id:'father_name',    label:'Full Name',       type:'text', req:true, ph:'Enter full name', half:false },
+                { id:'father_ghana',   label:'Ghana Card No.',  type:'text', req:true, ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'father_phone',   label:'Contact Number',  type:'tel',  req:true, ph:'+233 XXX XXX XXX', half:true },
+                { id:'father_occ',     label:'Occupation',      type:'text', req:true, ph:'Occupation', half:true },
+                { id:'father_addr',    label:'Address',         type:'text', req:true, ph:'Residential address', half:true }
+            ]},
+            { title: 'Mother\'s Information', fields: [
+                { id:'mother_name',    label:'Full Name',       type:'text', req:true, ph:'Enter full name', half:false },
+                { id:'mother_ghana',   label:'Ghana Card No.',  type:'text', req:true, ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'mother_phone',   label:'Contact Number',  type:'tel',  req:true, ph:'+233 XXX XXX XXX', half:true },
+                { id:'mother_occ',     label:'Occupation',      type:'text', req:true, ph:'Occupation', half:true },
+                { id:'mother_addr',    label:'Address',         type:'text', req:true, ph:'Residential address', half:true }
+            ]}
+        ]
+    },
+    'Death Registration': {
+        icon: 'fas fa-scroll', color: '#3d3d3d',
+        notice: 'Death registration should be completed as soon as possible. You will need a medical certificate of cause of death or a burial permit.',
+        sections: [
+            { title: 'Deceased\'s Information', fields: [
+                { id:'dec_name',    label:'Full Name of Deceased', type:'text',   req:true, ph:'Enter full name', half:false },
+                { id:'dec_sex',     label:'Sex',                   type:'select', req:true, opts:['','Male','Female'], half:true },
+                { id:'dec_dob',     label:'Date of Birth',         type:'date',   req:false, half:true },
+                { id:'dec_dod',     label:'Date of Death',         type:'date',   req:true,  half:true },
+                { id:'dec_place',   label:'Place of Death',        type:'text',   req:true,  ph:'Hospital / Town', half:true },
+                { id:'dec_cause',   label:'Cause of Death',        type:'text',   req:true,  ph:'As stated on medical certificate', half:false },
+                { id:'dec_occ',     label:'Occupation (if known)', type:'text',   req:false, ph:'Occupation', half:true },
+                { id:'dec_addr',    label:'Last Residential Address', type:'text',req:true,  ph:'House / Town', half:true }
+            ]},
+            { title: 'Informant\'s Information', fields: [
+                { id:'info_name',    label:'Full Name of Informant', type:'text',   req:true, ph:'Person reporting the death', half:false },
+                { id:'info_rel',     label:'Relationship to Deceased', type:'select', req:true, opts:['','Spouse','Child','Parent','Sibling','Other Relative','Friend','Doctor','Other'], half:true },
+                { id:'info_ghana',   label:'Ghana Card No.',         type:'text',   req:true, ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'info_phone',   label:'Contact Number',         type:'tel',    req:true, ph:'+233 XXX XXX XXX', half:true },
+                { id:'info_addr',    label:'Address',                type:'text',   req:true, ph:'Residential address', half:true }
+            ]}
+        ]
+    },
+    'Business Operating Permit': {
+        icon: 'fas fa-store', color: '#C9A227',
+        notice: 'Business operating permits must be renewed annually. New businesses must apply before commencing operations within the district.',
+        sections: [
+            { title: 'Business Information', fields: [
+                { id:'biz_name',     label:'Business / Trade Name',    type:'text',   req:true,  ph:'Official business name', half:false },
+                { id:'biz_type',     label:'Type of Business',         type:'select', req:true,  opts:['','Retail','Wholesale','Manufacturing','Services','Food & Beverage','Transport','Agriculture','Other'], half:true },
+                { id:'biz_reg',      label:'Business Reg. No. (if any)', type:'text', req:false, ph:'GH-XXXXXXXXX', half:true },
+                { id:'biz_tin',      label:'Tax Identification No. (TIN)', type:'text',req:true, ph:'CXXXXXXXXX', half:true },
+                { id:'biz_start',    label:'Business Start Date',      type:'date',   req:true,  half:true },
+                { id:'biz_addr',     label:'Business Location / Address', type:'text',req:true,  ph:'Street / Community / Town', half:false },
+                { id:'biz_desc',     label:'Description of Business Activity', type:'textarea', req:true, ph:'Brief description of goods/services provided', half:false }
+            ]},
+            { title: 'Owner / Applicant Information', fields: [
+                { id:'owner_name',   label:'Full Name of Owner',    type:'text',  req:true, ph:'Enter full name', half:false },
+                { id:'owner_ghana',  label:'Ghana Card No.',        type:'text',  req:true, ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'owner_phone',  label:'Contact Number',        type:'tel',   req:true, ph:'+233 XXX XXX XXX', half:true },
+                { id:'owner_email',  label:'Email Address',         type:'email', req:false,ph:'business@email.com', half:true },
+                { id:'owner_addr',   label:'Owner\'s Address',      type:'text',  req:true, ph:'Residential address', half:true }
+            ]}
+        ]
+    },
+    'Building Permit': {
+        icon: 'fas fa-hard-hat', color: '#dc3545',
+        notice: 'No building or construction must commence without a permit. Submit architectural drawings and site plans with this application for physical review.',
+        sections: [
+            { title: 'Applicant Information', fields: [
+                { id:'bp_owner',    label:'Full Name of Applicant / Owner', type:'text',  req:true, ph:'Enter full name', half:false },
+                { id:'bp_ghana',    label:'Ghana Card No.',                 type:'text',  req:true, ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'bp_phone',    label:'Contact Number',                 type:'tel',   req:true, ph:'+233 XXX XXX XXX', half:true },
+                { id:'bp_email',    label:'Email',                          type:'email', req:false,ph:'email@example.com', half:true },
+                { id:'bp_addr',     label:'Owner\'s Address',               type:'text',  req:true, ph:'Residential address', half:true }
+            ]},
+            { title: 'Building / Project Details', fields: [
+                { id:'bp_type',     label:'Type of Development',      type:'select', req:true, opts:['','Residential House','Commercial Building','Industrial Building','Extension','Renovation','Other'], half:true },
+                { id:'bp_location', label:'Site / Plot Location',     type:'text',   req:true, ph:'Community / Town / Street', half:true },
+                { id:'bp_purpose',  label:'Purpose / Use of Building',type:'text',   req:true, ph:'Residential, Commercial, etc.', half:true },
+                { id:'bp_stories',  label:'Number of Floors / Stories',type:'select',req:true, opts:['','1 (Single Storey)','2 (Double Storey)','3','4','5 or more'], half:true },
+                { id:'bp_cost',     label:'Estimated Cost of Works (GHS)', type:'number', req:true, ph:'0.00', half:true },
+                { id:'bp_start',    label:'Expected Start Date',      type:'date',   req:true, half:true },
+                { id:'bp_contractor',label:'Name of Contractor',      type:'text',   req:false,ph:'Contractor / Builder name', half:true },
+                { id:'bp_contact',  label:'Contractor\'s Contact',    type:'tel',    req:false,ph:'+233 XXX XXX XXX', half:true }
+            ]}
+        ]
+    },
+    'Development Permit': {
+        icon: 'fas fa-drafting-compass', color: '#0d5ba7',
+        notice: 'A Development Permit is required for land sub-division, change of use, or any significant development activity within the district.',
+        sections: [
+            { title: 'Applicant Information', fields: [
+                { id:'dp_name',   label:'Full Name',       type:'text', req:true, ph:'Enter full name', half:false },
+                { id:'dp_ghana',  label:'Ghana Card No.',  type:'text', req:true, ph:'GHA-XXXXXXXXX-X', half:true },
+                { id:'dp_phone',  label:'Contact Number',  type:'tel',  req:true, ph:'+233 XXX XXX XXX', half:true },
+                { id:'dp_addr',   label:'Address',         type:'text', req:true, ph:'Residential address', half:false }
+            ]},
+            { title: 'Development Details', fields: [
+                { id:'dp_type',     label:'Nature of Development',     type:'select', req:true, opts:['','Land Subdivision','Change of Use','Site Development','Demolition','Mixed Use','Other'], half:true },
+                { id:'dp_location', label:'Location of Land',          type:'text',   req:true, ph:'Community / Town', half:true },
+                { id:'dp_area',     label:'Site / Plot Area (sq.m)',   type:'number', req:true, ph:'Area in square metres', half:true },
+                { id:'dp_title',    label:'Land Title / Ownership Docs',type:'select',req:true, opts:['','Registered Title','Indenture','Leasehold','Family Land / Letter','Other'], half:true },
+                { id:'dp_desc',     label:'Description of Development',type:'textarea',req:true,ph:'Describe what you intend to develop', half:false }
+            ]}
+        ]
+    },
+    'Signage Permit': {
+        icon: 'fas fa-sign', color: '#6f42c1',
+        notice: 'All business signage, billboards and outdoor advertisements within the district require a permit from the Assembly before installation.',
+        sections: [
+            { title: 'Business Information', fields: [
+                { id:'sg_bizname',  label:'Business / Brand Name',  type:'text',  req:true,  ph:'Name on signage', half:false },
+                { id:'sg_owner',    label:'Owner\'s Full Name',     type:'text',  req:true,  ph:'Enter full name', half:true },
+                { id:'sg_phone',    label:'Contact Number',         type:'tel',   req:true,  ph:'+233 XXX XXX XXX', half:true },
+                { id:'sg_email',    label:'Email',                  type:'email', req:false, ph:'email@example.com', half:true },
+                { id:'sg_tin',      label:'TIN (if available)',     type:'text',  req:false, ph:'CXXXXXXXXX', half:true }
+            ]},
+            { title: 'Signage Details', fields: [
+                { id:'sg_type',     label:'Type of Signage',        type:'select', req:true, opts:['','Wall Sign','Hoarding / Billboard','Pylon / Pole Sign','Banner','Canopy Sign','LED / Digital Screen','Other'], half:true },
+                { id:'sg_location', label:'Location / Address',     type:'text',   req:true, ph:'Where the signage will be placed', half:true },
+                { id:'sg_width',    label:'Width (metres)',          type:'number', req:true, ph:'0.0', half:true },
+                { id:'sg_height',   label:'Height (metres)',         type:'number', req:true, ph:'0.0', half:true },
+                { id:'sg_material', label:'Material / Substrate',   type:'text',   req:true, ph:'Vinyl, Aluminium, LED, etc.', half:true },
+                { id:'sg_landlord', label:'Landlord Consent',       type:'select', req:true, opts:['','Yes – obtained','No – it is my property','Not applicable'], half:true }
+            ]}
+        ]
+    },
+    'General Enquiry': {
+        icon: 'fas fa-question-circle', color: '#17a2b8',
+        notice: 'Use this form to submit any general enquiry, request for information, or feedback to the District Assembly.',
+        sections: [
+            { title: 'Your Information', fields: [
+                { id:'enq_name',    label:'Full Name',         type:'text',  req:true, ph:'Enter your full name', half:false },
+                { id:'enq_phone',   label:'Contact Number',    type:'tel',   req:true, ph:'+233 XXX XXX XXX', half:true },
+                { id:'enq_email',   label:'Email Address',     type:'email', req:false,ph:'your@email.com', half:true },
+                { id:'enq_addr',    label:'Address',           type:'text',  req:false,ph:'Your community / town', half:false }
+            ]},
+            { title: 'Enquiry Details', fields: [
+                { id:'enq_subject', label:'Subject / Category', type:'select', req:true, opts:['','General Information','Development Project','Permit Query','Registration Query','Complaint','Feedback','Other'], half:true },
+                { id:'enq_urgent',  label:'Urgency Level',      type:'select', req:true, opts:['','Normal (respond within 5 days)','Urgent (respond within 24 hrs)'], half:true },
+                { id:'enq_msg',     label:'Your Enquiry / Message', type:'textarea', req:true, ph:'Please describe your enquiry in detail...', half:false }
+            ]}
+        ]
+    }
+};
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+var _state = { service:'', step:1, tracking:'', formData:{} };
+
+/* ═══════════════════════════════════════════════════════
+   PORTAL OPEN / CLOSE
+═══════════════════════════════════════════════════════ */
+function openPortal(svc) {
+    _state = { service:'', step:1, tracking:'', formData:{} };
+    showPortalStep(1);
+    document.getElementById('appPortal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (svc) selectService(svc);
+}
+function closePortal() {
+    document.getElementById('appPortal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+/* ═══════════════════════════════════════════════════════
+   STEP NAVIGATION
+═══════════════════════════════════════════════════════ */
+function showPortalStep(n) {
+    _state.step = n;
+    for (var i=1; i<=3; i++) {
+        var p = document.getElementById('portal-step'+i);
+        var ind = document.getElementById('step-ind-'+i);
+        if (p) p.classList.toggle('active', i===n);
+        if (ind) {
+            ind.classList.remove('active','done');
+            if (i===n) ind.classList.add('active');
+            else if (i<n) ind.classList.add('done');
+        }
+    }
+    // Header subtitle
+    var subtitles = { 1:'Select the service you need', 2:'Fill in the required details', 3:'Review and confirm your application' };
+    document.getElementById('portalSubtitle').textContent = subtitles[n] || '';
+    // Footer
+    var infos = { 1:'Step 1 of 3 — Select a service', 2:'Step 2 of 3 — Fill in all required fields', 3:'Step 3 of 3 — Review and submit' };
+    document.getElementById('portalFooterInfo').textContent = infos[n] || '';
+    document.getElementById('btnBack').style.display   = n > 1 ? '' : 'none';
+    document.getElementById('btnNext').style.display   = n === 2 ? '' : 'none';
+    document.getElementById('btnSubmit').style.display = n === 3 ? '' : 'none';
+    // Scroll body to top
+    var body = document.querySelector('.portal-body');
+    if (body) body.scrollTop = 0;
+}
+
+function portalBack() {
+    if (_state.step > 1) showPortalStep(_state.step - 1);
+}
+function portalNext() {
+    // Trigger native form validation
+    var form = document.getElementById('appForm');
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    var decl = document.getElementById('declCheck');
+    if (decl && !decl.checked) { alert('Please confirm the declaration to proceed.'); return; }
+    collectFormData();
+    buildReviewPanel();
+    showPortalStep(3);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SERVICE SELECTION
+═══════════════════════════════════════════════════════ */
+function selectService(svc) {
+    _state.service = svc;
+    document.querySelectorAll('.service-select-card').forEach(function(c){ c.classList.remove('selected'); });
+    var cards = document.querySelectorAll('.service-select-card');
+    cards.forEach(function(c){ if (c.getAttribute('onclick').indexOf(svc) !== -1) c.classList.add('selected'); });
+    // Build form for this service
+    buildFormFields(svc);
+    showPortalStep(2);
+    // Portal title
+    var conf = SERVICE_FORMS[svc];
+    document.getElementById('portalTitle').innerHTML = '<i class="fas '+conf.icon+'" style="margin-right:8px;"></i>' + svc + ' Application';
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUILD FORM FIELDS
+═══════════════════════════════════════════════════════ */
+function buildFormFields(svc) {
+    var conf = SERVICE_FORMS[svc];
+    if (!conf) return;
+    var html = '';
+    // Notice
+    html += '<div class="notice-box" style="margin-bottom:18px;"><p><i class="fas fa-info-circle" style="color:#C9A227;margin-right:6px;"></i><strong>Notice:</strong> '+conf.notice+'</p></div>';
+    // Sections
+    conf.sections.forEach(function(sec) {
+        html += '<div class="form-section-title">'+sec.title+'</div>';
+        // Group half-width fields into rows of 2
+        var i = 0;
+        while (i < sec.fields.length) {
+            var f = sec.fields[i];
+            if (f.half && i+1 < sec.fields.length && sec.fields[i+1].half) {
+                html += '<div class="form-row-2">' + buildField(f) + buildField(sec.fields[i+1]) + '</div>';
+                i += 2;
+            } else {
+                html += buildField(f);
+                i++;
+            }
+        }
+    });
+    document.getElementById('formFields').innerHTML = html;
+    // Reset declaration
+    var decl = document.getElementById('declCheck');
+    if (decl) decl.checked = false;
+}
+
+function buildField(f) {
+    var req = f.req ? '<span class="req">*</span>' : '';
+    var html = '<div class="form-group"><label>'+f.label+' '+req+'</label>';
+    if (f.type === 'select') {
+        html += '<select class="form-control" id="'+f.id+'" name="'+f.id+'"'+(f.req?' required':'')+'>';
+        (f.opts||[]).forEach(function(o){ html += '<option value="'+o+'">'+( o==='' ? '-- Select --' : o)+'</option>'; });
+        html += '</select>';
+    } else if (f.type === 'textarea') {
+        html += '<textarea class="form-control" id="'+f.id+'" name="'+f.id+'" rows="3" placeholder="'+(f.ph||'')+'"'+(f.req?' required':'')+'></textarea>';
+    } else {
+        html += '<input type="'+f.type+'" class="form-control" id="'+f.id+'" name="'+f.id+'" placeholder="'+(f.ph||'')+'"'+(f.req?' required':'')+'>';
+    }
+    html += '</div>';
+    return html;
+}
+
+/* ═══════════════════════════════════════════════════════
+   COLLECT FORM DATA
+═══════════════════════════════════════════════════════ */
+function collectFormData() {
+    var conf = SERVICE_FORMS[_state.service];
+    if (!conf) return;
+    var data = {};
+    conf.sections.forEach(function(sec) {
+        sec.fields.forEach(function(f) {
+            var el = document.getElementById(f.id);
+            if (el) data[f.id] = { label: f.label, value: el.value || '' };
+        });
+    });
+    _state.formData = data;
+    if (!_state.tracking) {
+        _state.tracking = 'AMADA-' + new Date().getFullYear() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUILD REVIEW PANEL
+═══════════════════════════════════════════════════════ */
+function buildReviewPanel() {
+    document.getElementById('reviewTracking').textContent = _state.tracking;
+    var conf = SERVICE_FORMS[_state.service];
+    var html = '';
+    conf.sections.forEach(function(sec) {
+        html += '<div class="review-section-title"><i class="fas fa-chevron-right" style="margin-right:6px;font-size:0.65rem;"></i>'+sec.title+'</div>';
+        html += '<table class="review-table">';
+        sec.fields.forEach(function(f) {
+            var val = (_state.formData[f.id] && _state.formData[f.id].value) ? _state.formData[f.id].value : '<span style="color:#ccc;font-style:italic;">Not provided</span>';
+            html += '<tr><td>'+f.label+'</td><td>'+val+'</td></tr>';
+        });
+        html += '</table>';
+    });
+    document.getElementById('reviewContent').innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SUBMIT APPLICATION → build + show slip
+═══════════════════════════════════════════════════════ */
+function submitApplication() {
+    var now = new Date();
+    var dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+    var timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    // Build slip details
+    var conf = SERVICE_FORMS[_state.service];
+    var slipRows = '';
+    conf.sections.forEach(function(sec) {
+        slipRows += '<tr><td colspan="2" style="background:#f4f6f4;font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--primary);padding:10px 14px;">'+sec.title+'</td></tr>';
+        sec.fields.forEach(function(f) {
+            var val = (_state.formData[f.id] && _state.formData[f.id].value) ? _state.formData[f.id].value : '—';
+            slipRows += '<tr><td class="label">'+f.label+'</td><td>'+val+'</td></tr>';
+        });
+    });
+    var html =
+        '<div class="slip-status-badge"><i class="fas fa-check-circle"></i> Application Received &amp; Acknowledged</div>'
+      + '<table class="slip-detail-table" style="margin-bottom:14px;">'
+      + '<thead><tr><th colspan="2">Application Summary</th></tr></thead>'
+      + '<tbody>'
+      + '<tr><td class="label">Tracking Number</td><td><strong style="font-family:monospace;font-size:1rem;color:var(--primary);">'+_state.tracking+'</strong></td></tr>'
+      + '<tr><td class="label">Service Applied For</td><td><strong>'+_state.service+'</strong></td></tr>'
+      + '<tr><td class="label">Date Submitted</td><td>'+dateStr+' at '+timeStr+'</td></tr>'
+      + '<tr><td class="label">Submit To</td><td>Asene Manso Akroso District Assembly, Akim Manso</td></tr>'
+      + '</tbody></table>'
+      + '<table class="slip-detail-table"><thead><tr><th colspan="2">Application Details</th></tr></thead><tbody>'+slipRows+'</tbody></table>'
+      + '<div class="slip-disclaimer"><strong>DISCLAIMER &amp; NEXT STEPS:</strong> This is an auto-generated acknowledgement slip confirming receipt of your application. Submission does not constitute approval. Visit the Asene Manso Akroso District Assembly office with this slip and all original supporting documents for physical verification and further processing. <strong>Keep this slip — your tracking number is '+_state.tracking+'.</strong></div>';
+    document.getElementById('slipDetailsContent').innerHTML = html;
+    document.getElementById('slipTrackingNum').textContent = _state.tracking;
+
+    /* Save to localStorage for tracking */
+    try {
+        var apps = {};
+        var raw = localStorage.getItem('amada_applications');
+        if (raw) apps = JSON.parse(raw);
+        apps[_state.tracking] = {
+            tracking: _state.tracking,
+            service:  _state.service,
+            dateSubmitted: dateStr + ' at ' + timeStr,
+            status: 'submitted',
+            statusHistory: [
+                { status:'submitted', date: dateStr, note:'Application submitted via online portal' }
+            ],
+            formData: _state.formData
+        };
+        localStorage.setItem('amada_applications', JSON.stringify(apps));
+    } catch(e) { console.warn('Could not save to localStorage:', e); }
+
+    // Close portal, open slip
+    closePortal();
+    document.getElementById('slipOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+/* ═══════════════════════════════════════════════════════
+   SLIP ACTIONS
+═══════════════════════════════════════════════════════ */
+function closeSlip() {
+    document.getElementById('slipOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+function printSlip() {
+    window.print();
+}
+function downloadSlip() {
+    /* Build a complete self-contained HTML file and download it directly as .html
+       The user opens it in a browser and uses Ctrl+P / Print to PDF if they want a PDF.
+       This avoids the popup-blocker issue and does NOT auto-open a print dialog. */
+    var slipHTML = document.getElementById('slipContent').innerHTML;
+    var fullHTML = '<!DOCTYPE html><html><head>'
+        + '<meta charset="UTF-8">'
+        + '<title>AMADA Application Slip — ' + _state.tracking + '<\/title>'
+        + '<style>'
+        + 'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;margin:0;padding:0;background:#fff;color:#333;}'
+        + '.slip-letterhead{background:linear-gradient(135deg,#1F6B3A,#0f2e1a);padding:24px 32px;display:flex;align-items:center;gap:18px;}'
+        + '.slip-logo{width:68px;height:68px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:4px;flex-shrink:0;}'
+        + '.slip-logo img{width:100%;height:100%;object-fit:contain;}'
+        + '.slip-org h2{font-size:1.05rem;font-weight:800;margin:0 0 3px;color:#fff;}'
+        + '.slip-org p{font-size:0.76rem;color:rgba(255,255,255,0.7);margin:0;}'
+        + '.slip-title-bar{background:#C9A227;padding:10px 32px;display:flex;justify-content:space-between;align-items:center;}'
+        + '.slip-title-bar h3{font-size:0.86rem;font-weight:800;color:#1a1a1a;text-transform:uppercase;letter-spacing:0.06em;margin:0;}'
+        + '.slip-tracking{font-size:1.05rem;font-weight:900;color:#1a1a1a;font-family:monospace;letter-spacing:0.1em;}'
+        + '.slip-body{padding:22px 32px;}'
+        + '.slip-status-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(40,167,69,0.1);border:1.5px solid #28a745;color:#28a745;padding:8px 16px;border-radius:6px;font-size:0.85rem;font-weight:700;margin-bottom:18px;}'
+        + '.slip-detail-table{width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #e0e8e0;border-radius:6px;overflow:hidden;}'
+        + '.slip-detail-table th{background:#f4f6f4;padding:10px 14px;font-size:0.76rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#7a8e7a;text-align:left;border-bottom:1px solid #e0e8e0;}'
+        + '.slip-detail-table td{padding:10px 14px;font-size:0.88rem;color:#0f2e1a;border-bottom:1px solid #f0f4f0;font-weight:500;}'
+        + '.slip-detail-table tr:last-child td{border-bottom:none;}'
+        + '.slip-detail-table td.label{font-weight:700;color:#7a8e7a;font-size:0.82rem;width:36%;}'
+        + '.slip-disclaimer{background:#fff8e6;border:1px solid #C9A227;border-radius:8px;padding:14px 16px;margin-top:16px;font-size:0.82rem;color:#3d4e3d;line-height:1.65;}'
+        + '.slip-footer-bar{background:#f4f6f4;border-top:1px dashed #e0e8e0;padding:13px 32px;text-align:center;font-size:0.75rem;color:#9aa89a;}'
+        + '@media print{body{margin:0;}}'
+        + '<\/style>'
+        + '<\/head><body>' + slipHTML + '<\/body><\/html>';
+
+    /* Create a Blob and trigger a real file download */
+    var blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'AMADA_Application_Slip_' + _state.tracking + '.html';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FORMS FILTER
+═══════════════════════════════════════════════════════ */
+function filterForms(cat, btn) {
+    document.querySelectorAll('#formsGrid .form-card').forEach(function(c){
+        c.style.display = (cat==='all' || c.getAttribute('data-form-cat')===cat) ? '' : 'none';
+    });
+    document.querySelectorAll('.publications-filter .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+}
+
+/* Close portal on backdrop click */
+document.getElementById('appPortal').addEventListener('click', function(e){ if(e.target===this) closePortal(); });
+document.getElementById('slipOverlay').addEventListener('click', function(e){ if(e.target===this) closeSlip(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closePortal(); closeSlip(); } });
+
+/* goToReview handles form submit trigger from Next btn */
+function goToReview(e){ if(e) e.preventDefault(); }
+
+/* Open tracker page with current tracking number */
+function goToTracker() {
+    if (_state.tracking) {
+        window.location.href = 'track.html?ref=' + _state.tracking;
+    } else {
+        window.location.href = 'track.html';
+    }
+}
+</script>
+
+<a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+</body>
+</html>

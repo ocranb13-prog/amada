@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    <meta name="description" content="Explore the departments of the Asene Manso Akroso District Assembly and the services they provide to residents of the district.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departments</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="amada_styles.css">
+</head>
+<body>
+<header>
+    <div class="top-bar"><div class="container"><div class="top-bar-content"><span><i class="fas fa-phone-alt"></i> +233 552 455 666</span><span id="liveClock"><i class="fas fa-clock"></i></span></div></div></div>
+    <nav class="navbar"><div class="container nav-container">
+        <a href="index.html" class="logo"><div class="logo-icon"><img src="LOGO.jpg" alt="AMADA Logo"></div><div class="logo-text"><h1>Asene Manso Akroso District Assembly</h1><p>Local Government Service, Ghana</p></div></a>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li><li><a href="leadership.html">Leadership</a></li><li><a href="departments.html" class="active">Departments</a></li><li><a href="publications.html">Publications</a></li><li><a href="track.html"><i class="fas fa-search" style="font-size:0.75rem;margin-right:4px;"></i>Track</a></li>
+            <li><a href="services.html">Services</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li>
+        </ul>
+    </div></nav>
+</header>
+
+<div class="page-banner"><div class="container"><h2>Departments &amp; Units</h2><p>Learn about the departments and units that make up the Asene Manso Akroso District Assembly.</p></div></div>
+
+<div class="section"><div class="container">
+<div class="departments-grid">
+
+<!-- Central Administration -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-landmark"></i><h3>Central Administration</h3></div>
+    <div class="department-body">
+        <div class="department-description">Coordinates overall Assembly administration, planning, budgeting &amp; legislative oversight.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list"><li><i class="fas fa-circle"></i> General Administration</li><li><i class="fas fa-circle"></i> Planning &amp; Budgeting</li><li><i class="fas fa-circle"></i> Legislative Oversight</li><li><i class="fas fa-circle"></i> Procurement Unit</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">Head of Department</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-central')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Physical Planning -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-map-marked-alt"></i><h3>Physical Planning</h3></div>
+    <div class="department-body">
+        <div class="department-description">Planning and sustainable development of land and human settlements.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Human Settlement Planning</li><li><i class="fas fa-circle"></i> Land Use Regulation</li><li><i class="fas fa-circle"></i> Environmental Horticulture</li><li><i class="fas fa-circle"></i> Development Advisory</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">District Physical Planner</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-planning')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Finance -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-money-check-alt"></i><h3>Finance</h3></div>
+    <div class="department-body">
+        <div class="department-description">Manages Assembly finances, budgeting, accounting and revenue collection.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list"><li><i class="fas fa-circle"></i> District Finance Office</li><li><i class="fas fa-circle"></i> Revenue Unit</li><li><i class="fas fa-circle"></i> Budget Unit</li><li><i class="fas fa-circle"></i> Accounts Unit</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">District Finance Officer</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-finance')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Human Resources -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-users-cog"></i><h3>Human Resources</h3></div>
+    <div class="department-body">
+        <div class="department-description">Manages recruitment, development, and welfare of Assembly staff.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Recruitment &amp; Hiring</li><li><i class="fas fa-circle"></i> Staff Development &amp; Training</li><li><i class="fas fa-circle"></i> Compensation Management</li><li><i class="fas fa-circle"></i> Employee Relations</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">Head, Human Resources</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-hr')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Health -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-heartbeat"></i><h3>Health</h3></div>
+    <div class="department-body">
+        <div class="department-description">Ensures healthcare services, disease prevention and health promotion across communities.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Environmental Health &amp; Sanitation</li><li><i class="fas fa-circle"></i> Disease Control</li><li><i class="fas fa-circle"></i> Health Education</li><li><i class="fas fa-circle"></i> Sanitation Management</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">District Health Officer</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-health')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Agriculture -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-tractor"></i><h3>Agriculture</h3></div>
+    <div class="department-body">
+        <div class="department-description">Promotes sustainable agriculture and thriving agribusinesses for improved livelihood.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Crops Unit</li><li><i class="fas fa-circle"></i> Extension Unit</li><li><i class="fas fa-circle"></i> Animals &amp; Veterinary Unit</li><li><i class="fas fa-circle"></i> Engineering Unit</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">Director of Agriculture</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-agric')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Works -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-hard-hat"></i><h3>Works Department</h3></div>
+    <div class="department-body">
+        <div class="department-description">Facilitates sustainable and resilient infrastructure development and management.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Contract Management</li><li><i class="fas fa-circle"></i> Project Execution &amp; Supervision</li><li><i class="fas fa-circle"></i> Road Infrastructure</li><li><i class="fas fa-circle"></i> Water &amp; Sanitation Works</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">District Works Engineer</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-works')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Social Welfare -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-hands-helping"></i><h3>Social Welfare &amp; Community Dev.</h3></div>
+    <div class="department-body">
+        <div class="department-description">Delivers social protection, community development, and welfare services.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Services</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Safety Net Programmes</li><li><i class="fas fa-circle"></i> Community Development</li><li><i class="fas fa-circle"></i> Child Protection</li><li><i class="fas fa-circle"></i> Disability Support</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">District Social Welfare Officer</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-welfare')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Births & Deaths -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-baby"></i><h3>Births &amp; Deaths</h3></div>
+    <div class="department-body">
+        <div class="department-description">Registration of births and deaths in the district.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Birth Registration</li><li><i class="fas fa-circle"></i> Death Registration</li><li><i class="fas fa-circle"></i> Certificate Issuance</li><li><i class="fas fa-circle"></i> Public Education</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">District Registrar</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-births')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+<!-- Statistics -->
+<div class="department-card">
+    <div class="department-header"><i class="fas fa-chart-pie"></i><h3>Statistics</h3></div>
+    <div class="department-body">
+        <div class="department-description">Data collection, compilation, analysis and dissemination for planning and development.</div>
+        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Areas</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Demographic Data</li><li><i class="fas fa-circle"></i> Health Statistics</li><li><i class="fas fa-circle"></i> Economic Indicators</li><li><i class="fas fa-circle"></i> Departmental Data</li></ul></div>
+    </div>
+    <div class="dept-head-section"><div class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name">To Be Announced</div><div class="dept-head-title">District Statistician</div></div></div>
+    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-stats')"><i class="fas fa-info-circle"></i> View Details</button></div>
+</div>
+
+</div>
+</div></div>
+
+<!-- FOOTER -->
+<footer><div class="footer-top"><div class="container"><div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div><div class="footer-divider"></div><div class="footer-grid"><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div></div></div></div><div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit</p></div></div></footer>
+<a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" target="_blank" rel="noopener noreferrer" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+<!-- DEPARTMENT MODALS -->
+<div class="dept-modal-overlay" id="m-central"><div class="dept-modal"><div class="dept-modal-header"><h3>Central Administration</h3><button class="close-dept-modal" onclick="closeDeptModal('m-central')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>General Administration, Planning, Budgeting &amp; Coordinating, Legislative oversight.</p></div><div class="dept-info-section"><h4>Description</h4><p>The General Administration sub-programme seeks to provide administrative support and ensure effective coordination of the activities of the various departments and quasi institutions under the District Assembly. It also coordinates activities to NDPC through RCC to enable the government have a clear picture of the district's performances.</p></div><div class="dept-info-section"><h4>Key Functions</h4><ul class="units-list"><li><i class="fas fa-circle"></i> General Administration — overall coordination of Assembly activities</li><li><i class="fas fa-circle"></i> Planning &amp; Budgeting — strategic planning and budget coordination</li><li><i class="fas fa-circle"></i> Legislative Oversight — Assembly meeting coordination</li><li><i class="fas fa-circle"></i> Procurement — public procurement management</li></ul></div><div class="dept-info-section"><h4>Funding Sources</h4><p>GoG Transfers, Assembly's Internally Generated Fund (IGF)</p></div></div></div></div>
+<div class="dept-modal-overlay" id="m-planning"><div class="dept-modal"><div class="dept-modal-header"><h3>Physical Planning Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-planning')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>To provide for the planning and sustainable development of land and human settlements.</p></div><div class="dept-info-section"><h4>Description</h4><p>The Physical Planning Department exists to plan, manage and implement harmonious, sustainable and cost-effective human settlement and environmental horticulture in the district in accordance with sound environmental and planning principles.</p></div><div class="dept-info-section"><h4>Staff &amp; Funding</h4><p><strong>Staff Strength:</strong> 1 officer<br><strong>Funding Sources:</strong> GoG Transfers, DACF, Assembly's IGF</p></div><div class="dept-info-section"><h4>Beneficiaries</h4><p>Departments, traditional authorities, NGOs, civil society organizations, and the general public.</p></div></div></div></div>
+<div class="dept-modal-overlay" id="m-finance"><div class="dept-modal"><div class="dept-modal-header"><h3>Finance Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-finance')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>To provide financial management and accounting service to the Assembly and stakeholders.</p></div><div class="dept-info-section"><h4>Description</h4><p>The Finance sub-programme provides financial services and accounting activities to the Assembly through the District Finance Office and the Revenue Unit. It is responsible for all financial matters including budgeting, accounting, revenue mobilization and financial reporting.</p></div><div class="dept-info-section"><h4>Key Units</h4><ul class="units-list"><li><i class="fas fa-circle"></i> District Finance Office</li><li><i class="fas fa-circle"></i> Revenue Unit</li><li><i class="fas fa-circle"></i> Budget Unit</li><li><i class="fas fa-circle"></i> Accounts Unit</li></ul></div><div class="dept-info-section"><h4>Staff &amp; Funding</h4><p><strong>Staff Strength:</strong> 35 officers<br><strong>Funding Sources:</strong> GoG Transfers, Assembly's IGF</p></div></div></div></div>
+<div class="dept-modal-overlay" id="m-hr"><div class="dept-modal"><div class="dept-modal-header"><h3>Human Resources Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-hr')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>Ensure availability of competent workforce and meet staff needs and aspirations.</p></div><div class="dept-info-section"><h4>Description</h4><p>The Human Resource Management sub-Programme covers recruitment, hiring, deploying, separation, development, compensation, motivation and managing employees of the District Assembly.</p></div><div class="dept-info-section"><h4>Staff &amp; Funding</h4><p><strong>Staff Strength:</strong> 2 officers<br><strong>Funding Sources:</strong> GoG Transfers (DACF-RFG, GOG), Assembly's IGF</p></div></div></div></div>
+<div class="dept-modal-overlay" id="m-health"><div class="dept-modal"><div class="dept-modal-header"><h3>Health Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-health')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>To develop and maintain a clean, healthy, safe and pleasant physical environment for all residents.</p></div><div class="dept-info-section"><h4>Description</h4><p>The Environmental Health &amp; Sanitation Management unit promotes environmental health through sanitation management, disease control, health education and maintaining a clean, healthy environment.</p></div><div class="dept-info-section"><h4>Staff &amp; Funding</h4><p><strong>Staff Strength:</strong> 17 officers<br><strong>Funding Sources:</strong> GoG allocations and IGF</p></div></div></div></div>
+<div class="dept-modal-overlay" id="m-agric"><div class="dept-modal"><div class="dept-modal-header"><h3>Agriculture Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-agric')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>Promote sustainable agriculture and thriving agribusinesses through research and technology development, effective extension services and support to farmers, processors and traders for improved livelihood.</p></div><div class="dept-info-section"><h4>Description</h4><p>The sub-programme focuses on the modernization of agricultural activities contributing to poverty reduction, rural development, environmental sustainability and resilience during economic shocks.</p></div><div class="dept-info-section"><h4>Units</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Director of Agriculture</li><li><i class="fas fa-circle"></i> Crops Unit</li><li><i class="fas fa-circle"></i> Extension Unit</li><li><i class="fas fa-circle"></i> WIAD Unit</li><li><i class="fas fa-circle"></i> Animals &amp; Veterinary Unit</li><li><i class="fas fa-circle"></i> Engineering Unit</li><li><i class="fas fa-circle"></i> MIS Unit</li></ul></div></div></div></div>
+<div class="dept-modal-overlay" id="m-works"><div class="dept-modal"><div class="dept-modal-header"><h3>Works Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-works')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>Facilitate sustainable and resilient infrastructure development.</p></div><div class="dept-info-section"><h4>Description</h4><p>The Works Department facilitates sustainable and resilient infrastructure development and improves efficiency and effectiveness of road transport infrastructure through contract management, project execution, supervision and regulation of infrastructure development.</p></div><div class="dept-info-section"><h4>Staff &amp; Funding</h4><p><strong>Staff Strength:</strong> 5 officers<br><strong>Funding Sources:</strong> Central Government Transfers, IGF, DACF, DACF-RFG</p></div></div></div></div>
+<div class="dept-modal-overlay" id="m-welfare"><div class="dept-modal"><div class="dept-modal-header"><h3>Social Welfare &amp; Community Development</h3><button class="close-dept-modal" onclick="closeDeptModal('m-welfare')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>To provide social protection and promote the social welfare of vulnerable groups and communities.</p></div><div class="dept-info-section"><h4>Description</h4><p>The department delivers social protection programmes including safety net programmes, community development initiatives, child protection services and support for persons with disabilities across the district.</p></div><div class="dept-info-section"><h4>Staff &amp; Funding</h4><p><strong>Staff Strength:</strong> 2 + National Service personnel<br><strong>Funding Sources:</strong> GoG allocations and IGF</p></div></div></div></div>
+<div class="dept-modal-overlay" id="m-births"><div class="dept-modal"><div class="dept-modal-header"><h3>Births &amp; Deaths Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-births')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>Effective vital registration of births and deaths in the district.</p></div><div class="dept-info-section"><h4>Key Functions</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Birth Registration — formal registration of births</li><li><i class="fas fa-circle"></i> Death Registration — formal registration of deaths</li><li><i class="fas fa-circle"></i> Certificate Issuance — birth and death certificates</li><li><i class="fas fa-circle"></i> Public Education — awareness on vital registration</li></ul></div></div></div></div>
+<div class="dept-modal-overlay" id="m-stats"><div class="dept-modal"><div class="dept-modal-header"><h3>Statistics Department</h3><button class="close-dept-modal" onclick="closeDeptModal('m-stats')">&times;</button></div><div class="dept-modal-body"><div class="dept-info-section"><h4>Objective</h4><p>To collect, compile, analyze and disseminate accurate statistical data for planning and decision-making.</p></div><div class="dept-info-section"><h4>Staff &amp; Funding</h4><p><strong>Staff Strength:</strong> 1 officer<br><strong>Funding Sources:</strong> GoG allocations and IGF</p></div><div class="dept-info-section"><h4>Key Data Areas</h4><ul class="units-list"><li><i class="fas fa-circle"></i> Demographic Data</li><li><i class="fas fa-circle"></i> Health Statistics</li><li><i class="fas fa-circle"></i> Economic Indicators</li><li><i class="fas fa-circle"></i> Departmental Data</li></ul></div></div></div></div>
+
+<script src="amada_shared.js"></script>
+
+<a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+</body></html>

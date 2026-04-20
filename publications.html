@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+        <meta name="description" content="Browse official publications, reports, resolutions, and development project documents from the Asene Manso Akroso District Assembly.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publications — Asene Manso Akroso District Assembly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="amada_styles.css">
+    <style>
+        /* ── TAB NAV ── */
+        .pub-tabs-bar {
+            display: flex;
+            gap: 0;
+            border-bottom: 3px solid #e0e8e0;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+        }
+        .pub-tab {
+            padding: 13px 24px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #7a8e7a;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .pub-tab:hover { color: var(--primary); background: rgba(31,107,58,0.04); }
+        .pub-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(31,107,58,0.05); }
+        .pub-tab .tab-count { background: var(--light); color: var(--gray); border-radius: 20px; padding: 1px 8px; font-size: 0.7rem; font-weight: 700; }
+        .pub-tab.active .tab-count { background: var(--primary); color: #fff; }
+        /* ── PANELS ── */
+        .pub-panel { display: none; animation: fadeIn 0.2s ease; }
+        .pub-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        /* ── PANEL HEADING ── */
+        .panel-heading {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 24px; padding-bottom: 14px;
+            border-bottom: 2px solid #e8ede8;
+        }
+        .panel-heading-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #fff; flex-shrink: 0; }
+        .panel-heading h2 { font-size: 1.25rem; margin: 0; color: var(--primary-dark); font-family: 'Lora', Georgia, serif; }
+        .panel-heading p  { font-size: 0.82rem; color: #7a8e7a; margin: 2px 0 0; }
+        .panel-heading .view-all-btn { margin-left: auto; flex-shrink: 0; }
+        /* ── SECTION SPACER ── */
+        .section-gap { margin-bottom: 48px; }
+        /* ── TIMELINE ── */
+        .proj-timeline { margin: 0; }
+        .proj-tl-item { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid #f0f4f0; }
+        .proj-tl-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .proj-tl-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #fff; flex-shrink: 0; margin-top: 1px; }
+        .proj-tl-label { font-size: 0.71rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7a8e7a; margin-bottom: 2px; }
+        .proj-tl-value { font-size: 0.88rem; font-weight: 700; color: var(--primary-dark); }
+        /* ── LOCATION MAP ── */
+        .proj-map-wrap { height: 235px; border-radius: 10px; overflow: hidden; border: 1px solid #e0e8e0; background: #f4f6f4; }
+        .proj-map-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+        /* ── MODAL WIDER ── */
+        #projectModal .modal { max-width: 920px; }
+        @media (max-width: 700px) {
+            .pub-tab { padding: 10px 12px; font-size: 0.8rem; }
+            .panel-heading { flex-wrap: wrap; }
+            .panel-heading .view-all-btn { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="top-bar"><div class="container"><div class="top-bar-content">
+        <span><i class="fas fa-phone-alt"></i> +233 552 455 666</span>
+        <span id="liveClock"><i class="fas fa-clock"></i></span>
+    </div></div></div>
+    <nav class="navbar"><div class="container nav-container">
+        <a href="index.html" class="logo">
+            <div class="logo-icon"><img src="LOGO.jpg" alt="AMADA Logo"></div>
+            <div class="logo-text"><h1>Asene Manso Akroso District Assembly</h1><p>Local Government Service, Ghana</p></div>
+        </a>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="leadership.html">Leadership</a></li>
+            <li><a href="departments.html">Departments</a></li>
+            <li><a href="publications.html" class="active">Publications</a></li>
+            <li><a href="track.html"><i class="fas fa-search" style="font-size:0.75rem;margin-right:4px;"></i>Track</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </div></nav>
+</header>
+
+<!-- PAGE BANNER -->
+<div class="page-banner">
+    <div class="container">
+        <h2>Official Publications</h2>
+        <p>Budgets, reports, resolutions, development plans and project updates from the Assembly.</p>
+    </div>
+</div>
+
+<!-- CONTENT -->
+<div class="section"><div class="container">
+
+    <!-- TAB BAR -->
+    <div class="pub-tabs-bar">
+        <button class="pub-tab active" id="tab-all" onclick="switchTab('all')">
+            <i class="fas fa-th-large"></i> All <span class="tab-count">21</span>
+        </button>
+        <button class="pub-tab" id="tab-documents" onclick="switchTab('documents')">
+            <i class="fas fa-file-alt"></i> Documents <span class="tab-count">3</span>
+        </button>
+        <button class="pub-tab" id="tab-reports" onclick="switchTab('reports')">
+            <i class="fas fa-chart-bar"></i> Reports <span class="tab-count">7</span>
+        </button>
+        <button class="pub-tab" id="tab-resolutions" onclick="switchTab('resolutions')">
+            <i class="fas fa-gavel"></i> Resolutions <span class="tab-count">3</span>
+        </button>
+        <button class="pub-tab" id="tab-projects" onclick="switchTab('projects')">
+            <i class="fas fa-hard-hat"></i> Dev. Projects <span class="tab-count">8</span>
+        </button>
+    </div>
+
+
+    <!-- ════════════════ ALL PANEL ════════════════ -->
+    <div class="pub-panel active" id="panel-all">
+
+        <!-- Documents preview -->
+        <div class="section-gap">
+            <div class="panel-heading">
+                <div class="panel-heading-icon" style="background:linear-gradient(135deg,#dc3545,#8b0000);"><i class="fas fa-file-alt"></i></div>
+                <div><h2>Documents &amp; Budgets</h2><p>Official budgets, action plans and financial documents</p></div>
+                <button class="btn btn-small btn-outline view-all-btn" onclick="switchTab('documents')">View All &rarr;</button>
+            </div>
+            <div class="publications-grid">
+                <div class="publication-card">
+                    <div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div>
+                    <div class="publication-content"><h4>2026 Approved Composite Budget</h4><p>Composite Budget for 2026–2029 — Asene Manso Akroso District Assembly.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2026</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="2026 BUDGET HEARING - AMADA.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
+                </div>
+                <div class="publication-card">
+                    <div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div>
+                    <div class="publication-content"><h4>2025 Approved Composite Budget</h4><p>Composite Budget for 2025–2028 — Asene Manso Akroso District Assembly.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="2025 BUDGET HEARING - AMADA.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports preview -->
+        <div class="section-gap">
+            <div class="panel-heading">
+                <div class="panel-heading-icon" style="background:linear-gradient(135deg,#0d5ba7,#1a365d);"><i class="fas fa-chart-bar"></i></div>
+                <div><h2>Reports</h2><p>Performance, sector and progress reports</p></div>
+                <button class="btn btn-small btn-outline view-all-btn" onclick="switchTab('reports')">View All &rarr;</button>
+            </div>
+            <div class="publications-grid">
+                <div class="publication-card">
+                    <div class="publication-icon"><i class="fas fa-store" style="color:#0d5ba7;"></i></div>
+                    <div class="publication-content"><h4>Report on Inauguration of Akroso Market Management Committee</h4><p>Official report on the inauguration of the newly constituted Akroso Market Management Committee, 26th November 2025.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> Nov 2025</span><span><i class="fas fa-file-alt" style="color:#0d5ba7;"></i> Report</span><span><i class="fas fa-building" style="color:var(--primary);"></i> Central Admin.</span></div><button class="pub-download-btn" style="background:var(--primary);" onclick="openReportModal()"><i class="fas fa-eye"></i> View Report</button></div>
+                </div>
+                <div class="publication-card">
+                    <div class="publication-icon"><i class="fas fa-chart-bar" style="color:#0d5ba7;"></i></div>
+                    <div class="publication-content"><h4>Annual Progress Report 2024</h4><p>Comprehensive progress report on development projects and Assembly programmes for the 2024 financial year.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2024</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resolutions preview -->
+        <div class="section-gap">
+            <div class="panel-heading">
+                <div class="panel-heading-icon" style="background:linear-gradient(135deg,#C9A227,#8a6b10);"><i class="fas fa-gavel"></i></div>
+                <div><h2>Resolutions &amp; Bye-Laws</h2><p>Official Assembly resolutions and governing bye-laws</p></div>
+                <button class="btn btn-small btn-outline view-all-btn" onclick="switchTab('resolutions')">View All &rarr;</button>
+            </div>
+            <div class="publications-grid">
+                <div class="publication-card">
+                    <div class="publication-icon"><i class="fas fa-gavel" style="color:#C9A227;"></i></div>
+                    <div class="publication-content"><h4>District Assembly Bye-Laws</h4><p>Official Bye-Laws of the Asene Manso Akroso District Assembly governing conduct and operations.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2024</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="BYE-LAWS.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
+                </div>
+                <div class="publication-card">
+                    <div class="publication-icon"><i class="fas fa-scroll" style="color:#C9A227;"></i></div>
+                    <div class="publication-content"><h4>Assembly Resolutions — Q4 2025</h4><p>Official resolutions passed at the Fourth Quarter General Assembly meeting, 2025.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> Q4 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dev Projects preview -->
+        <div class="section-gap">
+            <div class="panel-heading">
+                <div class="panel-heading-icon" style="background:linear-gradient(135deg,#1F6B3A,#0f2e1a);"><i class="fas fa-hard-hat"></i></div>
+                <div><h2>Development Projects</h2><p>Infrastructure, health, education and agriculture projects</p></div>
+                <button class="btn btn-small btn-outline view-all-btn" onclick="switchTab('projects')">View All &rarr;</button>
+            </div>
+            <div class="publications-grid">
+                <div class="development-project-card">
+                    <div class="development-image-container"><img src="pub3.jpg" alt="KG Block" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div>
+                    <div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">2-Unit KG Block At Akroso Presby</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Akroso</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(2)"><i class="fas fa-info-circle"></i> View Details</button></div>
+                </div>
+                <div class="development-project-card">
+                    <div class="development-image-container"><img src="pub4.JPG" alt="Classroom Nyamebekyere" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-ongoing">Ongoing</span></div>
+                    <div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">6-Unit Primary Classroom Block At Nyamebekyere</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Nyamebekyere</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-yellow" style="width:80%"></div></div><span class="progress-label">80% Complete</span><button class="project-view-btn" onclick="openProjectModal(4)"><i class="fas fa-info-circle"></i> View Details</button></div>
+                </div>
+                <div class="development-project-card">
+                    <div class="development-image-container"><img src="pub5.jpg" alt="CHPS Moffram" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div>
+                    <div class="project-card-body"><span class="project-category-tag">Health</span><h4 class="project-card-title">10-Unit CHPS Compound At Moffram</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Moffram</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(6)"><i class="fas fa-info-circle"></i> View Details</button></div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /panel-all -->
+
+
+    <!-- ════════════════ DOCUMENTS PANEL ════════════════ -->
+    <div class="pub-panel" id="panel-documents">
+        <div class="panel-heading">
+            <div class="panel-heading-icon" style="background:linear-gradient(135deg,#dc3545,#8b0000);"><i class="fas fa-file-alt"></i></div>
+            <div><h2>Documents &amp; Budgets</h2><p>Official budgets, action plans and financial documents</p></div>
+        </div>
+        <div class="publications-grid">
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div>
+                <div class="publication-content"><h4>2026 Approved Composite Budget</h4><p>Composite Budget for 2026–2029 — Asene Manso Akroso District Assembly.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2026</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="2026 BUDGET HEARING - AMADA.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div>
+                <div class="publication-content"><h4>2025 Approved Composite Budget</h4><p>Composite Budget for 2025–2028 — Asene Manso Akroso District Assembly.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="2025 BUDGET HEARING - AMADA.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-file-alt" style="color:#0d5ba7;"></i></div>
+                <div class="publication-content"><h4>2025 Annual Action Plan</h4><p>The Assembly's approved action plan outlining development programmes for the 2025 fiscal year.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+        </div>
+    </div><!-- /panel-documents -->
+
+
+    <!-- ════════════════ REPORTS PANEL ════════════════ -->
+    <div class="pub-panel" id="panel-reports">
+        <div class="panel-heading">
+            <div class="panel-heading-icon" style="background:linear-gradient(135deg,#0d5ba7,#1a365d);"><i class="fas fa-chart-bar"></i></div>
+            <div><h2>Reports</h2><p>Performance, sector and progress reports from Assembly departments</p></div>
+        </div>
+        <div class="publications-grid">
+
+            <!-- ★ RESTORED REPORT ★ -->
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-store" style="color:#0d5ba7;"></i></div>
+                <div class="publication-content">
+                    <h4>Report on Inauguration of Akroso Market Management Committee</h4>
+                    <p>Official report documenting the inauguration of the newly constituted Akroso Market Management Committee held on 26th November 2025 at Akim Akroso, led by the District Coordinating Director, Ms. Gladys Asamoah Addai.</p>
+                    <div class="publication-meta">
+                        <span><i class="fas fa-calendar"></i> November 2025</span>
+                        <span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span>
+                        <span><i class="fas fa-building" style="color:var(--primary);"></i> Central Administration</span>
+                    </div>
+                    <span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>
+                </div>
+            </div>
+
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-chart-bar" style="color:#0d5ba7;"></i></div>
+                <div class="publication-content"><h4>Annual Progress Report 2024</h4><p>Comprehensive progress report on development projects and Assembly programmes implemented during the 2024 financial year.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2024</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span><span><i class="fas fa-building" style="color:var(--primary);"></i> Central Administration</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-clipboard-check" style="color:#28a745;"></i></div>
+                <div class="publication-content"><h4>District Performance Report — Q3 2025</h4><p>Quarterly performance summary covering infrastructure, health, education and agriculture sectors for July–September 2025.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> Q3 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span><span><i class="fas fa-building" style="color:var(--primary);"></i> Planning Unit</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-hand-holding-usd" style="color:#C9A227;"></i></div>
+                <div class="publication-content"><h4>Revenue Mobilisation Report 2025</h4><p>Official report on internally generated funds (IGF) and revenue collection activities for the 2025 financial year.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span><span><i class="fas fa-building" style="color:var(--primary);"></i> Finance Dept.</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-heartbeat" style="color:#dc3545;"></i></div>
+                <div class="publication-content"><h4>Environmental Health &amp; Sanitation Report 2025</h4><p>Report on sanitation initiatives, WASH activities, and environmental health programmes across all communities.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span><span><i class="fas fa-building" style="color:var(--primary);"></i> Health Dept.</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-tractor" style="color:#28a745;"></i></div>
+                <div class="publication-content"><h4>Agricultural Sector Report 2025</h4><p>Overview of agricultural programmes, the Nkoko Nketenkete initiative, and food security activities across the district.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span><span><i class="fas fa-building" style="color:var(--primary);"></i> Agriculture Dept.</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-users" style="color:#17a2b8;"></i></div>
+                <div class="publication-content"><h4>Social Welfare &amp; Community Dev. Report 2025</h4><p>Report on social protection programmes, disability support, and community development activities for 2025.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span><span><i class="fas fa-building" style="color:var(--primary);"></i> Social Welfare</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+
+        </div>
+    </div><!-- /panel-reports -->
+
+
+    <!-- ════════════════ RESOLUTIONS PANEL ════════════════ -->
+    <div class="pub-panel" id="panel-resolutions">
+        <div class="panel-heading">
+            <div class="panel-heading-icon" style="background:linear-gradient(135deg,#C9A227,#8a6b10);"><i class="fas fa-gavel"></i></div>
+            <div><h2>Resolutions &amp; Bye-Laws</h2><p>Official Assembly resolutions and governing bye-laws</p></div>
+        </div>
+        <div class="publications-grid">
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-gavel" style="color:#C9A227;"></i></div>
+                <div class="publication-content"><h4>District Assembly Bye-Laws</h4><p>Official Bye-Laws of the Asene Manso Akroso District Assembly governing conduct and operations within the district.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2024</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="BYE-LAWS.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-scroll" style="color:#C9A227;"></i></div>
+                <div class="publication-content"><h4>Assembly Resolutions — Q4 2025</h4><p>Official resolutions passed at the Fourth Quarter General Assembly meeting, 2025.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> Q4 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+            <div class="publication-card">
+                <div class="publication-icon"><i class="fas fa-scroll" style="color:#C9A227;"></i></div>
+                <div class="publication-content"><h4>Assembly Resolutions — Q3 2025</h4><p>Official resolutions passed at the Third Quarter General Assembly meeting, 2025.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> Q3 2025</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span></div>
+            </div>
+        </div>
+    </div><!-- /panel-resolutions -->
+
+
+    <!-- ════════════════ DEV PROJECTS PANEL ════════════════ -->
+    <div class="pub-panel" id="panel-projects">
+        <div class="panel-heading">
+            <div class="panel-heading-icon" style="background:linear-gradient(135deg,#1F6B3A,#0f2e1a);"><i class="fas fa-hard-hat"></i></div>
+            <div><h2>Development Projects</h2><p>Infrastructure, health, education and agriculture projects across the district</p></div>
+        </div>
+        <div class="publications-grid">
+            <div class="development-project-card"><div class="development-image-container"><img src="pub1.jpg" alt="PWD Support" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Health &amp; Social</span><h4 class="project-card-title">Support To Persons With Disability</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Districtwide</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(1)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+            <div class="development-project-card"><div class="development-image-container"><img src="pub3.jpg" alt="KG Block Akroso" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">2-Unit KG Block With Ancillary Facilities At Akroso Presby</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Akroso</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(2)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+            <div class="development-project-card"><div class="development-image-container"><img src="pub2.jpg" alt="Day Care Center" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">Renovated KG Converted To Day Care Center At Akroso Presby</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Akroso</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(3)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+            <div class="development-project-card"><div class="development-image-container"><img src="pub4.JPG" alt="Classroom Nyamebekyere" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-ongoing">Ongoing</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">6-Unit Primary Classroom Block At Nyamebekyere</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Nyamebekyere</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-yellow" style="width:80%"></div></div><span class="progress-label">80% Complete</span><button class="project-view-btn" onclick="openProjectModal(4)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+            <div class="development-project-card"><div class="development-image-container"><img src="pub6.jpg" alt="CHPS Asibirim" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-ongoing">Ongoing</span></div><div class="project-card-body"><span class="project-category-tag">Health</span><h4 class="project-card-title">CHPS Compound With Nurses Quarters At Asibirim</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Asibirim</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-yellow" style="width:65%"></div></div><span class="progress-label">65% Complete</span><button class="project-view-btn" onclick="openProjectModal(5)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+            <div class="development-project-card"><div class="development-image-container"><img src="pub5.jpg" alt="CHPS Moffram" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Health</span><h4 class="project-card-title">10-Unit CHPS Compound At Moffram</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Moffram</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(6)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+            <div class="development-project-card"><div class="development-image-container"><img src="pub8.jpg" alt="Classroom Tabitha" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">4-Unit Classroom Block With Office At Tabitha</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Tabitha</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(7)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+            <div class="development-project-card"><div class="development-image-container"><img src="pub9.JPG" alt="Nkoko Nketenkete" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Agriculture</span><h4 class="project-card-title">The Nkoko Nketenkete Programme</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Districtwide</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(8)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
+        </div>
+    </div><!-- /panel-projects -->
+
+</div></div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-top"><div class="container">
+        <div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div>
+        <div class="footer-divider"></div>
+        <div class="footer-grid">
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div>
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About AMADA</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div>
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="#" onclick="switchTab('documents');window.scrollTo(0,0);return false;"><i class="fas fa-chevron-right"></i> Documents</a></li><li><a href="#" onclick="switchTab('reports');window.scrollTo(0,0);return false;"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="#" onclick="switchTab('resolutions');window.scrollTo(0,0);return false;"><i class="fas fa-chevron-right"></i> Resolutions</a></li><li><a href="#" onclick="switchTab('projects');window.scrollTo(0,0);return false;"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div>
+            <div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates delivered to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div>
+        </div>
+    </div></div>
+    <div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit &nbsp;|&nbsp; Local Government Service, Ghana</p></div></div>
+</footer>
+<a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" target="_blank" rel="noopener noreferrer" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+<!-- PROJECT DETAIL MODAL -->
+<div class="modal-overlay" id="projectModal">
+    <div class="modal" style="max-width:920px;">
+        <div class="modal-header"><h3 id="projectModalTitle">Project Details</h3><button class="close-modal" onclick="closeModal('projectModal')">&times;</button></div>
+        <div class="modal-body" id="projectModalBody"></div>
+    </div>
+</div>
+
+<script src="amada_shared.js"></script>
+<script>
+/* ═══════════════════════════════════
+   TAB SWITCHING — one panel at a time
+═══════════════════════════════════ */
+function switchTab(name) {
+    document.querySelectorAll('.pub-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.pub-tab').forEach(function(t){ t.classList.remove('active'); });
+    var panel = document.getElementById('panel-' + name);
+    var tab   = document.getElementById('tab-' + name);
+    if (panel) panel.classList.add('active');
+    if (tab)   tab.classList.add('active');
+    var bar = document.querySelector('.pub-tabs-bar');
+    if (bar) window.scrollTo({ top: bar.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' });
+}
+
+/* ═══════════════════════════════════
+   PROJECT DATA — full detail with
+   timeline + GPS coordinates
+═══════════════════════════════════ */
+var PROJECTS = [
+    { id:1, title:'Support To Persons With Disability', category:'Health & Social', community:'Districtwide', year:2025, status:'Completed', pct:100, budget:250000, spent:248000, startDate:'March 2024', endDate:'January 2025', fundingSource:'DACF / District IGF', images:['pub1.jpg','pub1-2.jpg','pub1-3.jpg'], lat:5.8978, lng:-0.8823,
+      desc:'The Asene Manso Akroso District Assembly, led by Hon. DCE Eric Ahinakwa, supported Persons with Disabilities to empower and improve their lives. Items including wheelchairs, white canes, hearing aids and livelihood kits were distributed to beneficiaries across the district.',
+      timeline:[ {l:'Project Initiated & Registration',d:'March 2024',c:'#0d5ba7'}, {l:'Procurement of Support Items',d:'May 2024',c:'#C9A227'}, {l:'Distribution — Phase 1',d:'August 2024',c:'#1F6B3A'}, {l:'Distribution — Phase 2',d:'November 2024',c:'#1F6B3A'}, {l:'Programme Successfully Completed',d:'January 2025',c:'#28a745'} ] },
+
+    { id:2, title:'2-Unit KG Block With Ancillary Facilities At Akroso Presby', category:'Education', community:'Akroso', year:2025, status:'Completed', pct:100, budget:450000, spent:445000, startDate:'January 2024', endDate:'March 2025', fundingSource:'DACF', images:['pub3.jpg','pub3-2.jpg','pub3-3.jpg'], lat:5.8978, lng:-0.8823,
+      desc:'The Assembly completed a 2-Unit KG Block at Akroso Presby with ancillary facilities including office, washroom, WC toilet, head teacher office, store room and playground — providing a safe and supportive early childhood education environment.',
+      timeline:[ {l:'Sod Cutting Ceremony',d:'November 2023',c:'#1F6B3A'}, {l:'Foundation & Substructure',d:'January 2024',c:'#0d5ba7'}, {l:'Superstructure Completed',d:'July 2024',c:'#C9A227'}, {l:'Roofing & Mechanical Works',d:'November 2024',c:'#1F6B3A'}, {l:'Commissioned & Handed Over',d:'March 2025',c:'#28a745'} ] },
+
+    { id:3, title:'Renovated KG Converted To Day Care Center At Akroso Presby', category:'Education', community:'Akroso', year:2025, status:'Completed', pct:100, budget:380000, spent:375000, startDate:'February 2024', endDate:'February 2025', fundingSource:'DACF', images:['pub2.jpg','pub2-2.jpg','pub2-3.jpg'], lat:5.8978, lng:-0.8823,
+      desc:'The Assembly renovated and converted the Akroso Presby Primary KG Block into a modern Day Care Center, equipped with child-safe furniture, sanitation facilities and a secure play area for early childhood care.',
+      timeline:[ {l:'Design & Mobilisation',d:'February 2024',c:'#0d5ba7'}, {l:'Structural Renovation Started',d:'April 2024',c:'#C9A227'}, {l:'Structural Works Completed',d:'October 2024',c:'#1F6B3A'}, {l:'Furnishing & Equipment',d:'January 2025',c:'#C9A227'}, {l:'Commissioned as Day Care Center',d:'February 2025',c:'#28a745'} ] },
+
+    { id:4, title:'6-Unit Primary Classroom Block At Nyamebekyere', category:'Education', community:'Nyamebekyere', year:2025, status:'Ongoing', pct:80, budget:720000, spent:576000, startDate:'May 2024', endDate:'October 2025 (Expected)', fundingSource:'DACF', images:['pub4.JPG','pub4-2.JPG','pub4-3.JPG'], lat:6.2345, lng:-1.3456,
+      desc:'Construction of a 6-Unit Primary Classroom Block at Nyamebekyere to improve educational infrastructure and increase enrolment capacity. Includes head teacher office, store room, library and 6-seater WC toilet.',
+      timeline:[ {l:'Sod Cutting Ceremony',d:'November 2024',c:'#1F6B3A'}, {l:'Foundation Completed',d:'July 2024',c:'#0d5ba7'}, {l:'Block Work — 80% Complete',d:'March 2025',c:'#C9A227'}, {l:'Roofing & Finishing (In Progress)',d:'Ongoing',c:'#ffc107'}, {l:'Expected Commissioning',d:'October 2025',c:'#7a8e7a'} ] },
+
+    { id:5, title:'CHPS Compound With Nurses Quarters At Asibirim', category:'Health', community:'Asibirim', year:2025, status:'Ongoing', pct:65, budget:680000, spent:442000, startDate:'June 2024', endDate:'December 2025 (Expected)', fundingSource:'DACF / GETFund', images:['pub6.jpg','pub6-2.jpg','pub6-3.jpg'], lat:6.5678, lng:-1.6789,
+      desc:'Construction of a CHPS Compound with nurses quarters at Asibirim to improve primary healthcare access for residents who currently travel long distances for basic health services.',
+      timeline:[ {l:'Sod Cutting Ceremony',d:'November 2024',c:'#1F6B3A'}, {l:'Foundation Works Completed',d:'August 2024',c:'#0d5ba7'}, {l:'Superstructure — 65% Complete',d:'March 2025',c:'#ffc107'}, {l:'Roofing (Scheduled)',d:'June 2025',c:'#7a8e7a'}, {l:'Expected Commissioning',d:'December 2025',c:'#7a8e7a'} ] },
+
+    { id:6, title:'10-Unit CHPS Compound At Moffram', category:'Health', community:'Moffram', year:2025, status:'Completed', pct:100, budget:850000, spent:842000, startDate:'April 2024', endDate:'May 2025', fundingSource:'DACF / GETFund', images:['pub5.jpg','pub5-2.jpg','pub5-3.jpg'], lat:6.6789, lng:-1.7890,
+      desc:'Construction of a 10-Unit CHPS Compound at Moffram providing comprehensive primary healthcare — consultation rooms, maternity ward, pharmacy, laboratory and staff accommodation — to the community.',
+      timeline:[ {l:'Mobilisation & Foundation',d:'April 2024',c:'#0d5ba7'}, {l:'Superstructure Completed',d:'October 2024',c:'#C9A227'}, {l:'Roofing & MEP Works',d:'February 2025',c:'#1F6B3A'}, {l:'Finishing & Fittings',d:'April 2025',c:'#1F6B3A'}, {l:'Commissioned & Operational',d:'May 2025',c:'#28a745'} ] },
+
+    { id:7, title:'4-Unit Classroom Block With Office At Tabitha', category:'Education', community:'Tabitha', year:2025, status:'Completed', pct:100, budget:550000, spent:548000, startDate:'March 2024', endDate:'April 2025', fundingSource:'DACF', images:['pub8.jpg','pub8-2.jpg','pub8-3.jpg'], lat:6.7890, lng:-1.8901,
+      desc:'Construction of a 4-Unit Classroom Block with Office and Staff Common Room at Tabitha to enhance educational facilities, improve learning conditions and relieve overcrowding.',
+      timeline:[ {l:'Sod Cutting Ceremony',d:'November 2024',c:'#1F6B3A'}, {l:'Foundation & Substructure',d:'March 2024',c:'#0d5ba7'}, {l:'Block Work Completed',d:'September 2024',c:'#C9A227'}, {l:'Roofing & Finishes',d:'February 2025',c:'#1F6B3A'}, {l:'Commissioned & Handed Over',d:'April 2025',c:'#28a745'} ] },
+
+    { id:8, title:'The Nkoko Nketenkete Programme', category:'Agriculture', community:'Districtwide', year:2025, status:'Completed', pct:100, budget:450000, spent:448000, startDate:'July 2024', endDate:'June 2025', fundingSource:'Central Government / DACF', images:['pub9.JPG','pub9-2.JPG','pub9-3.JPG'], lat:5.8978, lng:-0.8823,
+      desc:'The Assembly, through the Department of Agriculture, implemented the Nkoko Nketenkete Programme to promote poultry development and improve household incomes. 10,000 Ross 308 day-old broiler chicks were distributed to selected farmers across the district.',
+      timeline:[ {l:'Programme Launch & Farmer Registration',d:'July 2024',c:'#0d5ba7'}, {l:'Beneficiary Verification & Training',d:'September 2024',c:'#C9A227'}, {l:'Chick Distribution — Phase 1',d:'November 2024',c:'#1F6B3A'}, {l:'Chick Distribution — Phase 2',d:'February 2025',c:'#1F6B3A'}, {l:'Programme Successfully Completed',d:'June 2025',c:'#28a745'} ] }
+];
+
+/* ═══════════════════════════════════
+   OPEN PROJECT MODAL
+   Shows: Slider · Meta · Overview ·
+          Financial · Timeline · Map
+═══════════════════════════════════ */
+function openProjectModal(id) {
+    var p = PROJECTS.find(function(x){ return x.id === id; });
+    if (!p) return;
+    document.getElementById('projectModalTitle').textContent = p.title;
+
+    var pcolor = p.pct <= 30 ? '#dc3545' : p.pct <= 70 ? '#ffc107' : '#28a745';
+    var sicon  = p.status === 'Completed' ? '✔' : '⏳';
+
+    /* Image slider */
+    window['_pimgs' + id] = p.images || [];
+    var slides = (p.images || []).map(function(img, i) {
+        return '<div class="project-slide" onclick="lbOpen(window[\'_pimgs' + id + '\'],' + i + ',\'\')"><img src="' + img + '" onerror="this.style.display=\'none\'" alt=""></div>';
+    }).join('');
+    var dots = (p.images || []).map(function(_, i) {
+        return '<span class="slide-dot ' + (i===0?'active':'') + '" onclick="slideTo(\'p' + id + '\',' + i + ')"></span>';
+    }).join('');
+    initProjectSlider('p' + id, p.images || []);
+
+    /* Timeline */
+    var tlRows = (p.timeline || []).map(function(tl) {
+        return '<div class="proj-tl-item">'
+             + '<div class="proj-tl-dot" style="background:' + tl.c + ';"><i class="fas fa-circle" style="font-size:0.45rem;"></i></div>'
+             + '<div><div class="proj-tl-label">' + tl.l + '</div><div class="proj-tl-value">' + tl.d + '</div></div>'
+             + '</div>';
+    }).join('');
+
+    /* Map */
+    var mapSrc = 'https://maps.google.com/maps?q=' + p.lat + ',' + p.lng + '&z=14&output=embed';
+
+    var html =
+      /* ── Slider ── */
+      '<div class="project-detail-slides">'
+    + '<div class="project-slides-track" id="track-p'+id+'" style="display:flex;height:100%;transition:transform 0.35s ease;">' + slides + '</div>'
+    + (p.images.length > 1 ? '<button class="slide-arrow prev" onclick="slideMove(\'p'+id+'\',-1)">&#8249;</button><button class="slide-arrow next" onclick="slideMove(\'p'+id+'\',1)">&#8250;</button>' : '')
+    + '<div class="slide-dots">' + dots + '</div>'
+    + '</div>'
+
+      /* ── Meta tags ── */
+    + '<div class="project-detail-meta" style="margin:16px 0;">'
+    + '<span class="detail-tag"><i class="fas fa-tag" style="color:var(--primary);margin-right:5px;"></i>' + p.category + '</span>'
+    + '<span class="detail-tag"><i class="fas fa-calendar" style="color:var(--primary);margin-right:5px;"></i>' + p.year + '</span>'
+    + '<span class="detail-tag"><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:5px;"></i>' + p.community + '</span>'
+    + '<span class="detail-tag"><i class="fas fa-money-bill-wave" style="color:var(--primary);margin-right:5px;"></i>' + p.fundingSource + '</span>'
+    + '<span class="detail-tag" style="color:'+pcolor+';font-weight:700;">' + sicon + ' ' + p.status + '</span>'
+    + '</div>'
+
+      /* ── Row 1: Overview + Financial ── */
+    + '<div class="project-detail-grid" style="margin-bottom:14px;">'
+
+    + '<div class="project-detail-box">'
+    + '<h4><i class="fas fa-info-circle" style="margin-right:7px;"></i>Project Overview</h4>'
+    + '<p style="font-size:0.87rem;color:#3d4e3d;line-height:1.72;margin-bottom:14px;">' + p.desc + '</p>'
+    + '<div style="font-size:0.83rem;font-weight:700;color:var(--primary);margin-bottom:6px;"><i class="fas fa-chart-line" style="margin-right:6px;"></i>Completion</div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;"><span>Progress</span><span style="font-weight:800;color:'+pcolor+';">' + p.pct + '%</span></div>'
+    + '<div style="background:#e0e8e0;border-radius:4px;height:9px;overflow:hidden;"><div style="height:100%;width:'+p.pct+'%;background:'+pcolor+';border-radius:4px;"></div></div>'
+    + '</div>'
+
+    + '<div class="project-detail-box">'
+    + '<h4><i class="fas fa-coins" style="margin-right:7px;"></i>Financial Summary</h4>'
+    + '<div class="budget-item"><div class="budget-item-label">Total Budget</div><div class="budget-item-value">GHS ' + p.budget.toLocaleString() + '</div></div>'
+    + '<div class="budget-item"><div class="budget-item-label">Amount Spent</div><div class="budget-item-value">GHS ' + p.spent.toLocaleString() + '</div></div>'
+    + '<div style="margin-top:12px;">'
+    + '<div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#7a8e7a;margin-bottom:4px;">Budget Utilisation</div>'
+    + '<div style="background:#e0e8e0;border-radius:4px;height:7px;overflow:hidden;"><div style="height:100%;width:'+Math.round((p.spent/p.budget)*100)+'%;background:var(--secondary);border-radius:4px;"></div></div>'
+    + '<div style="font-size:0.77rem;color:#7a8e7a;margin-top:3px;">' + Math.round((p.spent/p.budget)*100) + '% of budget utilised</div>'
+    + '</div>'
+    + '</div>'
+
+    + '</div>' /* end row 1 */
+
+      /* ── Row 2: Timeline + Location Map ── */
+    + '<div class="project-detail-grid">'
+
+    + '<div class="project-detail-box">'
+    + '<h4><i class="fas fa-stream" style="margin-right:7px;"></i>Project Timeline</h4>'
+    + '<div style="display:flex;gap:20px;font-size:0.82rem;color:#5a6e5a;margin-bottom:12px;">'
+    + '<span><i class="fas fa-play-circle" style="color:var(--primary);margin-right:5px;"></i><strong>Start:</strong> ' + p.startDate + '</span>'
+    + '<span><i class="fas fa-flag-checkered" style="color:#28a745;margin-right:5px;"></i><strong>End:</strong> ' + p.endDate + '</span>'
+    + '</div>'
+    + '<div class="proj-timeline">' + tlRows + '</div>'
+    + '</div>'
+
+    + '<div class="project-detail-box">'
+    + '<h4><i class="fas fa-map-marked-alt" style="margin-right:7px;"></i>Project Location</h4>'
+    + '<p style="font-size:0.82rem;color:#7a8e7a;margin-bottom:10px;"><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:5px;"></i>' + p.community + ', Asene Manso Akroso District, Eastern Region</p>'
+    + '<div class="proj-map-wrap"><iframe src="' + mapSrc + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>'
+    + '<p style="font-size:0.74rem;color:#9aa89a;margin-top:7px;margin-bottom:0;"><i class="fas fa-info-circle" style="margin-right:4px;"></i>Map shows approximate project area. Click to open in Google Maps.</p>'
+    + '</div>'
+
+    + '</div>'; /* end row 2 */
+
+    document.getElementById('projectModalBody').innerHTML = html;
+    openModal('projectModal');
+}
+</script>
+
+<!-- INAUGURATION REPORT MODAL -->
+<div class="modal-overlay" id="reportModal">
+    <div class="modal" style="max-width:780px;">
+        <div class="modal-header">
+            <h3>Report on Inauguration of Akroso Market Management Committee</h3>
+            <button class="close-modal" onclick="closeModal('reportModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+                <span class="detail-tag"><i class="fas fa-calendar" style="color:var(--primary);margin-right:5px;"></i>26th November 2025</span>
+                <span class="detail-tag"><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:5px;"></i>Akim Akroso Market</span>
+                <span class="detail-tag"><i class="fas fa-building" style="color:var(--primary);margin-right:5px;"></i>Central Administration</span>
+                <span class="detail-tag" style="color:#28a745;font-weight:700;">&#10004; Completed</span>
+            </div>
+
+            <!-- Image gallery from news -->
+            <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:6px;height:240px;border-radius:10px;overflow:hidden;margin-bottom:20px;">
+                <div style="overflow:hidden;cursor:zoom-in;" onclick="lbOpen(['img2.jpg','img1.jpg','img4.jpg'],0,'Market Committee Inauguration')">
+                    <img src="img2.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'" alt="">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <div style="flex:1;overflow:hidden;cursor:zoom-in;" onclick="lbOpen(['img2.jpg','img1.jpg','img4.jpg'],1,'Market Committee Inauguration')">
+                        <img src="img1.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'" alt="">
+                    </div>
+                    <div style="flex:1;overflow:hidden;cursor:zoom-in;position:relative;" onclick="lbOpen(['img2.jpg','img1.jpg','img4.jpg'],2,'Market Committee Inauguration')">
+                        <img src="img4.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'" alt="">
+                    </div>
+                </div>
+            </div>
+
+            <div style="line-height:1.8;color:#3d4e3d;font-size:0.92rem;">
+                <h4 style="color:var(--primary);margin:0 0 10px;font-size:1rem;border-bottom:2px solid var(--accent);padding-bottom:8px;">Background</h4>
+                <p>On Wednesday, 26th November 2025, the Management of the Asene Manso Akroso District Assembly undertook an official visit to Akim Akroso to inaugurate the newly constituted Akroso Market Management Committee. The event was led by the District Coordinating Director (DCD), Ms. Gladys Asamoah Addai, in the absence of the District Chief Executive (DCE), Hon. Eric Ahinakwa, who was unavoidably absent due to other official engagements.</p>
+
+                <h4 style="color:var(--primary);margin:16px 0 10px;font-size:1rem;border-bottom:2px solid var(--accent);padding-bottom:8px;">Purpose &amp; Mandate</h4>
+                <p>The inauguration marks a significant milestone in improving trade and commerce within the district. The newly constituted committee has been mandated to be responsible for the day-to-day management, maintenance, and development of the Akroso Market — ensuring it operates efficiently, safely and to the benefit of traders and consumers alike.</p>
+
+                <h4 style="color:var(--primary);margin:16px 0 10px;font-size:1rem;border-bottom:2px solid var(--accent);padding-bottom:8px;">In Attendance</h4>
+                <p>The ceremony was attended by local traders and market women, community leaders and elders, Assembly members for the area, department heads from the District Assembly, and representatives from the Ghana Revenue Authority and Municipal/District Trade departments.</p>
+
+                <h4 style="color:var(--primary);margin:16px 0 10px;font-size:1rem;border-bottom:2px solid var(--accent);padding-bottom:8px;">Key Outcomes</h4>
+                <ul style="padding-left:20px;color:#3d4e3d;">
+                    <li style="margin-bottom:6px;">Official swearing-in of the Akroso Market Management Committee members</li>
+                    <li style="margin-bottom:6px;">Presentation of roles and responsibilities to committee members</li>
+                    <li style="margin-bottom:6px;">Address by the DCD on the Assembly's commitment to market infrastructure development</li>
+                    <li style="margin-bottom:6px;">Sensitization of traders on market rules, revenue obligations and sanitation standards</li>
+                    <li>Call for community support in maintaining a clean, orderly and productive market environment</li>
+                </ul>
+
+                <div style="background:#f0f8f4;border-left:4px solid var(--primary);padding:14px 18px;border-radius:0 8px 8px 0;margin-top:18px;">
+                    <p style="margin:0;font-size:0.87rem;"><i class="fas fa-quote-left" style="color:var(--accent);margin-right:8px;"></i>The District Assembly remains committed to providing the infrastructure and governance framework needed for our markets to thrive. This committee is a key part of that commitment.</p>
+                    <p style="margin:8px 0 0;font-size:0.8rem;color:#7a8e7a;">— Ms. Gladys Asamoah Addai, District Coordinating Director</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('reportModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openReportModal() { openModal('reportModal'); }
+</script>
+
+
+<a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+</body>
+</html>
