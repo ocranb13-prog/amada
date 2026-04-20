@@ -358,6 +358,206 @@
 </div>
 
 <script src="amada_shared.js"></script>
+
+<!-- Firebase: Dynamically render publications from Firestore -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+    apiKey: "AIzaSyC4q2KlFeO10oukA5cjBzRytmqGt-thrA0",
+    authDomain: "asmda-576a4.firebaseapp.com",
+    projectId: "asmda-576a4",
+    storageBucket: "asmda-576a4.firebasestorage.app",
+    messagingSenderId: "593311894920",
+    appId: "1:593311894920:web:8a1a90b740d87b9c3f7e3d"
+});
+const db = getFirestore(app);
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function makeDocCard(p) {
+    var btn = p.status === 'available' && p.link
+        ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>'
+        : '<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';
+    return '<div class="publication-card">'
+        + '<div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div>'
+        + '<div class="publication-content"><h4>' + esc(p.title) + '</h4><p>' + esc(p.desc||'') + '</p>'
+        + '<div class="publication-meta"><span><i class="fas fa-calendar"></i> ' + esc(p.year||'') + '</span>'
+        + (p.dept ? '<span><i class="fas fa-building" style="color:var(--primary);"></i> ' + esc(p.dept) + '</span>' : '')
+        + '</div>' + btn + '</div></div>';
+}
+
+function makeReportCard(p) {
+    var btn = p.status === 'available' && p.link
+        ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>'
+        : '<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';
+    return '<div class="publication-card">'
+        + '<div class="publication-icon"><i class="fas fa-chart-bar" style="color:#0d5ba7;"></i></div>'
+        + '<div class="publication-content"><h4>' + esc(p.title) + '</h4><p>' + esc(p.desc||'') + '</p>'
+        + '<div class="publication-meta"><span><i class="fas fa-calendar"></i> ' + esc(p.year||'') + '</span>'
+        + (p.dept ? '<span><i class="fas fa-building" style="color:var(--primary);"></i> ' + esc(p.dept) + '</span>' : '')
+        + '</div>' + btn + '</div></div>';
+}
+
+function makeResCard(p) {
+    var btn = p.status === 'available' && p.link
+        ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>'
+        : '<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';
+    return '<div class="publication-card">'
+        + '<div class="publication-icon"><i class="fas fa-gavel" style="color:#C9A227;"></i></div>'
+        + '<div class="publication-content"><h4>' + esc(p.title) + '</h4><p>' + esc(p.desc||'') + '</p>'
+        + '<div class="publication-meta"><span><i class="fas fa-calendar"></i> ' + esc(p.year||'') + '</span></div>'
+        + btn + '</div></div>';
+}
+
+function makeProjCard(p, idx) {
+    var pct  = p.pct || 0;
+    var pcolor = pct >= 80 ? 'progress-green' : pct >= 40 ? 'progress-yellow' : 'progress-red';
+    var badge  = p.status === 'Completed' ? 'status-completed' : 'status-ongoing';
+    var cover  = (p.media && p.media[0]) ? p.media[0].src : '';
+    var imgHtml = cover
+        ? '<img src="' + cover + '" alt="' + esc(p.title) + '" onerror="this.parentElement.style.background=\'linear-gradient(135deg,#1F6B3A,#0f2e1a)\'">'
+        : '';
+    return '<div class="development-project-card">'
+        + '<div class="development-image-container">' + imgHtml
+        + '<span class="project-status-badge ' + badge + '">' + esc(p.status) + '</span></div>'
+        + '<div class="project-card-body">'
+        + '<span class="project-category-tag">' + esc(p.cat||p.category||'') + '</span>'
+        + '<h4 class="project-card-title">' + esc(p.title) + '</h4>'
+        + '<div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> ' + esc(p.community||'') + '</span><span><i class="fas fa-calendar"></i> ' + esc(p.year||'') + '</span></div>'
+        + '<div class="project-progress-bar"><div class="project-progress-fill ' + pcolor + '" style="width:' + pct + '%"></div></div>'
+        + '<span class="progress-label">' + pct + '% Complete</span>'
+        + '<button class="project-view-btn" onclick="openFirebaseProjectModal(\'' + esc(p.id) + '\')"><i class="fas fa-info-circle"></i> View Details</button>'
+        + '</div></div>';
+}
+
+// Store loaded projects globally for modal
+window._fbProjects = [];
+
+async function loadPublications() {
+    try {
+        const snap = await getDoc(doc(db, 'site_content', 'publications'));
+        if (!snap.exists()) return;
+        const data = snap.data();
+
+        // Update tab counts
+        var cats = {budget: data.budget||[], report: data.report||[], resolution: data.resolution||[], plan: data.plan||[]};
+        var total = cats.budget.length + cats.report.length + cats.resolution.length + cats.plan.length;
+        if (total === 0) return; // no data yet, keep hardcoded content
+
+        // Store projects for modal
+        window._fbProjects = cats.plan;
+
+        // Update tab count badges
+        var tabAll = document.getElementById('tab-all');
+        if (tabAll) tabAll.querySelector('.tab-count').textContent = total;
+        var tabDoc = document.getElementById('tab-documents');
+        if (tabDoc) tabDoc.querySelector('.tab-count').textContent = cats.budget.length;
+        var tabRep = document.getElementById('tab-reports');
+        if (tabRep) tabRep.querySelector('.tab-count').textContent = cats.report.length;
+        var tabRes = document.getElementById('tab-resolutions');
+        if (tabRes) tabRes.querySelector('.tab-count').textContent = cats.resolution.length;
+        var tabPrj = document.getElementById('tab-projects');
+        if (tabPrj) tabPrj.querySelector('.tab-count').textContent = cats.plan.length;
+
+        // Render Documents panel
+        var docsGrid = document.querySelector('#panel-documents .publications-grid');
+        if (docsGrid && cats.budget.length) docsGrid.innerHTML = cats.budget.map(makeDocCard).join('');
+
+        // Render Reports panel
+        var repGrid = document.querySelector('#panel-reports .publications-grid');
+        if (repGrid && cats.report.length) repGrid.innerHTML = cats.report.map(makeReportCard).join('');
+
+        // Render Resolutions panel
+        var resGrid = document.querySelector('#panel-resolutions .publications-grid');
+        if (resGrid && cats.resolution.length) resGrid.innerHTML = cats.resolution.map(makeResCard).join('');
+
+        // Render Projects panel
+        var projGrid = document.querySelector('#panel-projects .publications-grid');
+        if (projGrid && cats.plan.length) projGrid.innerHTML = cats.plan.map(makeProjCard).join('');
+
+        // Update "All" panel previews (first 2 of each)
+        var allDocGrid  = document.querySelector('#panel-all .section-gap:nth-child(1) .publications-grid');
+        var allRepGrid  = document.querySelector('#panel-all .section-gap:nth-child(2) .publications-grid');
+        var allResGrid  = document.querySelector('#panel-all .section-gap:nth-child(3) .publications-grid');
+        var allProjGrid = document.querySelector('#panel-all .section-gap:nth-child(4) .publications-grid');
+        if (allDocGrid  && cats.budget.length)     allDocGrid.innerHTML  = cats.budget.slice(0,2).map(makeDocCard).join('');
+        if (allRepGrid  && cats.report.length)      allRepGrid.innerHTML  = cats.report.slice(0,2).map(makeReportCard).join('');
+        if (allResGrid  && cats.resolution.length)  allResGrid.innerHTML  = cats.resolution.slice(0,2).map(makeResCard).join('');
+        if (allProjGrid && cats.plan.length)        allProjGrid.innerHTML = cats.plan.slice(0,3).map(makeProjCard).join('');
+
+    } catch(e) {
+        console.warn('Firebase publications load failed, using defaults:', e.message);
+    }
+}
+
+// Project detail modal using Firebase data
+window.openFirebaseProjectModal = function(projId) {
+    var p = window._fbProjects.find(function(x){ return x.id === projId; });
+    if (!p) return;
+
+    var pct    = p.pct || 0;
+    var pcolor = pct <= 30 ? '#dc3545' : pct <= 70 ? '#ffc107' : '#28a745';
+    var sicon  = p.status === 'Completed' ? '✔' : '⏳';
+    var imgs   = p.media || [];
+
+    var slides = imgs.map(function(m,i){
+        return '<div class="project-slide"><img src="' + m.src + '" onerror="this.style.display=\'none\'" alt=""></div>';
+    }).join('');
+    var dots = imgs.map(function(_,i){
+        return '<span class="slide-dot ' + (i===0?'active':'') + '" onclick="slideTo(\'fb'+projId+'\',' + i + ')"></span>';
+    }).join('');
+
+    var tlRows = (p.timeline||[]).map(function(tl){
+        return '<div class="proj-tl-item">'
+            + '<div class="proj-tl-dot" style="background:' + (tl.c||'#1F6B3A') + ';"><i class="fas fa-circle" style="font-size:0.45rem;"></i></div>'
+            + '<div><div class="proj-tl-label">' + esc(tl.l) + '</div><div class="proj-tl-value">' + esc(tl.d) + '</div></div>'
+            + '</div>';
+    }).join('');
+
+    var lat = p.lat || 5.8978, lng = p.lng || -0.8823;
+    var mapSrc = 'https://maps.google.com/maps?q=' + lat + ',' + lng + '&z=14&output=embed';
+
+    var html =
+        '<div class="project-detail-slides">'
+        + '<div class="project-slides-track" id="track-fb'+projId+'" style="display:flex;height:100%;transition:transform 0.35s ease;">' + slides + '</div>'
+        + (imgs.length > 1 ? '<button class="slide-arrow prev" onclick="slideMove(\'fb'+projId+'\',-1)">&#8249;</button><button class="slide-arrow next" onclick="slideMove(\'fb'+projId+'\',1)">&#8250;</button>' : '')
+        + '<div class="slide-dots">' + dots + '</div></div>'
+        + '<div class="project-detail-meta" style="margin:16px 0;">'
+        + '<span class="detail-tag"><i class="fas fa-tag" style="color:var(--primary);margin-right:5px;"></i>' + esc(p.cat||p.category||'') + '</span>'
+        + '<span class="detail-tag"><i class="fas fa-calendar" style="color:var(--primary);margin-right:5px;"></i>' + esc(p.year||'') + '</span>'
+        + '<span class="detail-tag"><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:5px;"></i>' + esc(p.community||'') + '</span>'
+        + (p.funding ? '<span class="detail-tag"><i class="fas fa-money-bill-wave" style="color:var(--primary);margin-right:5px;"></i>' + esc(p.funding) + '</span>' : '')
+        + '<span class="detail-tag" style="color:'+pcolor+';font-weight:700;">' + sicon + ' ' + esc(p.status) + '</span>'
+        + '</div>'
+        + '<div class="project-detail-grid" style="margin-bottom:14px;">'
+        + '<div class="project-detail-box"><h4><i class="fas fa-info-circle" style="margin-right:7px;"></i>Project Overview</h4>'
+        + '<p style="font-size:0.87rem;color:#3d4e3d;line-height:1.72;margin-bottom:14px;">' + esc(p.desc||'') + '</p>'
+        + '<div style="font-size:0.83rem;font-weight:700;color:var(--primary);margin-bottom:6px;"><i class="fas fa-chart-line" style="margin-right:6px;"></i>Completion</div>'
+        + '<div style="background:#e0e8e0;border-radius:4px;height:9px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+pcolor+';border-radius:4px;"></div></div>'
+        + '</div>'
+        + '<div class="project-detail-box"><h4><i class="fas fa-coins" style="margin-right:7px;"></i>Financial Summary</h4>'
+        + (p.budget ? '<div class="budget-item"><div class="budget-item-label">Total Budget</div><div class="budget-item-value">GHS ' + Number(p.budget).toLocaleString() + '</div></div>' : '')
+        + (p.spent  ? '<div class="budget-item"><div class="budget-item-label">Amount Spent</div><div class="budget-item-value">GHS ' + Number(p.spent).toLocaleString() + '</div></div>' : '')
+        + '</div></div>'
+        + '<div class="project-detail-grid">'
+        + '<div class="project-detail-box"><h4><i class="fas fa-stream" style="margin-right:7px;"></i>Project Timeline</h4>'
+        + (p.start ? '<div style="font-size:0.82rem;color:#5a6e5a;margin-bottom:12px;"><span style="margin-right:16px;"><i class="fas fa-play-circle" style="color:var(--primary);margin-right:5px;"></i><strong>Start:</strong> ' + esc(p.start) + '</span><span><i class="fas fa-flag-checkered" style="color:#28a745;margin-right:5px;"></i><strong>End:</strong> ' + esc(p.end||'TBD') + '</span></div>' : '')
+        + '<div class="proj-timeline">' + tlRows + '</div></div>'
+        + '<div class="project-detail-box"><h4><i class="fas fa-map-marked-alt" style="margin-right:7px;"></i>Project Location</h4>'
+        + '<p style="font-size:0.82rem;color:#7a8e7a;margin-bottom:10px;"><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:5px;"></i>' + esc(p.community||'') + ', Asene Manso Akroso District</p>'
+        + '<div class="proj-map-wrap"><iframe src="' + mapSrc + '" allowfullscreen="" loading="lazy"></iframe></div>'
+        + '</div></div>';
+
+    document.getElementById('projectModalTitle').textContent = p.title;
+    document.getElementById('projectModalBody').innerHTML = html;
+    openModal('projectModal');
+    if (imgs.length > 1) initProjectSlider('fb'+projId, imgs.map(function(m){return m.src;}));
+};
+
+loadPublications();
+</script>
 <script>
 /* ═══════════════════════════════════
    TAB SWITCHING — one panel at a time
