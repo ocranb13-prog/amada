@@ -96,20 +96,30 @@
     </div>
 </div>
 <script src="amada_shared.js"></script>
-<script>
-/* ── Load leadership data from localStorage (saved by admin dashboard) ── */
-(function() {
-    function getLS(key, def) {
-        try { var v = localStorage.getItem('amada_' + key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
-    }
+<script type="module">
+/* ═══════════════════════════════════════════════════════════
+   LEADERSHIP PAGE — Load data from Firebase Realtime Database
+   Falls back to hardcoded defaults if Firebase has no data yet
+═══════════════════════════════════════════════════════════ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
 
-```
-var data   = getLS('section_leadership', {});
-var photos = { dce: getLS('photo_dce',''), dcd: getLS('photo_dcd',''), pm: getLS('photo_pm','') };
+const firebaseConfig = {
+    apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+    authDomain: "asmda-website.firebaseapp.com",
+    databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
+    projectId: "asmda-website",
+    storageBucket: "asmda-website.firebasestorage.app",
+    messagingSenderId: "699818483381",
+    appId: "1:699818483381:web:09c926a48830d46ae228fc"
+};
 
-// Helper to set text if value saved
-function setText(id, val) { if (val) { var el = document.getElementById(id); if (el) el.textContent = val; } }
-// Helper to set photo
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+function setText(id, val) {
+    if (val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+}
 function setPhoto(role, src, altName) {
     if (!src) return;
     var wrap = document.getElementById(role + '-photo-wrap');
@@ -118,54 +128,49 @@ function setPhoto(role, src, altName) {
         img.src = src;
         img.alt = altName || '';
     } else if (wrap) {
-        // PM starts as a placeholder div — replace with img
         wrap.outerHTML = '<div class="leader-photo-wrap" id="' + role + '-photo-wrap">'
             + '<img src="' + src + '" alt="' + (altName||'') + '" class="leader-photo" id="' + role + '-photo">'
             + '</div>';
     }
 }
-
-// DCE
-setText('dce-name',   data.dce_name);
-setText('dce-role',   data.dce_role);
-setText('dce-bio',    data.dce_bio);
-setText('dce-phone',  data.dce_phone);
-setText('dce-email',  data.dce_email);
-setText('dce-office', data.dce_office);
-setPhoto('dce', photos.dce, data.dce_name);
-
-// DCD
-setText('dcd-name',   data.dcd_name);
-setText('dcd-role',   data.dcd_role);
-setText('dcd-bio',    data.dcd_bio);
-setText('dcd-phone',  data.dcd_phone);
-setText('dcd-email',  data.dcd_email);
-setText('dcd-office', data.dcd_office);
-setPhoto('dcd', photos.dcd, data.dcd_name);
-
-// PM
-setText('pm-name',   data.pm_name);
-setText('pm-role',   data.pm_role);
-setText('pm-bio',    data.pm_bio);
-setText('pm-phone',  data.pm_phone);
-setText('pm-email',  data.pm_email);
-setText('pm-office', data.pm_office);
-setPhoto('pm', photos.pm, data.pm_name);
-
-// Hide empty contact fields
-['dce','dcd','pm'].forEach(function(role) {
-    ['phone','email','office'].forEach(function(field) {
-        var el = document.getElementById(role + '-' + field);
-        if (el && !el.textContent.trim()) {
-            var span = el.closest('span'); if (span) span.style.display = 'none';
-        }
+function applyLeadership(data, photos) {
+    ['dce','dcd','pm'].forEach(function(role) {
+        setText(role+'-name',   data[role+'_name']);
+        setText(role+'-role',   data[role+'_role']);
+        setText(role+'-bio',    data[role+'_bio']);
+        setText(role+'-phone',  data[role+'_phone']);
+        setText(role+'-email',  data[role+'_email']);
+        setText(role+'-office', data[role+'_office']);
+        setPhoto(role, photos[role], data[role+'_name']);
     });
+    // Hide empty contact fields
+    ['dce','dcd','pm'].forEach(function(role) {
+        ['phone','email','office'].forEach(function(field) {
+            var el = document.getElementById(role + '-' + field);
+            if (el && !el.textContent.trim()) {
+                var span = el.closest('span'); if (span) span.style.display = 'none';
+            }
+        });
+    });
+}
+
+Promise.all([
+    get(ref(db, 'sections/leadership')),
+    get(ref(db, 'photos/dce')),
+    get(ref(db, 'photos/dcd')),
+    get(ref(db, 'photos/pm'))
+]).then(function(results) {
+    var data   = results[0].exists() ? results[0].val() : {};
+    var photos = {
+        dce: results[1].exists() ? results[1].val() : '',
+        dcd: results[2].exists() ? results[2].val() : '',
+        pm:  results[3].exists() ? results[3].val() : ''
+    };
+    applyLeadership(data, photos);
+}).catch(function(err) {
+    console.warn('Firebase read failed, using defaults.', err);
 });
-```
-
-})();
 </script>
-
 <script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
 
 </body></html>

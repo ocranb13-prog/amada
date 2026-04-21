@@ -6,6 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
+    const firebaseConfig = {
+        apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+        authDomain: "asmda-website.firebaseapp.com",
+        databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
+        projectId: "asmda-website",
+        storageBucket: "asmda-website.firebasestorage.app",
+        messagingSenderId: "699818483381",
+        appId: "1:699818483381:web:09c926a48830d46ae228fc"
+    };
+    const _fbApp = initializeApp(firebaseConfig);
+    const _fbDb  = getDatabase(_fbApp);
+    // Expose to global scope so inline onclick handlers can use it
+    window._fbDb  = _fbDb;
+    window._fbRef = ref;
+    window._fbSet = set;
+    window._fbGet = get;
+    </script>
     <style>
     :root{
         --green:#1F6B3A; --green-dark:#0f2e1a; --green-light:#e8f4ec;
@@ -1525,9 +1546,23 @@ function saveSection(section) {
     var data   = getLS('section_' + key, {});
     fields.forEach(function(id) { var el=document.getElementById(id); if (el) data[id]=el.value; });
     if (key === 'home') saveNewsItems(data);
+    // Save to localStorage (local backup)
     setLS('section_' + key, data);
-    logActivity('Saved: ' + (PANEL_LABELS['edit-'+key]||key) + ' by ' + (_session ? _session.name : 'Admin'));
-    showToast('Changes saved to ' + (PANEL_LABELS['edit-'+key]||key));
+    // Save to Firebase (shared, visible to all visitors)
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'sections/' + key), data)
+            .then(function() {
+                logActivity('Saved to Firebase: ' + (PANEL_LABELS['edit-'+key]||key) + ' by ' + (_session ? _session.name : 'Admin'));
+                showToast('✅ Saved & synced to public website');
+            })
+            .catch(function(err) {
+                console.error('Firebase save failed:', err);
+                showToast('⚠️ Saved locally only — Firebase sync failed');
+            });
+    } else {
+        logActivity('Saved: ' + (PANEL_LABELS['edit-'+key]||key) + ' by ' + (_session ? _session.name : 'Admin'));
+        showToast('Changes saved to ' + (PANEL_LABELS['edit-'+key]||key));
+    }
 }
 
 /* ── 9. LEADER PHOTOS ── */
@@ -1540,9 +1575,23 @@ function previewLeaderPhoto(role, input) {
         var zone = document.getElementById(role+'_photo_zone');
         if (prev) { prev.src = e.target.result; prev.style.display='block'; }
         if (zone) zone.classList.add('has-image');
+        // Save to localStorage
         setLS('photo_'+role, e.target.result);
-        showToast('Photo uploaded');
-        logActivity('Photo uploaded for '+role.toUpperCase());
+        // Save to Firebase
+        if (window._fbDb && window._fbRef && window._fbSet) {
+            window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), e.target.result)
+                .then(function() {
+                    showToast('✅ Photo uploaded & synced to public website');
+                    logActivity('Photo synced to Firebase for ' + role.toUpperCase());
+                })
+                .catch(function(err) {
+                    console.error('Firebase photo save failed:', err);
+                    showToast('⚠️ Photo saved locally — Firebase sync failed');
+                });
+        } else {
+            showToast('Photo uploaded');
+            logActivity('Photo uploaded for '+role.toUpperCase());
+        }
     };
     reader.readAsDataURL(file);
 }
@@ -1555,6 +1604,9 @@ function clearLeaderPhoto(role, e) {
     if (zone) zone.classList.remove('has-image');
     if (inp)  inp.value='';
     setLS('photo_'+role,'');
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), '');
+    }
     showToast('Photo removed');
 }
 function loadLeaderPhotos() {
@@ -2072,6 +2124,28 @@ document.addEventListener('DOMContentLoaded', function() {
     logActivity((_session ? _session.name : 'Admin') + ' signed in');
     updateDashboardStats();
     loadSectionData('home');
+
+    /* Seed Firebase with current PROJECTS if not yet stored */
+    (function seedProjectsToFirebase() {
+        if (!window._fbDb || !window._fbRef || !window._fbGet || !window._fbSet) return;
+        window._fbGet(window._fbRef(window._fbDb, 'projects')).then(function(snap) {
+            if (snap.exists()) return; // Already seeded
+            // Build projects from SECTION_DEFAULTS or a minimal seed
+            var seed = [
+                {id:1,title:'Support To Persons With Disability',category:'Health & Social',community:'Districtwide',year:2025,status:'Completed',pct:100,budget:250000,spent:248000,startDate:'March 2024',endDate:'January 2025',fundingSource:'DACF / District IGF',images:['pub1.jpg','pub1-2.jpg','pub1-3.jpg'],lat:5.8978,lng:-0.8823,desc:'The Asene Manso Akroso District Assembly supported Persons with Disabilities across the district with wheelchairs, white canes, hearing aids and livelihood kits.',timeline:[{l:'Project Initiated',d:'March 2024',c:'#0d5ba7'},{l:'Procurement',d:'May 2024',c:'#C9A227'},{l:'Distribution Phase 1',d:'August 2024',c:'#1F6B3A'},{l:'Distribution Phase 2',d:'November 2024',c:'#1F6B3A'},{l:'Completed',d:'January 2025',c:'#28a745'}]},
+                {id:2,title:'2-Unit KG Block With Ancillary Facilities At Akroso Presby',category:'Education',community:'Akroso',year:2025,status:'Completed',pct:100,budget:450000,spent:445000,startDate:'January 2024',endDate:'March 2025',fundingSource:'DACF',images:['pub3.jpg','pub3-2.jpg','pub3-3.jpg'],lat:5.8978,lng:-0.8823,desc:'Completed a 2-Unit KG Block at Akroso Presby with office, washroom, WC toilet, head teacher office, store room and playground.',timeline:[{l:'Sod Cutting',d:'November 2023',c:'#1F6B3A'},{l:'Foundation',d:'January 2024',c:'#0d5ba7'},{l:'Superstructure',d:'July 2024',c:'#C9A227'},{l:'Roofing & MEP',d:'November 2024',c:'#1F6B3A'},{l:'Commissioned',d:'March 2025',c:'#28a745'}]},
+                {id:3,title:'Renovated KG Converted To Day Care Center At Akroso Presby',category:'Education',community:'Akroso',year:2025,status:'Completed',pct:100,budget:380000,spent:375000,startDate:'February 2024',endDate:'February 2025',fundingSource:'DACF',images:['pub2.jpg','pub2-2.jpg','pub2-3.jpg'],lat:5.8978,lng:-0.8823,desc:'Renovated and converted the Akroso Presby Primary KG Block into a modern Day Care Center with child-safe furniture and sanitation.',timeline:[{l:'Design & Mobilisation',d:'February 2024',c:'#0d5ba7'},{l:'Renovation Started',d:'April 2024',c:'#C9A227'},{l:'Structural Works',d:'October 2024',c:'#1F6B3A'},{l:'Furnishing',d:'January 2025',c:'#C9A227'},{l:'Commissioned',d:'February 2025',c:'#28a745'}]},
+                {id:4,title:'6-Unit Primary Classroom Block At Nyamebekyere',category:'Education',community:'Nyamebekyere',year:2025,status:'Ongoing',pct:80,budget:720000,spent:576000,startDate:'May 2024',endDate:'October 2025 (Expected)',fundingSource:'DACF',images:['pub4.JPG','pub4-2.JPG','pub4-3.JPG'],lat:6.2345,lng:-1.3456,desc:'Construction of a 6-Unit Primary Classroom Block at Nyamebekyere with head teacher office, store, library and WC toilet.',timeline:[{l:'Sod Cutting',d:'November 2024',c:'#1F6B3A'},{l:'Foundation',d:'July 2024',c:'#0d5ba7'},{l:'Block Work 80%',d:'March 2025',c:'#C9A227'},{l:'Roofing (Ongoing)',d:'Ongoing',c:'#ffc107'},{l:'Expected',d:'October 2025',c:'#7a8e7a'}]},
+                {id:5,title:'CHPS Compound With Nurses Quarters At Asibirim',category:'Health',community:'Asibirim',year:2025,status:'Ongoing',pct:65,budget:680000,spent:442000,startDate:'June 2024',endDate:'December 2025 (Expected)',fundingSource:'DACF / GETFund',images:['pub6.jpg','pub6-2.jpg','pub6-3.jpg'],lat:6.5678,lng:-1.6789,desc:'Construction of a CHPS Compound with nurses quarters at Asibirim to improve primary healthcare access.',timeline:[{l:'Sod Cutting',d:'November 2024',c:'#1F6B3A'},{l:'Foundation',d:'August 2024',c:'#0d5ba7'},{l:'Superstructure 65%',d:'March 2025',c:'#ffc107'},{l:'Roofing (Scheduled)',d:'June 2025',c:'#7a8e7a'},{l:'Expected',d:'December 2025',c:'#7a8e7a'}]},
+                {id:6,title:'10-Unit CHPS Compound At Moffram',category:'Health',community:'Moffram',year:2025,status:'Completed',pct:100,budget:850000,spent:842000,startDate:'April 2024',endDate:'May 2025',fundingSource:'DACF / GETFund',images:['pub5.jpg','pub5-2.jpg','pub5-3.jpg'],lat:6.6789,lng:-1.7890,desc:'10-Unit CHPS Compound at Moffram with consultation rooms, maternity ward, pharmacy, laboratory and staff accommodation.',timeline:[{l:'Foundation',d:'April 2024',c:'#0d5ba7'},{l:'Superstructure',d:'October 2024',c:'#C9A227'},{l:'Roofing & MEP',d:'February 2025',c:'#1F6B3A'},{l:'Finishing',d:'April 2025',c:'#1F6B3A'},{l:'Commissioned',d:'May 2025',c:'#28a745'}]},
+                {id:7,title:'4-Unit Classroom Block With Office At Tabitha',category:'Education',community:'Tabitha',year:2025,status:'Completed',pct:100,budget:550000,spent:548000,startDate:'March 2024',endDate:'April 2025',fundingSource:'DACF',images:['pub8.jpg','pub8-2.jpg','pub8-3.jpg'],lat:6.7890,lng:-1.8901,desc:'4-Unit Classroom Block with Office and Staff Common Room at Tabitha to improve learning conditions.',timeline:[{l:'Sod Cutting',d:'November 2024',c:'#1F6B3A'},{l:'Foundation',d:'March 2024',c:'#0d5ba7'},{l:'Block Work',d:'September 2024',c:'#C9A227'},{l:'Roofing',d:'February 2025',c:'#1F6B3A'},{l:'Commissioned',d:'April 2025',c:'#28a745'}]},
+                {id:8,title:'The Nkoko Nketenkete Programme',category:'Agriculture',community:'Districtwide',year:2025,status:'Completed',pct:100,budget:450000,spent:448000,startDate:'July 2024',endDate:'June 2025',fundingSource:'Central Government / DACF',images:['pub9.JPG','pub9-2.JPG','pub9-3.JPG'],lat:5.8978,lng:-0.8823,desc:'10,000 Ross 308 day-old broiler chicks distributed to selected farmers to promote poultry development and household incomes.',timeline:[{l:'Launch & Registration',d:'July 2024',c:'#0d5ba7'},{l:'Training',d:'September 2024',c:'#C9A227'},{l:'Distribution Phase 1',d:'November 2024',c:'#1F6B3A'},{l:'Distribution Phase 2',d:'February 2025',c:'#1F6B3A'},{l:'Completed',d:'June 2025',c:'#28a745'}]}
+            ];
+            window._fbSet(window._fbRef(window._fbDb, 'projects'), seed)
+                .then(function() { console.log('Projects seeded to Firebase.'); })
+                .catch(function(e) { console.warn('Project seed failed:', e); });
+        }).catch(function(){});
+    })();
 });
 </script>
 

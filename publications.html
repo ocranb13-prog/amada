@@ -319,7 +319,7 @@
             <div class="panel-heading-icon" style="background:linear-gradient(135deg,#1F6B3A,#0f2e1a);"><i class="fas fa-hard-hat"></i></div>
             <div><h2>Development Projects</h2><p>Infrastructure, health, education and agriculture projects across the district</p></div>
         </div>
-        <div class="publications-grid">
+        <div class="publications-grid" id="projects-grid">
             <div class="development-project-card"><div class="development-image-container"><img src="pub1.jpg" alt="PWD Support" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Health &amp; Social</span><h4 class="project-card-title">Support To Persons With Disability</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Districtwide</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(1)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
             <div class="development-project-card"><div class="development-image-container"><img src="pub3.jpg" alt="KG Block Akroso" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">2-Unit KG Block With Ancillary Facilities At Akroso Presby</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Akroso</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(2)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
             <div class="development-project-card"><div class="development-image-container"><img src="pub2.jpg" alt="Day Care Center" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">Renovated KG Converted To Day Care Center At Akroso Presby</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Akroso</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(3)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
@@ -577,6 +577,69 @@ function openProjectModal(id) {
 function openReportModal() { openModal('reportModal'); }
 </script>
 
+<script type="module">
+/* ═══════════════════════════════════════════════════════════
+   PUBLICATIONS PAGE — Sync PROJECTS array from Firebase
+   If Firebase has updated project data, it overrides the
+   hardcoded PROJECTS and re-renders all project cards.
+═══════════════════════════════════════════════════════════ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+    authDomain: "asmda-website.firebaseapp.com",
+    databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
+    projectId: "asmda-website",
+    storageBucket: "asmda-website.firebasestorage.app",
+    messagingSenderId: "699818483381",
+    appId: "1:699818483381:web:09c926a48830d46ae228fc"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+function pcolor(pct) { return pct <= 30 ? '#dc3545' : pct <= 70 ? '#ffc107' : '#28a745'; }
+function pclass(pct) { return pct <= 30 ? 'progress-red' : pct <= 70 ? 'progress-yellow' : 'progress-green'; }
+
+function renderProjectCards(projects) {
+    var grid = document.getElementById('projects-grid');
+    if (!grid) return;
+    grid.innerHTML = projects.map(function(p) {
+        var statusClass = p.status === 'Completed' ? 'status-completed' : 'status-ongoing';
+        var img0 = (p.images && p.images[0]) ? p.images[0] : '';
+        return '<div class="development-project-card">'
+            + '<div class="development-image-container">'
+            + (img0 ? '<img src="' + img0 + '" alt="' + p.title + '" onerror="this.parentElement.style.background=\'linear-gradient(135deg,#1F6B3A,#0f2e1a)\'">' : '')
+            + '<span class="project-status-badge ' + statusClass + '">' + p.status + '</span>'
+            + '</div>'
+            + '<div class="project-card-body">'
+            + '<span class="project-category-tag">' + p.category + '</span>'
+            + '<h4 class="project-card-title">' + p.title + '</h4>'
+            + '<div class="project-meta-row">'
+            + '<span><i class="fas fa-map-marker-alt"></i> ' + p.community + '</span>'
+            + '<span><i class="fas fa-calendar"></i> ' + p.year + '</span>'
+            + '</div>'
+            + '<div class="project-progress-bar"><div class="project-progress-fill ' + pclass(p.pct) + '" style="width:' + p.pct + '%"></div></div>'
+            + '<span class="progress-label">' + p.pct + '% Complete</span>'
+            + '<button class="project-view-btn" onclick="openProjectModal(' + p.id + ')"><i class="fas fa-info-circle"></i> View Details</button>'
+            + '</div></div>';
+    }).join('');
+}
+
+get(ref(db, 'projects')).then(function(snap) {
+    if (!snap.exists()) return; // No Firebase projects yet — keep hardcoded ones
+    var fbData = snap.val();
+    // Firebase stores as object with numeric keys — convert to array
+    var projects = Array.isArray(fbData) ? fbData : Object.values(fbData);
+    if (!projects || projects.length === 0) return;
+    // Override global PROJECTS used by openProjectModal
+    window.PROJECTS = projects;
+    // Re-render the project cards grid
+    renderProjectCards(projects);
+}).catch(function(err) {
+    console.warn('Firebase projects read failed, using hardcoded defaults.', err);
+});
+</script>
 
 <a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
 </body>
