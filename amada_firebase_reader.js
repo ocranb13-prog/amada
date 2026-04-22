@@ -269,7 +269,9 @@
       else if (page === 'leadership') loadLeadership(db, ref, get);
       else if (page === 'contact')    loadContact(db, ref, get);
       else if (page === 'projects')   loadProjects(db, ref, get);
-      else if (page === 'departments') loadDepartments(db, ref, get);
+      else if (page === 'departments')  loadDepartments(db, ref, get);
+      else if (page === 'publications') loadPublications(db, ref, get);
+      else if (page === 'services')     loadServices(db, ref, get);
     });
   };
 

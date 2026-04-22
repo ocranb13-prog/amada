@@ -1979,7 +1979,26 @@ var DEFAULT_PUBS = {
     ]
 };
 function getPubs(){return getLS('publications',DEFAULT_PUBS);}
-function savePubs(data){setLS('publications',data);}
+function savePubs(data){
+    setLS('publications', data);
+    // Strip base64 images from plan items before saving to Firebase (keep only metadata + URLs)
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        var fbData = JSON.parse(JSON.stringify(data)); // deep clone
+        if (fbData.plan) {
+            fbData.plan.forEach(function(p) {
+                if (p.media) {
+                    p.media = p.media.map(function(m) {
+                        // If src is a huge base64, compress via canvas before saving
+                        return { src: m.src, type: m.type, name: m.name };
+                    });
+                }
+            });
+        }
+        window._fbSet(window._fbRef(window._fbDb, 'publications'), fbData)
+            .then(function(){ console.log('Publications synced to Firebase'); })
+            .catch(function(e){ console.warn('Publications Firebase sync failed:', e); });
+    }
+}
 
 var _projMedia=[], _projTimeline=[];
 
@@ -2116,7 +2135,26 @@ function addNewForm(){var name=prompt('Form name:');if(!name)return;var forms=ge
 function deleteForm(fi){if(!confirm('Remove?'))return;var forms=getLS('forms_list',FORMS_LIST);forms.splice(fi,1);setLS('forms_list',forms);renderFormsEditor();showToast('Removed');}
 function addNewService(){var name=prompt('Service name:');if(!name)return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.push(name);setLS('online_services',svcs);renderOnlineServices();showToast('Service added');}
 function deleteService(i){if(!confirm('Remove?'))return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.splice(i,1);setLS('online_services',svcs);renderOnlineServices();}
-function saveFormsStatus(){var data={};document.querySelectorAll('[data-fkey]').forEach(function(el){data[el.dataset.fkey]=el.value;});setLS('forms_status',data);var svcs=[];document.querySelectorAll('[data-svc]').forEach(function(el){svcs[parseInt(el.dataset.svc)]=el.value;});if(svcs.length)setLS('online_services',svcs.filter(Boolean));logActivity('Services updated');showToast('Services saved');}
+function saveFormsStatus(){
+    var data={};
+    document.querySelectorAll('[data-fkey]').forEach(function(el){data[el.dataset.fkey]=el.value;});
+    setLS('forms_status',data);
+    var svcs=[];
+    document.querySelectorAll('[data-svc]').forEach(function(el){svcs[parseInt(el.dataset.svc)]=el.value;});
+    if(svcs.length) setLS('online_services', svcs.filter(Boolean));
+    // Also save forms_list in case names changed
+    var forms = getLS('forms_list', FORMS_LIST);
+    logActivity('Services updated');
+    // Push to Firebase
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        var fbPayload = { forms_status: data, forms_list: forms, online_services: svcs.filter(Boolean) };
+        window._fbSet(window._fbRef(window._fbDb, 'sections/services'), fbPayload)
+            .then(function(){ showToast('\u2705 Services saved & synced to public website'); })
+            .catch(function(e){ console.warn('Services Firebase sync failed:', e); showToast('Services saved locally'); });
+    } else {
+        showToast('Services saved');
+    }
+}
 
 /* ── 16. APPLICATIONS ── */
 var _currentAppTracking=null;

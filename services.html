@@ -447,7 +447,9 @@
 
 
 <script src="amada_shared.js"></script>
-<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
+<script src="amada_firebase_reader.js"></script>
+<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();
+document.addEventListener('DOMContentLoaded', function(){ amadaLoadPage('services'); });</script>
 <script>
 /* ═══════════════════════════════════════════════════════
    SERVICE FORM DEFINITIONS
