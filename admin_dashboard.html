@@ -1811,7 +1811,21 @@ function renderDeptHeads() {
 }
 function previewDeptPhoto(key,input){var file=input.files[0];if(!file)return;if(file.size>5*1024*1024){alert('Max 5MB');return;}var r=new FileReader();r.onload=function(e){var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);if(pp){pp.src=e.target.result;pp.style.display='block';}if(pz)pz.classList.add('has-image');var dd=getLS('dept_data',{});if(!dd[key])dd[key]={};dd[key].photo=e.target.result;setLS('dept_data',dd);showToast('Photo uploaded');};r.readAsDataURL(file);}
 function clearDeptPhoto(key,e){if(e&&e.stopPropagation)e.stopPropagation();var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);var inp=document.getElementById('dpt_'+key);if(pp){pp.src='';pp.style.display='none';}if(pz)pz.classList.remove('has-image');if(inp)inp.value='';var dd=getLS('dept_data',{});if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}showToast('Photo removed');}
-function saveDeptHeads(){var data=getLS('dept_data',{});document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el){var k=el.dataset.dept,f=el.dataset.dfield;if(!data[k])data[k]={};data[k][f]=el.value;});document.querySelectorAll('[data-dept][data-unit]').forEach(function(el){var k=el.dataset.dept,u=parseInt(el.dataset.unit);if(!data[k])data[k]={};if(!data[k].units)data[k].units=[];data[k].units[u]=el.value;});setLS('dept_data',data);logActivity('Departments updated');showToast('Departments saved');}
+function saveDeptHeads(){
+    var data=getLS('dept_data',{});
+    document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el){var k=el.dataset.dept,f=el.dataset.dfield;if(!data[k])data[k]={};data[k][f]=el.value;});
+    document.querySelectorAll('[data-dept][data-unit]').forEach(function(el){var k=el.dataset.dept,u=parseInt(el.dataset.unit);if(!data[k])data[k]={};if(!data[k].units)data[k].units=[];data[k].units[u]=el.value;});
+    setLS('dept_data',data);
+    logActivity('Departments updated');
+    // Save to Firebase
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'sections/departments'), data)
+            .then(function(){ showToast('\u2705 Departments saved & synced to public website'); })
+            .catch(function(err){ console.error('Firebase dept save failed:', err); showToast('Departments saved locally only'); });
+    } else {
+        showToast('Departments saved');
+    }
+}
 
 /* ── 14b. PDF UPLOAD HELPERS ── */
 var _pdfStore = { pub:'', rep:'', res:'' }; // stores base64 or filename

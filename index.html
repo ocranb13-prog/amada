@@ -39,8 +39,8 @@
 <section class="hero">
     <div class="container">
         <div class="hero-content">
-            <h2>Welcome to Asene Manso Akroso District Assembly</h2>
-            <p>To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
+            <h2 id="fb-hero-heading">Welcome to Asene Manso Akroso District Assembly</h2>
+            <p id="fb-hero-subtitle">To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
             <div class="hero-buttons">
                 <a href="publications.html" class="btn btn-secondary"><i class="fas fa-file-alt"></i> View Publications</a>
                 <a href="#events" onclick="document.getElementById('latestEvents').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-outline"><i class="fas fa-calendar-alt"></i> Latest Events</a>
@@ -53,13 +53,13 @@
 <div class="hero-stats-strip">
     <div class="container">
         <div class="hero-stats-grid">
-            <div class="hero-stat"><span class="hero-stat-number">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-pop">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-area">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">55+</span><span class="hero-stat-label">Communities</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-comm">55+</span><span class="hero-stat-label">Communities</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-year">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
         </div>
     </div>
 </div>
@@ -101,7 +101,8 @@
 <div class="section section-alt">
     <div class="container">
         <h2 class="section-title" id="latestEvents">Latest Events</h2>
-        <div class="news-grid">
+        <div class="news-grid" id="fb-news-cards">
+            <!-- Populated by Firebase → amada_firebase_reader.js; fallback below -->
             <div class="news-card">
                 <div class="news-image"><img src="img1.jpg" alt="Sod-Cutting Ceremony"></div>
                 <div class="news-content">
@@ -241,7 +242,9 @@
 </div>
 
 <script src="amada_shared.js"></script>
-<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
+<script src="amada_firebase_reader.js"></script>
+<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();
+document.addEventListener('DOMContentLoaded', function(){ amadaLoadPage('home'); });</script>
 <script>
 var NEWS = {
     1: { title:'Sod-Cutting Ceremony for 6 Projects', date:'20th & 21st November 2025', category:'Announcements', images:['img1.jpg','img2.jpg','img4.jpg'],
