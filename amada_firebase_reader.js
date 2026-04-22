@@ -170,6 +170,16 @@
       setText('fb-about-pop',           d.about_pop);
       setText('fb-about-map-caption',   d.about_map_caption);
 
+      // Map image (if admin uploaded a replacement)
+      if (d.about_map_image) {
+        var mapImg = document.getElementById('mapImg');
+        if (mapImg) {
+          mapImg.src = d.about_map_image;
+          var fallback = document.getElementById('mapFallback');
+          if (fallback) fallback.style.display = 'none';
+        }
+      }
+
       // Stats
       setText('fb-about-stat-pop',  d.about_stat_pop);
       setText('fb-about-stat-area', d.about_stat_area);
@@ -182,59 +192,36 @@
 
   /* ── LEADERSHIP ── */
   function loadLeadership(db, ref, get) {
-    // Read from Realtime DB  sections/leadership  (correct path)
     get(ref(db, 'sections/leadership')).then(function (snap) {
       if (!snap.exists()) return;
       var d = snap.val();
 
-      // DCE
-      setText('fb-dce-name',   d.dce_name);
-      setText('fb-dce-role',   d.dce_role);
-      setText('fb-dce-bio',    d.dce_bio);
-      setText('fb-dce-phone',  d.dce_phone);
-      setText('fb-dce-email',  d.dce_email);
-      setText('fb-dce-office', d.dce_office);
-      if (d.dce_email) setAttr('fb-dce-email-link', 'href', 'mailto:'+d.dce_email);
-      if (d.dce_phone) setAttr('fb-dce-phone-link', 'href', 'tel:'+d.dce_phone);
+      // Text fields
+      ['dce','dcd','pm'].forEach(function(role) {
+        setText('fb-'+role+'-name',   d[role+'_name']);
+        setText('fb-'+role+'-role',   d[role+'_role']);
+        setText('fb-'+role+'-bio',    d[role+'_bio']);
+        setText('fb-'+role+'-phone',  d[role+'_phone']);
+        setText('fb-'+role+'-email',  d[role+'_email']);
+        setText('fb-'+role+'-office', d[role+'_office']);
+        if (d[role+'_email']) setAttr('fb-'+role+'-email-link', 'href', 'mailto:'+d[role+'_email']);
+        if (d[role+'_phone']) setAttr('fb-'+role+'-phone-link', 'href', 'tel:'+d[role+'_phone']);
 
-      // DCD
-      setText('fb-dcd-name',   d.dcd_name);
-      setText('fb-dcd-role',   d.dcd_role);
-      setText('fb-dcd-bio',    d.dcd_bio);
-      setText('fb-dcd-phone',  d.dcd_phone);
-      setText('fb-dcd-email',  d.dcd_email);
-      setText('fb-dcd-office', d.dcd_office);
-      if (d.dcd_email) setAttr('fb-dcd-email-link', 'href', 'mailto:'+d.dcd_email);
-      if (d.dcd_phone) setAttr('fb-dcd-phone-link', 'href', 'tel:'+d.dcd_phone);
-
-      // Presiding Member
-      setText('fb-pm-name',   d.pm_name);
-      setText('fb-pm-role',   d.pm_role);
-      setText('fb-pm-bio',    d.pm_bio);
-      setText('fb-pm-phone',  d.pm_phone);
-      setText('fb-pm-email',  d.pm_email);
-      setText('fb-pm-office', d.pm_office);
-      if (d.pm_email) setAttr('fb-pm-email-link', 'href', 'mailto:'+d.pm_email);
-      if (d.pm_phone) setAttr('fb-pm-phone-link', 'href', 'tel:'+d.pm_phone);
+        // Photos — admin saves as  photo_dce / photo_dcd / photo_pm
+        var photoSrc = d['photo_' + role] || d[role + '_photo_url'];
+        if (photoSrc) {
+          var img = document.getElementById('fb-' + role + '-photo');
+          var placeholder = document.getElementById(role + '-photo-placeholder');
+          if (img) {
+            img.src = photoSrc;
+            img.style.display = 'block';
+          }
+          if (placeholder) placeholder.style.display = 'none';
+        }
+      });
     }).catch(function (e) {
       console.warn('AMADA reader: leadership load failed', e.message);
     });
-
-    // Photos (saved separately under sections/leadership_photos or as data URIs)
-    // The admin stores photos under localStorage key 'amada_photo_dce' etc.
-    // but also tries to save to Firebase Storage. We attempt to read
-    // a photo_url field from sections/leadership if present.
-    get(ref(db, 'sections/leadership')).then(function(snap){
-      if (!snap.exists()) return;
-      var d = snap.val();
-      ['dce','dcd','pm'].forEach(function(role){
-        var url = d[role+'_photo_url'] || d['photo_'+role];
-        if (url) {
-          var img = document.getElementById('fb-'+role+'-photo');
-          if (img) img.src = url;
-        }
-      });
-    }).catch(function(){});
   }
 
   /* ── CONTACT ── */
