@@ -284,28 +284,3 @@ document.addEventListener('DOMContentLoaded', function() {
     initModalOverlayClose();
     initEscClose();
 });
-
-
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyC4q2KlFeO10oukA5cjBzRytmqGt-thrA0",
-    authDomain: "asmda-576a4.firebaseapp.com",
-    projectId: "asmda-576a4",
-    storageBucket: "asmda-576a4.firebasestorage.app",
-    messagingSenderId: "593311894920",
-    appId: "1:593311894920:web:8a1a90b740d87b9c3f7e3d",
-    measurementId: "G-97T5ZLTEMP"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>

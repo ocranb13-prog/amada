@@ -358,6 +358,7 @@
 </div>
 
 <script src="amada_shared.js"></script>
+<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
 
 <!-- Firebase: Dynamically render publications from Firestore -->
 <script type="module">
@@ -428,7 +429,7 @@ function makeProjCard(p, idx) {
         + '<div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> ' + esc(p.community||'') + '</span><span><i class="fas fa-calendar"></i> ' + esc(p.year||'') + '</span></div>'
         + '<div class="project-progress-bar"><div class="project-progress-fill ' + pcolor + '" style="width:' + pct + '%"></div></div>'
         + '<span class="progress-label">' + pct + '% Complete</span>'
-        + '<button class="project-view-btn" onclick="openProjectModal(" + p.id + ")"><i class="fas fa-info-circle"></i> View Details</button>'
+        + '<button class="project-view-btn" onclick="(window.openFirebaseProjectModal||window.openProjectModal)(\'' + p.id + '\')" ><i class="fas fa-info-circle"></i> View Details</button>'
         + '</div></div>';
 }
 
@@ -494,7 +495,7 @@ async function loadPublications() {
 
 // Project detail modal using Firebase data
 window.openFirebaseProjectModal = function(projId) {
-    var p = window._fbProjects.find(function(x){ return x.id === projId; });
+    var p = window._fbProjects.find(function(x){ return x.id == projId || String(x.id) === String(projId); });
     if (!p) return;
 
     var pct    = p.pct || 0;
@@ -594,11 +595,11 @@ var PROJECTS = [
       desc:'Construction of a 6-Unit Primary Classroom Block at Nyamebekyere to improve educational infrastructure and increase enrolment capacity. Includes head teacher office, store room, library and 6-seater WC toilet.',
       timeline:[ {l:'Sod Cutting Ceremony',d:'November 2024',c:'#1F6B3A'}, {l:'Foundation Completed',d:'July 2024',c:'#0d5ba7'}, {l:'Block Work — 80% Complete',d:'March 2025',c:'#C9A227'}, {l:'Roofing & Finishing (In Progress)',d:'Ongoing',c:'#ffc107'}, {l:'Expected Commissioning',d:'October 2025',c:'#7a8e7a'} ] },
 
-    { id:5, title:'CHPS Compound With Nurses Quarters At Asibirim', category:'Health', community:'Asibirim', year:2025, status:'Ongoing', pct:65, budget:680000, spent:442000, startDate:'June 2024', endDate:'December 2025 (Expected)', fundingSource:'DACF / GETFund', images:['pub6.JPG','pub6-2.JPG','pub6-3.jpg'], lat:6.5678, lng:-1.6789,
+    { id:5, title:'CHPS Compound With Nurses Quarters At Asibirim', category:'Health', community:'Asibirim', year:2025, status:'Ongoing', pct:65, budget:680000, spent:442000, startDate:'June 2024', endDate:'December 2025 (Expected)', fundingSource:'DACF / GETFund', images:['pub6.JPG','pub6-2.JPG','pub6-3.JPG'], lat:6.5678, lng:-1.6789,
       desc:'Construction of a CHPS Compound with nurses quarters at Asibirim to improve primary healthcare access for residents who currently travel long distances for basic health services.',
       timeline:[ {l:'Sod Cutting Ceremony',d:'November 2024',c:'#1F6B3A'}, {l:'Foundation Works Completed',d:'August 2024',c:'#0d5ba7'}, {l:'Superstructure — 65% Complete',d:'March 2025',c:'#ffc107'}, {l:'Roofing (Scheduled)',d:'June 2025',c:'#7a8e7a'}, {l:'Expected Commissioning',d:'December 2025',c:'#7a8e7a'} ] },
 
-    { id:6, title:'10-Unit CHPS Compound At Moffram', category:'Health', community:'Moffram', year:2025, status:'Completed', pct:100, budget:850000, spent:842000, startDate:'April 2024', endDate:'May 2025', fundingSource:'DACF / GETFund', images:['pub5.JPG','pub5-2.JPG','pub5-3.jpg'], lat:6.6789, lng:-1.7890,
+    { id:6, title:'10-Unit CHPS Compound At Moffram', category:'Health', community:'Moffram', year:2025, status:'Completed', pct:100, budget:850000, spent:842000, startDate:'April 2024', endDate:'May 2025', fundingSource:'DACF / GETFund', images:['pub5.JPG','pub5-2.JPG','pub5-3.JPG'], lat:6.6789, lng:-1.7890,
       desc:'Construction of a 10-Unit CHPS Compound at Moffram providing comprehensive primary healthcare — consultation rooms, maternity ward, pharmacy, laboratory and staff accommodation — to the community.',
       timeline:[ {l:'Mobilisation & Foundation',d:'April 2024',c:'#0d5ba7'}, {l:'Superstructure Completed',d:'October 2024',c:'#C9A227'}, {l:'Roofing & MEP Works',d:'February 2025',c:'#1F6B3A'}, {l:'Finishing & Fittings',d:'April 2025',c:'#1F6B3A'}, {l:'Commissioned & Operational',d:'May 2025',c:'#28a745'} ] },
 
@@ -617,7 +618,7 @@ var PROJECTS = [
           Financial · Timeline · Map
 ═══════════════════════════════════ */
 function openProjectModal(id) {
-    var p = PROJECTS.find(function(x){ return x.id === id; });
+    var p = PROJECTS.find(function(x){ return x.id == id || String(x.id) === String(id); });
     if (!p) return;
     document.getElementById('projectModalTitle').textContent = p.title;
 
