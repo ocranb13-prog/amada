@@ -139,7 +139,7 @@
                 <div><h2>Documents &amp; Budgets</h2><p>Official budgets, action plans and financial documents</p></div>
                 <button class="btn btn-small btn-outline view-all-btn" onclick="switchTab('documents')">View All &rarr;</button>
             </div>
-            <div class="publications-grid">
+            <div class="publications-grid" id="projects-grid">
                 <div class="publication-card">
                     <div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div>
                     <div class="publication-content"><h4>2026 Approved Composite Budget</h4><p>Composite Budget for 2026–2029 — Asene Manso Akroso District Assembly.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2026</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="2026 BUDGET HEARING - AMADA.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
@@ -216,12 +216,12 @@
 
 
     <!-- ════════════════ DOCUMENTS PANEL ════════════════ -->
-    <div class="pub-panel" id="panel-documents" data-fb-panel="budget">
+    <div class="pub-panel" id="panel-documents">
         <div class="panel-heading">
             <div class="panel-heading-icon" style="background:linear-gradient(135deg,#dc3545,#8b0000);"><i class="fas fa-file-alt"></i></div>
             <div><h2>Documents &amp; Budgets</h2><p>Official budgets, action plans and financial documents</p></div>
         </div>
-        <div class="publications-grid" id="fb-pub-budget">
+        <div class="publications-grid">
             <div class="publication-card">
                 <div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div>
                 <div class="publication-content"><h4>2026 Approved Composite Budget</h4><p>Composite Budget for 2026–2029 — Asene Manso Akroso District Assembly.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2026</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="2026 BUDGET HEARING - AMADA.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
@@ -239,12 +239,12 @@
 
 
     <!-- ════════════════ REPORTS PANEL ════════════════ -->
-    <div class="pub-panel" id="panel-reports" data-fb-panel="report">
+    <div class="pub-panel" id="panel-reports">
         <div class="panel-heading">
             <div class="panel-heading-icon" style="background:linear-gradient(135deg,#0d5ba7,#1a365d);"><i class="fas fa-chart-bar"></i></div>
             <div><h2>Reports</h2><p>Performance, sector and progress reports from Assembly departments</p></div>
         </div>
-        <div class="publications-grid" id="fb-pub-report">
+        <div class="publications-grid">
 
             <!-- ★ RESTORED REPORT ★ -->
             <div class="publication-card">
@@ -291,12 +291,12 @@
 
 
     <!-- ════════════════ RESOLUTIONS PANEL ════════════════ -->
-    <div class="pub-panel" id="panel-resolutions" data-fb-panel="resolution">
+    <div class="pub-panel" id="panel-resolutions">
         <div class="panel-heading">
             <div class="panel-heading-icon" style="background:linear-gradient(135deg,#C9A227,#8a6b10);"><i class="fas fa-gavel"></i></div>
             <div><h2>Resolutions &amp; Bye-Laws</h2><p>Official Assembly resolutions and governing bye-laws</p></div>
         </div>
-        <div class="publications-grid" id="fb-pub-resolution">
+        <div class="publications-grid">
             <div class="publication-card">
                 <div class="publication-icon"><i class="fas fa-gavel" style="color:#C9A227;"></i></div>
                 <div class="publication-content"><h4>District Assembly Bye-Laws</h4><p>Official Bye-Laws of the Asene Manso Akroso District Assembly governing conduct and operations within the district.</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> 2024</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div><a href="BYE-LAWS.pdf" target="_blank" rel="noopener noreferrer" class="pub-download-btn"><i class="fas fa-eye"></i> View</a></div>
@@ -319,7 +319,7 @@
             <div class="panel-heading-icon" style="background:linear-gradient(135deg,#1F6B3A,#0f2e1a);"><i class="fas fa-hard-hat"></i></div>
             <div><h2>Development Projects</h2><p>Infrastructure, health, education and agriculture projects across the district</p></div>
         </div>
-        <div class="publications-grid" id="fb-projects-grid">
+        <div class="publications-grid" id="projects-grid">
             <div class="development-project-card"><div class="development-image-container"><img src="pub1.jpg" alt="PWD Support" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Health &amp; Social</span><h4 class="project-card-title">Support To Persons With Disability</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Districtwide</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(1)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
             <div class="development-project-card"><div class="development-image-container"><img src="pub3.jpg" alt="KG Block Akroso" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">2-Unit KG Block With Ancillary Facilities At Akroso Presby</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Akroso</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(2)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
             <div class="development-project-card"><div class="development-image-container"><img src="pub2.jpg" alt="Day Care Center" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'"><span class="project-status-badge status-completed">Completed</span></div><div class="project-card-body"><span class="project-category-tag">Education</span><h4 class="project-card-title">Renovated KG Converted To Day Care Center At Akroso Presby</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> Akroso</span><span><i class="fas fa-calendar"></i> 2025</span></div><div class="project-progress-bar"><div class="project-progress-fill progress-green" style="width:100%"></div></div><span class="progress-label">100% Complete</span><button class="project-view-btn" onclick="openProjectModal(3)"><i class="fas fa-info-circle"></i> View Details</button></div></div>
@@ -358,9 +358,9 @@
 </div>
 
 <script src="amada_shared.js"></script>
-<script src="amada_firebase_reader.js"></script>
-<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();
-document.addEventListener('DOMContentLoaded', function(){ amadaLoadPage('publications'); });</script>
+<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
+
+<!-- Firebase: Dynamically render publications from Firestore -->
 
 <script>
 /* ═══════════════════════════════════
@@ -584,5 +584,95 @@ function openReportModal() { openModal('reportModal'); }
 
 
 <a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+
+<script type="module">
+/* ═══════════════════════════════════════════════════════
+   PUBLICATIONS — Load projects from Firebase Realtime DB
+   Admin saves to: /projects  (via savePubs in admin_dashboard)
+   Public reads from: /projects
+   Also loads: /publications/reports, /budgets, /resolutions
+════════════════════════════════════════════════════════ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
+
+const _app = initializeApp({
+    apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+    authDomain: "asmda-website.firebaseapp.com",
+    databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
+    projectId: "asmda-website",
+    storageBucket: "asmda-website.firebasestorage.app",
+    messagingSenderId: "699818483381",
+    appId: "1:699818483381:web:09c926a48830d46ae228fc"
+}, 'pub-reader');
+const _db = getDatabase(_app);
+
+function pclass(pct) {
+    return pct <= 30 ? 'progress-red' : pct <= 70 ? 'progress-yellow' : 'progress-green';
+}
+
+function renderProjects(projects) {
+    var grid = document.getElementById('projects-grid');
+    if (!grid || !projects || !projects.length) return;
+    // Override global PROJECTS for openProjectModal
+    window.PROJECTS = projects.map(function(p, i) {
+        return {
+            id: p.id || (i+1),
+            title: p.title || '',
+            category: p.category || p.cat || '',
+            community: p.community || '',
+            year: p.year || '',
+            status: p.status || 'Ongoing',
+            pct: p.pct || 0,
+            budget: p.budget || 0,
+            spent: p.spent || 0,
+            startDate: p.start || p.startDate || '',
+            endDate: p.end || p.endDate || '',
+            fundingSource: p.funding || p.fundingSource || '',
+            images: p.images || (p.media||[]).map(function(m){ return typeof m==='string'?m:(m.src||''); }).filter(Boolean),
+            lat: p.lat || 5.8978,
+            lng: p.lng || -0.8823,
+            desc: p.desc || '',
+            timeline: p.timeline || []
+        };
+    });
+    grid.innerHTML = window.PROJECTS.map(function(p) {
+        var statusClass = p.status === 'Completed' ? 'status-completed' : 'status-ongoing';
+        var img0 = p.images && p.images[0] ? p.images[0] : '';
+        return '<div class="development-project-card">'
+            + '<div class="development-image-container">'
+            + (img0 ? '<img src="' + img0 + '" alt="' + p.title + '" onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)'">' : '')
+            + '<span class="project-status-badge ' + statusClass + '">' + p.status + '</span>'
+            + '</div>'
+            + '<div class="project-card-body">'
+            + '<span class="project-category-tag">' + p.category + '</span>'
+            + '<h4 class="project-card-title">' + p.title + '</h4>'
+            + '<div class="project-meta-row">'
+            + '<span><i class="fas fa-map-marker-alt"></i> ' + p.community + '</span>'
+            + '<span><i class="fas fa-calendar"></i> ' + p.year + '</span>'
+            + '</div>'
+            + '<div class="project-progress-bar"><div class="project-progress-fill ' + pclass(p.pct) + '" style="width:' + p.pct + '%"></div></div>'
+            + '<span class="progress-label">' + p.pct + '% Complete</span>'
+            + '<button class="project-view-btn" onclick="openProjectModal(' + p.id + ')"><i class="fas fa-info-circle"></i> View Details</button>'
+            + '</div></div>';
+    }).join('');
+}
+
+(async function loadPublications() {
+    try {
+        const [projSnap] = await Promise.all([
+            get(ref(_db, 'projects'))
+        ]);
+
+        if (projSnap.exists()) {
+            var raw = projSnap.val();
+            var projects = Array.isArray(raw) ? raw : Object.values(raw);
+            projects = projects.filter(Boolean);
+            if (projects.length) renderProjects(projects);
+        }
+    } catch(e) {
+        console.warn('Publications Firebase load failed, using hardcoded defaults.', e.message);
+    }
+})();
+</script>
 </body>
 </html>

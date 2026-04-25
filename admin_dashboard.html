@@ -1457,25 +1457,6 @@ function setLS(key, val) {
     try { localStorage.setItem('amada_' + key, JSON.stringify(val)); } catch(e) {}
 }
 
-/* ── Compress image before Firebase upload ──────────────────
-   Resizes to max 800px wide and compresses to JPEG 0.75
-   so images stay well under Firebase's node size limits.    */
-function compressImage(dataUrl, maxWidth, quality, cb) {
-    maxWidth = maxWidth || 800;
-    quality  = quality  || 0.75;
-    var img = new Image();
-    img.onload = function() {
-        var w = img.width, h = img.height;
-        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
-        var canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        cb(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.src = dataUrl;
-}
-
-
 /* ── 7. ACTIVITY LOG ── */
 function logActivity(msg) {
     var log = getLS('activity_log', []);
@@ -1590,37 +1571,27 @@ function previewLeaderPhoto(role, input) {
     if (file.size > 5*1024*1024) { alert('Max 5MB'); return; }
     var reader = new FileReader();
     reader.onload = function(e) {
-        var rawData = e.target.result;
         var prev = document.getElementById(role+'_photo_preview');
         var zone = document.getElementById(role+'_photo_zone');
-        if (prev) { prev.src = rawData; prev.style.display='block'; }
+        if (prev) { prev.src = e.target.result; prev.style.display='block'; }
         if (zone) zone.classList.add('has-image');
-        // Compress before saving
-        compressImage(rawData, 800, 0.75, function(compressed) {
-            setLS('photo_'+role, compressed);
-        var e = { target: { result: compressed } };
-        // Save to Firebase — store photo in both paths so public pages can read it
+        // Save to localStorage
+        setLS('photo_'+role, e.target.result);
+        // Save to Firebase
         if (window._fbDb && window._fbRef && window._fbSet) {
-            var photoData = e.target.result;
-            // Save to photos/{role} (legacy path)
-            window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), photoData);
-            // Also patch into sections/leadership so public leadership page reads it
-            window._fbGet(window._fbRef(window._fbDb, 'sections/leadership')).then(function(snap) {
-                var existing = snap.exists() ? snap.val() : {};
-                existing['photo_' + role] = photoData;
-                return window._fbSet(window._fbRef(window._fbDb, 'sections/leadership'), existing);
-            }).then(function() {
-                showToast('\u2705 Photo uploaded & synced to public website');
-                logActivity('Photo synced to Firebase for ' + role.toUpperCase());
-            }).catch(function(err) {
-                console.error('Firebase photo save failed:', err);
-                showToast('\u26a0\ufe0f Photo saved locally \u2014 Firebase sync failed');
-            });
+            window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), e.target.result)
+                .then(function() {
+                    showToast('✅ Photo uploaded & synced to public website');
+                    logActivity('Photo synced to Firebase for ' + role.toUpperCase());
+                })
+                .catch(function(err) {
+                    console.error('Firebase photo save failed:', err);
+                    showToast('⚠️ Photo saved locally — Firebase sync failed');
+                });
         } else {
             showToast('Photo uploaded');
             logActivity('Photo uploaded for '+role.toUpperCase());
         }
-        }); // end compressImage
     };
     reader.readAsDataURL(file);
 }
@@ -1662,18 +1633,8 @@ function previewMapImage(input) {
         if(prev){prev.src=e.target.result;prev.style.display='block';}
         if(zone)zone.classList.add('has-image');
         if(text)text.style.display='none';
-        compressImage(e.target.result, 1200, 0.80, function(compressed) {
-            setLS('about_map_image', compressed);
-            showToast('Map image uploaded');
-            if (window._fbDb && window._fbRef && window._fbSet && window._fbGet) {
-                window._fbGet(window._fbRef(window._fbDb, 'sections/about')).then(function(snap) {
-                    var d = snap.exists() ? snap.val() : {};
-                    d.about_map_image = compressed;
-                    return window._fbSet(window._fbRef(window._fbDb, 'sections/about'), d);
-                }).then(function(){ showToast('\u2705 Map image synced to public website'); })
-                  .catch(function(e){ console.warn('Map Firebase save failed:', e); });
-            }
-        });
+        setLS('about_map_image',e.target.result);
+        showToast('Map image uploaded');
     };
     reader.readAsDataURL(file);
 }
@@ -1795,14 +1756,8 @@ function addNewsMedia(idx, input) {
         if(file.size>20*1024*1024){showToast('Too large: '+file.name);loaded++;return;}
         var r=new FileReader();
         r.onload=function(e){
-            var rawSrc = e.target.result;
-            var isVideo = file.type.startsWith('video');
-            function pushMedia(src) {
-                news[idx].media.push({src:src,type:isVideo?'video':'image',name:file.name});
-                loaded++;if(loaded===files.length){setLS('home_news',news);renderNewsEditor();showToast(loaded+' file(s) added');}
-            }
-            if (isVideo) { pushMedia(rawSrc); }
-            else { compressImage(rawSrc, 900, 0.75, pushMedia); }
+            news[idx].media.push({src:e.target.result,type:file.type.startsWith('video')?'video':'image',name:file.name});
+            loaded++;if(loaded===files.length){setLS('home_news',news);renderNewsEditor();showToast(loaded+' file(s) added');}
         };r.readAsDataURL(file);
     });input.value='';
 }
@@ -1854,21 +1809,49 @@ function renderDeptHeads() {
     }).join('');
     DEPT_FULL_LIST.forEach(function(d){var s2=(getLS('dept_data',{})[d.key]||{});if(s2.photo){var pp=document.getElementById('dept_pp_'+d.key);var pz=document.getElementById('dept_pz_'+d.key);if(pp){pp.src=s2.photo;pp.style.display='block';}if(pz)pz.classList.add('has-image');}});
 }
-function previewDeptPhoto(key,input){var file=input.files[0];if(!file)return;if(file.size>5*1024*1024){alert('Max 5MB');return;}var r=new FileReader();r.onload=function(e){var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);if(pp){pp.src=e.target.result;pp.style.display='block';}if(pz)pz.classList.add('has-image');var dd=getLS('dept_data',{});if(!dd[key])dd[key]={};dd[key].photo=e.target.result;setLS('dept_data',dd);showToast('Photo uploaded');};r.readAsDataURL(file);}
+function previewDeptPhoto(key,input){
+    var file=input.files[0];if(!file)return;
+    if(file.size>5*1024*1024){alert('Max 5MB');return;}
+    var r=new FileReader();
+    r.onload=function(e){
+        var pp=document.getElementById('dept_pp_'+key);
+        var pz=document.getElementById('dept_pz_'+key);
+        if(pp){pp.src=e.target.result;pp.style.display='block';}
+        if(pz)pz.classList.add('has-image');
+        var dd=getLS('dept_data',{});
+        if(!dd[key])dd[key]={};
+        dd[key].photo=e.target.result;
+        setLS('dept_data',dd);
+        // Also push photo to Firebase
+        if(window._fbDb&&window._fbRef&&window._fbSet){
+            window._fbSet(window._fbRef(window._fbDb,'dept_photos/'+key),e.target.result)
+                .then(function(){showToast('Photo uploaded & synced');})
+                .catch(function(){showToast('Photo uploaded locally');});
+        } else { showToast('Photo uploaded'); }
+    };
+    r.readAsDataURL(file);
+}
 function clearDeptPhoto(key,e){if(e&&e.stopPropagation)e.stopPropagation();var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);var inp=document.getElementById('dpt_'+key);if(pp){pp.src='';pp.style.display='none';}if(pz)pz.classList.remove('has-image');if(inp)inp.value='';var dd=getLS('dept_data',{});if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}showToast('Photo removed');}
 function saveDeptHeads(){
     var data=getLS('dept_data',{});
-    document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el){var k=el.dataset.dept,f=el.dataset.dfield;if(!data[k])data[k]={};data[k][f]=el.value;});
-    document.querySelectorAll('[data-dept][data-unit]').forEach(function(el){var k=el.dataset.dept,u=parseInt(el.dataset.unit);if(!data[k])data[k]={};if(!data[k].units)data[k].units=[];data[k].units[u]=el.value;});
+    document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el){
+        var k=el.dataset.dept,f=el.dataset.dfield;
+        if(!data[k])data[k]={};data[k][f]=el.value;
+    });
+    document.querySelectorAll('[data-dept][data-unit]').forEach(function(el){
+        var k=el.dataset.dept,u=parseInt(el.dataset.unit);
+        if(!data[k])data[k]={};
+        if(!data[k].units)data[k].units=[];
+        data[k].units[u]=el.value;
+    });
     setLS('dept_data',data);
-    logActivity('Departments updated');
-    // Save to Firebase
+    // Push to Firebase Realtime Database so public page reads it
     if (window._fbDb && window._fbRef && window._fbSet) {
-        window._fbSet(window._fbRef(window._fbDb, 'sections/departments'), data)
-            .then(function(){ showToast('\u2705 Departments saved & synced to public website'); })
-            .catch(function(err){ console.error('Firebase dept save failed:', err); showToast('Departments saved locally only'); });
+        window._fbSet(window._fbRef(window._fbDb,'sections/departments'), data)
+            .then(function(){ showToast('✅ Departments saved & live on public site'); logActivity('Departments synced to Firebase'); })
+            .catch(function(e){ console.error('Dept Firebase save failed:',e); showToast('Departments saved locally only'); logActivity('Departments updated'); });
     } else {
-        showToast('Departments saved');
+        logActivity('Departments updated'); showToast('Departments saved');
     }
 }
 
@@ -1980,24 +1963,48 @@ var DEFAULT_PUBS = {
 };
 function getPubs(){return getLS('publications',DEFAULT_PUBS);}
 function savePubs(data){
-    setLS('publications', data);
-    // Strip base64 images from plan items before saving to Firebase (keep only metadata + URLs)
+    setLS('publications',data);
+    // Push projects to Firebase Realtime Database (correct project: asmda-website)
     if (window._fbDb && window._fbRef && window._fbSet) {
-        var fbData = JSON.parse(JSON.stringify(data)); // deep clone
-        if (fbData.plan) {
-            fbData.plan.forEach(function(p) {
-                if (p.media) {
-                    p.media = p.media.map(function(m) {
-                        // If src is a huge base64, compress via canvas before saving
-                        return { src: m.src, type: m.type, name: m.name };
-                    });
-                }
-            });
+        // Save full publications object
+        var fbData = {
+            reports:     (data.report     || []).map(stripBase64),
+            budgets:     (data.budget     || []).map(stripBase64),
+            resolutions: (data.resolution || []).map(stripBase64),
+            projects:    (data.plan       || []).map(function(p) {
+                // Convert media array to images array for public page
+                var proj = Object.assign({}, p);
+                proj.images = (p.media||[]).map(function(m){ return m.src||m; });
+                proj.category = p.cat || p.category || '';
+                proj = stripBase64(proj);
+                return proj;
+            })
+        };
+        // Save projects to /projects path (what publications.html reads)
+        if (fbData.projects.length > 0) {
+            window._fbSet(window._fbRef(window._fbDb,'projects'), fbData.projects)
+                .then(function(){ showToast('✅ Projects saved & live on public site'); logActivity('Projects synced to Firebase'); })
+                .catch(function(e){ console.error('Projects Firebase save failed:',e); });
         }
-        window._fbSet(window._fbRef(window._fbDb, 'publications'), fbData)
-            .then(function(){ console.log('Publications synced to Firebase'); })
-            .catch(function(e){ console.warn('Publications Firebase sync failed:', e); });
+        // Save documents/reports to their paths
+        window._fbSet(window._fbRef(window._fbDb,'publications/reports'),     fbData.reports);
+        window._fbSet(window._fbRef(window._fbDb,'publications/budgets'),     fbData.budgets);
+        window._fbSet(window._fbRef(window._fbDb,'publications/resolutions'), fbData.resolutions);
     }
+}
+
+// Helper: strip large base64 strings before pushing to Firebase (too large)
+function stripBase64(obj) {
+    var o = Object.assign({}, obj);
+    if (o.pdfData && o.pdfData.startsWith('data:')) o.pdfData = '';
+    if (o.media) o.media = (o.media||[]).map(function(m){
+        if (typeof m === 'object' && m.src && m.src.startsWith('data:image')) {
+            return Object.assign({}, m, {src: ''}); // strip large base64 images
+        }
+        return m;
+    });
+    if (o.images) o.images = (o.images||[]).filter(function(s){ return s && !s.startsWith('data:'); });
+    return o;
 }
 
 var _projMedia=[], _projTimeline=[];
@@ -2135,26 +2142,7 @@ function addNewForm(){var name=prompt('Form name:');if(!name)return;var forms=ge
 function deleteForm(fi){if(!confirm('Remove?'))return;var forms=getLS('forms_list',FORMS_LIST);forms.splice(fi,1);setLS('forms_list',forms);renderFormsEditor();showToast('Removed');}
 function addNewService(){var name=prompt('Service name:');if(!name)return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.push(name);setLS('online_services',svcs);renderOnlineServices();showToast('Service added');}
 function deleteService(i){if(!confirm('Remove?'))return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.splice(i,1);setLS('online_services',svcs);renderOnlineServices();}
-function saveFormsStatus(){
-    var data={};
-    document.querySelectorAll('[data-fkey]').forEach(function(el){data[el.dataset.fkey]=el.value;});
-    setLS('forms_status',data);
-    var svcs=[];
-    document.querySelectorAll('[data-svc]').forEach(function(el){svcs[parseInt(el.dataset.svc)]=el.value;});
-    if(svcs.length) setLS('online_services', svcs.filter(Boolean));
-    // Also save forms_list in case names changed
-    var forms = getLS('forms_list', FORMS_LIST);
-    logActivity('Services updated');
-    // Push to Firebase
-    if (window._fbDb && window._fbRef && window._fbSet) {
-        var fbPayload = { forms_status: data, forms_list: forms, online_services: svcs.filter(Boolean) };
-        window._fbSet(window._fbRef(window._fbDb, 'sections/services'), fbPayload)
-            .then(function(){ showToast('\u2705 Services saved & synced to public website'); })
-            .catch(function(e){ console.warn('Services Firebase sync failed:', e); showToast('Services saved locally'); });
-    } else {
-        showToast('Services saved');
-    }
-}
+function saveFormsStatus(){var data={};document.querySelectorAll('[data-fkey]').forEach(function(el){data[el.dataset.fkey]=el.value;});setLS('forms_status',data);var svcs=[];document.querySelectorAll('[data-svc]').forEach(function(el){svcs[parseInt(el.dataset.svc)]=el.value;});if(svcs.length)setLS('online_services',svcs.filter(Boolean));logActivity('Services updated');showToast('Services saved');}
 
 /* ── 16. APPLICATIONS ── */
 var _currentAppTracking=null;
@@ -2253,73 +2241,140 @@ document.addEventListener('DOMContentLoaded', function() {
      publications to Firestore so all visitors see
      the latest content on the public pages.
 ═══════════════════════════════════════════════ -->
-<script>
-/* ═══════════════════════════════════════════════════
-   ADMIN — Override leadership & publications save
-   so they also sync to the correct Firebase project
-   (asmda-website Realtime Database)
-═══════════════════════════════════════════════════ */
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-/* saveLeadershipToFirebase — reads field values and
-   writes to sections/leadership in Realtime DB      */
-window.saveLeadershipToFirebase = function() {
-    return new Promise(function(resolve) {
-        if (!window._fbDb || !window._fbRef || !window._fbSet || !window._fbGet) {
-            resolve(false); return;
-        }
+const app = initializeApp({
+    apiKey: "AIzaSyC4q2KlFeO10oukA5cjBzRytmqGt-thrA0",
+    authDomain: "asmda-576a4.firebaseapp.com",
+    projectId: "asmda-576a4",
+    storageBucket: "asmda-576a4.firebasestorage.app",
+    messagingSenderId: "593311894920",
+    appId: "1:593311894920:web:8a1a90b740d87b9c3f7e3d"
+});
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+/* ── Upload base64 image to Firebase Storage, return URL ── */
+async function uploadPhoto(role, base64Data) {
+    if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
+    try {
+        const storageRef = ref(storage, 'leaders/' + role + '_' + Date.now() + '.jpg');
+        await uploadString(storageRef, base64Data, 'data_url');
+        const url = await getDownloadURL(storageRef);
+        return url;
+    } catch(e) {
+        console.warn('Photo upload failed:', e);
+        return base64Data; // fallback to base64
+    }
+}
+
+/* ── Save Leadership to Firestore ── */
+window.saveLeadershipToFirebase = async function() {
+    try {
+        // Gather field values
         var fields = ['dce_name','dce_role','dce_bio','dce_phone','dce_email','dce_office',
                       'dcd_name','dcd_role','dcd_bio','dcd_phone','dcd_email','dcd_office',
                       'pm_name','pm_role','pm_bio','pm_phone','pm_email','pm_office'];
-        // Start from existing saved data so photos aren't overwritten
-        window._fbGet(window._fbRef(window._fbDb, 'sections/leadership')).then(function(snap) {
-            var data = snap.exists() ? snap.val() : {};
-            fields.forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) data[id] = el.value || '';
-            });
-            // Attach any previewed photos (base64)
-            ['dce','dcd','pm'].forEach(function(role) {
-                var prev = document.getElementById(role + '_photo_preview');
-                if (prev && prev.src && prev.style.display !== 'none' && prev.src.startsWith('data:')) {
-                    data['photo_' + role] = prev.src;
+        var data = {};
+        fields.forEach(function(id) {
+            var el = document.getElementById(id); if (el) data[id] = el.value || '';
+        });
+
+        // Upload photos if they are base64 (new uploads)
+        for (var role of ['dce','dcd','pm']) {
+            var preview = document.getElementById(role + '_photo_preview');
+            if (preview && preview.src && preview.style.display !== 'none') {
+                var src = preview.src;
+                if (src.startsWith('data:')) {
+                    data[role + '_photo'] = await uploadPhoto(role, src);
+                } else if (src.startsWith('http')) {
+                    data[role + '_photo'] = src; // already a URL
                 }
-            });
-            return window._fbSet(window._fbRef(window._fbDb, 'sections/leadership'), data);
-        }).then(function() { resolve(true); })
-          .catch(function(e) { console.error('saveLeadershipToFirebase failed:', e); resolve(false); });
-    });
-};
-
-/* savePublicationsToFirebase — syncs projects array */
-window.savePublicationsToFirebase = function() {
-    return new Promise(function(resolve) {
-        if (!window._fbDb || !window._fbRef || !window._fbSet) { resolve(false); return; }
-        var pubs = null;
-        try { var raw = localStorage.getItem('amada_publications'); pubs = raw ? JSON.parse(raw) : null; } catch(e) {}
-        if (!pubs) { resolve(false); return; }
-        window._fbSet(window._fbRef(window._fbDb, 'publications'), pubs)
-            .then(function() { resolve(true); })
-            .catch(function(e) { console.error('savePublicationsToFirebase failed:', e); resolve(false); });
-    });
-};
-
-/* Override saveSection for leadership to also call saveLeadershipToFirebase */
-(function() {
-    var _origSaveSection = window.saveSection;
-    window.saveSection = function(section) {
-        _origSaveSection && _origSaveSection(section);
-        var key = section.replace('edit-','');
-        if (key === 'leadership') {
-            var toastTxt = document.querySelector('.toast-message');
-            if (toastTxt) toastTxt.textContent = 'Saving to Firebase…';
-            window.saveLeadershipToFirebase().then(function(ok) {
-                showToast(ok ? '\u2705 Leadership saved & published!' : '\u2705 Saved locally (Firebase error)');
-            });
+            }
         }
-    };
-})();
 
-console.log('Firebase admin overrides loaded \u2713');
+        await setDoc(doc(db, 'site_content', 'leadership'), data, { merge: true });
+        return true;
+    } catch(e) {
+        console.error('Firebase leadership save failed:', e);
+        return false;
+    }
+};
+
+/* ── Save Publications to Firestore ── */
+window.savePublicationsToFirebase = async function() {
+    try {
+        var pubs = window.getPubs ? window.getPubs() : null;
+        if (!pubs) {
+            try { var raw = localStorage.getItem('amada_publications'); pubs = raw ? JSON.parse(raw) : null; } catch(e) {}
+        }
+        if (!pubs) return false;
+
+        // Upload project media images that are base64
+        if (pubs.plan) {
+            for (var proj of pubs.plan) {
+                if (proj.media) {
+                    for (var i = 0; i < proj.media.length; i++) {
+                        var m = proj.media[i];
+                        if (m.src && m.src.startsWith('data:image')) {
+                            var url = await uploadPhoto('proj_' + proj.id + '_' + i, m.src);
+                            proj.media[i].src = url;
+                        }
+                    }
+                }
+                // Remove cover photo base64 if it's already in media
+                if (proj.coverPhoto && proj.coverPhoto.startsWith('data:')) {
+                    proj.coverPhoto = await uploadPhoto('cover_' + proj.id, proj.coverPhoto);
+                }
+            }
+        }
+
+        await setDoc(doc(db, 'site_content', 'publications'), pubs, { merge: false });
+        return true;
+    } catch(e) {
+        console.error('Firebase publications save failed:', e);
+        return false;
+    }
+};
+
+/* ── Override saveSection to ALSO save to Firebase ── */
+var _origSaveSection = window.saveSection;
+window.saveSection = async function(section) {
+    // Run original localStorage save first
+    if (_origSaveSection) _origSaveSection(section);
+
+    var key = section.replace('edit-','');
+
+    if (key === 'leadership') {
+        var toast = document.getElementById('saveToast');
+        var toastTxt = document.getElementById('toastText');
+        if (toastTxt) toastTxt.textContent = 'Saving to Firebase...';
+        if (toast) toast.classList.add('show');
+        var ok = await window.saveLeadershipToFirebase();
+        if (toastTxt) toastTxt.textContent = ok ? '✓ Leadership saved & published!' : '✓ Saved locally (Firebase error)';
+        setTimeout(function(){ if (toast) toast.classList.remove('show'); }, 3500);
+    }
+};
+
+/* ── Override savePubs to ALSO save to Firebase ── */
+var _origSavePubs = window.savePubs;
+window.savePubs = function(data) {
+    if (_origSavePubs) _origSavePubs(data);
+    // Async save to Firebase
+    window.savePublicationsToFirebase().then(function(ok) {
+        if (ok) {
+            var toastTxt = document.getElementById('toastText');
+            var toast = document.getElementById('saveToast');
+            if (toastTxt) toastTxt.textContent = '✓ Publications saved & published!';
+            if (toast) { toast.classList.add('show'); setTimeout(function(){ toast.classList.remove('show'); }, 3000); }
+        }
+    });
+};
+
+console.log('Firebase integration loaded ✓');
 </script>
 
 </body>
