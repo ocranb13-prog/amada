@@ -1822,16 +1822,29 @@ function previewDeptPhoto(key,input){
         if(!dd[key])dd[key]={};
         dd[key].photo=e.target.result;
         setLS('dept_data',dd);
-        // Also push photo to Firebase
         if(window._fbDb&&window._fbRef&&window._fbSet){
             window._fbSet(window._fbRef(window._fbDb,'dept_photos/'+key),e.target.result)
-                .then(function(){showToast('Photo uploaded & synced');})
+                .then(function(){showToast('\u2705 Photo uploaded & live on public site');})
                 .catch(function(){showToast('Photo uploaded locally');});
-        } else { showToast('Photo uploaded'); }
+        } else {showToast('Photo uploaded');}
     };
     r.readAsDataURL(file);
 }
-function clearDeptPhoto(key,e){if(e&&e.stopPropagation)e.stopPropagation();var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);var inp=document.getElementById('dpt_'+key);if(pp){pp.src='';pp.style.display='none';}if(pz)pz.classList.remove('has-image');if(inp)inp.value='';var dd=getLS('dept_data',{});if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}showToast('Photo removed');}
+function clearDeptPhoto(key,e){
+    if(e&&e.stopPropagation)e.stopPropagation();
+    var pp=document.getElementById('dept_pp_'+key);
+    var pz=document.getElementById('dept_pz_'+key);
+    var inp=document.getElementById('dpt_'+key);
+    if(pp){pp.src='';pp.style.display='none';}
+    if(pz)pz.classList.remove('has-image');
+    if(inp)inp.value='';
+    var dd=getLS('dept_data',{});
+    if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}
+    if(window._fbDb&&window._fbRef&&window._fbSet){
+        window._fbSet(window._fbRef(window._fbDb,'dept_photos/'+key),'');
+    }
+    showToast('Photo removed');
+}
 function saveDeptHeads(){
     var data=getLS('dept_data',{});
     document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el){
@@ -1845,14 +1858,11 @@ function saveDeptHeads(){
         data[k].units[u]=el.value;
     });
     setLS('dept_data',data);
-    // Push to Firebase Realtime Database so public page reads it
-    if (window._fbDb && window._fbRef && window._fbSet) {
-        window._fbSet(window._fbRef(window._fbDb,'sections/departments'), data)
-            .then(function(){ showToast('✅ Departments saved & live on public site'); logActivity('Departments synced to Firebase'); })
-            .catch(function(e){ console.error('Dept Firebase save failed:',e); showToast('Departments saved locally only'); logActivity('Departments updated'); });
-    } else {
-        logActivity('Departments updated'); showToast('Departments saved');
-    }
+    if(window._fbDb&&window._fbRef&&window._fbSet){
+        window._fbSet(window._fbRef(window._fbDb,'sections/departments'),data)
+            .then(function(){showToast('\u2705 Departments saved & live on public site');logActivity('Departments synced to Firebase');})
+            .catch(function(e){console.error('Dept Firebase error:',e);showToast('Departments saved locally only');logActivity('Departments updated');});
+    } else {logActivity('Departments updated');showToast('Departments saved');}
 }
 
 /* ── 14b. PDF UPLOAD HELPERS ── */
@@ -1964,47 +1974,27 @@ var DEFAULT_PUBS = {
 function getPubs(){return getLS('publications',DEFAULT_PUBS);}
 function savePubs(data){
     setLS('publications',data);
-    // Push projects to Firebase Realtime Database (correct project: asmda-website)
-    if (window._fbDb && window._fbRef && window._fbSet) {
-        // Save full publications object
-        var fbData = {
-            reports:     (data.report     || []).map(stripBase64),
-            budgets:     (data.budget     || []).map(stripBase64),
-            resolutions: (data.resolution || []).map(stripBase64),
-            projects:    (data.plan       || []).map(function(p) {
-                // Convert media array to images array for public page
-                var proj = Object.assign({}, p);
-                proj.images = (p.media||[]).map(function(m){ return m.src||m; });
-                proj.category = p.cat || p.category || '';
-                proj = stripBase64(proj);
-                return proj;
-            })
-        };
-        // Save projects to /projects path (what publications.html reads)
-        if (fbData.projects.length > 0) {
-            window._fbSet(window._fbRef(window._fbDb,'projects'), fbData.projects)
-                .then(function(){ showToast('✅ Projects saved & live on public site'); logActivity('Projects synced to Firebase'); })
-                .catch(function(e){ console.error('Projects Firebase save failed:',e); });
-        }
-        // Save documents/reports to their paths
-        window._fbSet(window._fbRef(window._fbDb,'publications/reports'),     fbData.reports);
-        window._fbSet(window._fbRef(window._fbDb,'publications/budgets'),     fbData.budgets);
-        window._fbSet(window._fbRef(window._fbDb,'publications/resolutions'), fbData.resolutions);
-    }
-}
-
-// Helper: strip large base64 strings before pushing to Firebase (too large)
-function stripBase64(obj) {
-    var o = Object.assign({}, obj);
-    if (o.pdfData && o.pdfData.startsWith('data:')) o.pdfData = '';
-    if (o.media) o.media = (o.media||[]).map(function(m){
-        if (typeof m === 'object' && m.src && m.src.startsWith('data:image')) {
-            return Object.assign({}, m, {src: ''}); // strip large base64 images
-        }
-        return m;
+    if(!window._fbDb||!window._fbRef||!window._fbSet) return;
+    // Build projects array for public publications.html
+    var projects=(data.plan||[]).map(function(p){
+        var imgs=(p.media||[]).map(function(m){
+            var src=typeof m==='string'?m:(m.src||'');
+            return src.startsWith('data:')?'':src; // strip base64
+        }).filter(Boolean);
+        return {id:p.id,title:p.title||'',desc:p.desc||'',
+                category:p.cat||p.category||'',community:p.community||'',
+                year:p.year||'',status:p.status||'Ongoing',pct:p.pct||0,
+                budget:p.budget||0,spent:p.spent||0,
+                funding:p.funding||'',contractor:p.contractor||'',
+                start:p.start||'',end:p.end||'',
+                lat:p.lat||5.8978,lng:p.lng||-0.8823,
+                images:imgs,timeline:p.timeline||[]};
     });
-    if (o.images) o.images = (o.images||[]).filter(function(s){ return s && !s.startsWith('data:'); });
-    return o;
+    if(projects.length){
+        window._fbSet(window._fbRef(window._fbDb,'projects'),projects)
+            .then(function(){showToast('\u2705 Projects saved & live on public site');logActivity('Projects synced to Firebase');})
+            .catch(function(e){console.error('Projects Firebase error:',e);showToast('\u26a0\ufe0f Saved locally — Firebase sync failed');});
+    }
 }
 
 var _projMedia=[], _projTimeline=[];
