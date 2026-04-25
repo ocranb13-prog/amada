@@ -1824,8 +1824,8 @@ function previewDeptPhoto(key,input){
         setLS('dept_data',dd);
         if(window._fbDb&&window._fbRef&&window._fbSet){
             window._fbSet(window._fbRef(window._fbDb,'dept_photos/'+key),e.target.result)
-                .then(function(){showToast('\u2705 Photo uploaded & live on public site');})
-                .catch(function(){showToast('Photo uploaded locally');});
+                .then(function(){showToast('✅ Photo synced to public website');})
+                .catch(function(e2){console.error('Dept photo Firebase sync failed:',e2);showToast('Photo saved locally');});
         } else {showToast('Photo uploaded');}
     };
     r.readAsDataURL(file);
@@ -1860,8 +1860,8 @@ function saveDeptHeads(){
     setLS('dept_data',data);
     if(window._fbDb&&window._fbRef&&window._fbSet){
         window._fbSet(window._fbRef(window._fbDb,'sections/departments'),data)
-            .then(function(){showToast('\u2705 Departments saved & live on public site');logActivity('Departments synced to Firebase');})
-            .catch(function(e){console.error('Dept Firebase error:',e);showToast('Departments saved locally only');logActivity('Departments updated');});
+            .then(function(){showToast('✅ Departments synced to public website');logActivity('Departments synced to Firebase');})
+            .catch(function(e){console.error('Dept Firebase sync failed:',e);showToast('Departments saved locally only');logActivity('Departments updated');});
     } else {logActivity('Departments updated');showToast('Departments saved');}
 }
 
@@ -1974,27 +1974,33 @@ var DEFAULT_PUBS = {
 function getPubs(){return getLS('publications',DEFAULT_PUBS);}
 function savePubs(data){
     setLS('publications',data);
-    if(!window._fbDb||!window._fbRef||!window._fbSet) return;
-    // Build projects array for public publications.html
+    /* Push to Firebase Realtime DB so public publications.html sees it */
+    if(!window._fbDb||!window._fbRef||!window._fbSet){return;}
     var projects=(data.plan||[]).map(function(p){
+        /* Strip base64 images — too large for Realtime DB; use filename refs only */
         var imgs=(p.media||[]).map(function(m){
-            var src=typeof m==='string'?m:(m.src||'');
-            return src.startsWith('data:')?'':src; // strip base64
+            var s=typeof m==='string'?m:(m&&m.src?m.src:'');
+            return (s&&!s.startsWith('data:'))?s:'';
         }).filter(Boolean);
         return {id:p.id,title:p.title||'',desc:p.desc||'',
-                category:p.cat||p.category||'',community:p.community||'',
-                year:p.year||'',status:p.status||'Ongoing',pct:p.pct||0,
-                budget:p.budget||0,spent:p.spent||0,
-                funding:p.funding||'',contractor:p.contractor||'',
-                start:p.start||'',end:p.end||'',
-                lat:p.lat||5.8978,lng:p.lng||-0.8823,
-                images:imgs,timeline:p.timeline||[]};
+            category:p.cat||p.category||'',community:p.community||'',
+            year:p.year||'',yearDisplay:p.yearDisplay||'',
+            status:p.status||'Ongoing',pct:p.pct||0,
+            budget:p.budget||0,spent:p.spent||0,
+            funding:p.funding||'',contractor:p.contractor||'',
+            start:p.start||'',end:p.end||'',
+            lat:p.lat||5.8978,lng:p.lng||-0.8823,
+            images:imgs,timeline:p.timeline||[]};
     });
-    if(projects.length){
-        window._fbSet(window._fbRef(window._fbDb,'projects'),projects)
-            .then(function(){showToast('\u2705 Projects saved & live on public site');logActivity('Projects synced to Firebase');})
-            .catch(function(e){console.error('Projects Firebase error:',e);showToast('\u26a0\ufe0f Saved locally — Firebase sync failed');});
-    }
+    window._fbSet(window._fbRef(window._fbDb,'projects'),projects)
+        .then(function(){
+            showToast('✅ Projects synced to public website');
+            logActivity('Projects synced to Firebase Realtime DB');
+        })
+        .catch(function(e){
+            console.error('Projects Firebase sync failed:',e);
+            showToast('⚠️ Saved locally — Firebase sync failed. Check console.');
+        });
 }
 
 var _projMedia=[], _projTimeline=[];

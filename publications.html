@@ -586,97 +586,95 @@ function openReportModal() { openModal('reportModal'); }
 <a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
 
 <script type="module">
-/* ═══════════════════════════════════════════════════════════
-   PUBLICATIONS — Load projects from Firebase Realtime Database
-   Path written by admin: /projects
-   This page reads: /projects
-════════════════════════════════════════════════════════════ */
+/* ================================================================
+   PUBLICATIONS — Firebase Realtime Database reader
+   Reads /projects written by admin savePubs()
+   Uses unique app name 'pub-view' to avoid duplicate-app crash
+================================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
 
-const _fbApp = initializeApp({
-    apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
-    authDomain: "asmda-website.firebaseapp.com",
-    databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
-    projectId: "asmda-website",
-    storageBucket: "asmda-website.firebasestorage.app",
-    messagingSenderId: "699818483381",
-    appId: "1:699818483381:web:09c926a48830d46ae228fc"
-}, 'pub-reader');
-const _db = getDatabase(_fbApp);
+let _app;
+try { _app = initializeApp({
+    apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+    authDomain:"asmda-website.firebaseapp.com",
+    databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
+    projectId:"asmda-website",
+    storageBucket:"asmda-website.firebasestorage.app",
+    messagingSenderId:"699818483381",
+    appId:"1:699818483381:web:09c926a48830d46ae228fc"
+}, 'pub-view');
+} catch(e) { _app = null; console.warn('Firebase init error:', e.message); }
 
-function pclass(pct) {
-    return pct <= 30 ? 'progress-red' : pct <= 70 ? 'progress-yellow' : 'progress-green';
-}
+if (_app) {
+    const _db = getDatabase(_app);
 
-function renderProjects(projects) {
-    var grid = document.getElementById('projects-grid');
-    if (!grid || !projects || !projects.length) return;
+    function pclass(p){ return p<=30?'progress-red':p<=70?'progress-yellow':'progress-green'; }
 
-    // Normalise and store globally so openProjectModal works
-    window.PROJECTS = projects.map(function(p, i) {
-        return {
-            id:           p.id          || (i + 1),
-            title:        p.title       || '',
-            category:     p.category    || p.cat || '',
-            community:    p.community   || '',
-            year:         p.year        || '',
-            status:       p.status      || 'Ongoing',
-            pct:          p.pct         || 0,
-            budget:       p.budget      || 0,
-            spent:        p.spent       || 0,
-            startDate:    p.start       || p.startDate  || '',
-            endDate:      p.end         || p.endDate    || '',
-            fundingSource:p.funding     || p.fundingSource || '',
-            contractor:   p.contractor  || '',
-            images:       (p.images     || []).filter(Boolean),
-            lat:          p.lat         || 5.8978,
-            lng:          p.lng         || -0.8823,
-            desc:         p.desc        || '',
-            timeline:     p.timeline    || []
-        };
-    });
+    function renderProjects(list) {
+        var grid = document.getElementById('projects-grid');
+        if (!grid || !list || !list.length) return;
 
-    grid.innerHTML = window.PROJECTS.map(function(p) {
-        var statusCls = p.status === 'Completed' ? 'status-completed' : 'status-ongoing';
-        var img0 = p.images[0] || '';
-        return '<div class="development-project-card">'
-            + '<div class="development-image-container">'
-            + (img0
-                ? '<img src="' + img0 + '" alt="' + p.title + '" '
-                  + 'onerror="this.parentElement.style.background='linear-gradient(135deg,#1F6B3A,#0f2e1a)';this.remove()">'
-                : '')
-            + '<span class="project-status-badge ' + statusCls + '">' + p.status + '</span>'
-            + '</div>'
-            + '<div class="project-card-body">'
-            + '<span class="project-category-tag">' + p.category + '</span>'
-            + '<h4 class="project-card-title">' + p.title + '</h4>'
-            + '<div class="project-meta-row">'
-            + '<span><i class="fas fa-map-marker-alt"></i> ' + p.community + '</span>'
-            + '<span><i class="fas fa-calendar"></i> ' + p.year + '</span>'
-            + '</div>'
-            + '<div class="project-progress-bar">'
-            + '<div class="project-progress-fill ' + pclass(p.pct) + '" style="width:' + p.pct + '%"></div>'
-            + '</div>'
-            + '<span class="progress-label">' + p.pct + '% Complete</span>'
-            + '<button class="project-view-btn" onclick="openProjectModal(' + p.id + ')">'
-            + '<i class="fas fa-info-circle"></i> View Details</button>'
-            + '</div></div>';
-    }).join('');
-}
+        /* Update global PROJECTS so openProjectModal() works */
+        window.PROJECTS = list.map(function(p,i){
+            return {
+                id:          p.id          || (i+1),
+                title:       p.title       || '',
+                category:    p.category    || p.cat || '',
+                community:   p.community   || '',
+                year:        p.year        || '',
+                status:      p.status      || 'Ongoing',
+                pct:         p.pct         || 0,
+                budget:      p.budget      || 0,
+                spent:       p.spent       || 0,
+                startDate:   p.start       || p.startDate  || '',
+                endDate:     p.end         || p.endDate    || '',
+                fundingSource:p.funding    || p.fundingSource || '',
+                contractor:  p.contractor  || '',
+                images:      (p.images     || []).filter(Boolean),
+                lat:         p.lat         || 5.8978,
+                lng:         p.lng         || -0.8823,
+                desc:        p.desc        || '',
+                timeline:    p.timeline    || []
+            };
+        });
 
-(async function loadProjects() {
-    try {
-        var snap = await get(ref(_db, 'projects'));
-        if (!snap.exists()) return; // No Firebase data yet — keep hardcoded defaults
-        var raw = snap.val();
-        var projects = Array.isArray(raw) ? raw : Object.values(raw);
-        projects = projects.filter(Boolean);
-        if (projects.length) renderProjects(projects);
-    } catch(e) {
-        console.warn('Publications Firebase load failed, using hardcoded defaults.', e.message);
+        grid.innerHTML = window.PROJECTS.map(function(p){
+            var sc  = p.status==='Completed'?'status-completed':'status-ongoing';
+            var img = p.images[0] || '';
+            return '<div class="development-project-card">'
+                +'<div class="development-image-container">'
+                +(img?'<img src="'+img+'" alt="'+p.title+'" onerror="this.style.display='none'">'
+                     :'<div style="height:180px;background:linear-gradient(135deg,#1F6B3A,#0f2e1a);display:flex;align-items:center;justify-content:center;"><i class="fas fa-hard-hat" style="font-size:3rem;color:rgba(255,255,255,0.2);"></i></div>')
+                +'<span class="project-status-badge '+sc+'">'+p.status+'</span>'
+                +'</div>'
+                +'<div class="project-card-body">'
+                +'<span class="project-category-tag">'+p.category+'</span>'
+                +'<h4 class="project-card-title">'+p.title+'</h4>'
+                +'<div class="project-meta-row">'
+                +'<span><i class="fas fa-map-marker-alt"></i> '+p.community+'</span>'
+                +'<span><i class="fas fa-calendar"></i> '+p.year+'</span>'
+                +'</div>'
+                +'<div class="project-progress-bar">'
+                +'<div class="project-progress-fill '+pclass(p.pct)+'" style="width:'+p.pct+'%"></div>'
+                +'</div>'
+                +'<span class="progress-label">'+p.pct+'% Complete</span>'
+                +'<button class="project-view-btn" onclick="openProjectModal('+p.id+')">'
+                +'<i class="fas fa-info-circle"></i> View Details</button>'
+                +'</div></div>';
+        }).join('');
     }
-})();
+
+    get(ref(_db,'projects')).then(function(snap){
+        if (!snap.exists()) return;
+        var raw = snap.val();
+        var arr = Array.isArray(raw) ? raw : Object.values(raw);
+        arr = arr.filter(Boolean);
+        if (arr.length) renderProjects(arr);
+    }).catch(function(e){
+        console.warn('Publications Firebase read failed:', e.message);
+    });
+}
 </script>
 </body>
 </html>
