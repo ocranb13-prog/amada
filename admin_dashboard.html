@@ -1814,53 +1814,39 @@ function previewDeptPhoto(key, input) {
     if(file.size>5*1024*1024){alert('Max 5MB');return;}
     var r=new FileReader();
     r.onload=function(e){
-        var pp=document.getElementById('dept_pp_'+key);
-        var pz=document.getElementById('dept_pz_'+key);
-        if(pp){pp.src=e.target.result;pp.style.display='block';}
-        if(pz)pz.classList.add('has-image');
-        var dd=getLS('dept_data',{});
-        if(!dd[key])dd[key]={};
-        dd[key].photo=e.target.result;
-        setLS('dept_data',dd);
+        var pp=document.getElementById('dept_pp_'+key),pz=document.getElementById('dept_pz_'+key);
+        if(pp){pp.src=e.target.result;pp.style.display='block';} if(pz)pz.classList.add('has-image');
+        var dd=getLS('dept_data',{}); if(!dd[key])dd[key]={}; dd[key].photo=e.target.result; setLS('dept_data',dd);
         if(window._fbDb&&window._fbRef&&window._fbSet){
             window._fbSet(window._fbRef(window._fbDb,'dept_photos/'+key),e.target.result)
-                .then(function(){ showToast('✅ Photo uploaded & live on public website'); })
-                .catch(function(err){ console.error('Photo sync FAILED:',err); showToast('Photo saved locally only'); });
+                .then(function(){ showToast('✅ Photo live on public website'); })
+                .catch(function(e2){ console.error('Photo FAILED:',e2); showToast('Photo saved locally only'); });
         } else { showToast('Photo uploaded'); }
     };
     r.readAsDataURL(file);
 }
 function clearDeptPhoto(key, e) {
     if(e&&e.stopPropagation)e.stopPropagation();
-    var pp=document.getElementById('dept_pp_'+key);
-    var pz=document.getElementById('dept_pz_'+key);
-    var inp=document.getElementById('dpt_'+key);
-    if(pp){pp.src='';pp.style.display='none';}
-    if(pz)pz.classList.remove('has-image');
-    if(inp)inp.value='';
-    var dd=getLS('dept_data',{});
-    if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}
-    if(window._fbDb&&window._fbRef&&window._fbSet){
-        window._fbSet(window._fbRef(window._fbDb,'dept_photos/'+key),'');
-    }
+    var pp=document.getElementById('dept_pp_'+key),pz=document.getElementById('dept_pz_'+key),inp=document.getElementById('dpt_'+key);
+    if(pp){pp.src='';pp.style.display='none';} if(pz)pz.classList.remove('has-image'); if(inp)inp.value='';
+    var dd=getLS('dept_data',{}); if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}
+    if(window._fbDb&&window._fbRef&&window._fbSet) window._fbSet(window._fbRef(window._fbDb,'dept_photos/'+key),'');
     showToast('Photo removed');
 }
 function saveDeptHeads() {
     var data = getLS('dept_data', {});
     document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el) {
-        var k=el.dataset.dept, f=el.dataset.dfield;
-        if(!data[k])data[k]={}; data[k][f]=el.value;
+        var k=el.dataset.dept,f=el.dataset.dfield; if(!data[k])data[k]={}; data[k][f]=el.value;
     });
     document.querySelectorAll('[data-dept][data-unit]').forEach(function(el) {
-        var k=el.dataset.dept, u=parseInt(el.dataset.unit);
-        if(!data[k])data[k]={}; if(!data[k].units)data[k].units=[];
-        data[k].units[u]=el.value;
+        var k=el.dataset.dept,u=parseInt(el.dataset.unit);
+        if(!data[k])data[k]={}; if(!data[k].units)data[k].units=[]; data[k].units[u]=el.value;
     });
     setLS('dept_data', data);
     if (window._fbDb && window._fbRef && window._fbSet) {
-        window._fbSet(window._fbRef(window._fbDb,'sections/departments'), data)
-            .then(function(){ showToast('✅ Departments saved & live on public website'); logActivity('Departments synced to Firebase'); })
-            .catch(function(err){ console.error('Dept sync FAILED:',err); showToast('Departments saved locally only'); });
+        window._fbSet(window._fbRef(window._fbDb, 'sections/departments'), data)
+            .then(function() { showToast('✅ Departments live on public website'); logActivity('Departments synced to Firebase'); })
+            .catch(function(e) { console.error('saveDeptHeads FAILED:', e); showToast('Saved locally only'); logActivity('Departments updated'); });
     } else { logActivity('Departments updated'); showToast('Departments saved'); }
 }
 
@@ -1973,24 +1959,24 @@ var DEFAULT_PUBS = {
 function getPubs(){return getLS('publications',DEFAULT_PUBS);}
 function savePubs(data) {
     setLS('publications', data);
-    if (!window._fbDb || !window._fbRef || !window._fbSet) { return; }
-    var projects = (data.plan || []).map(function(p) {
+    if (!window._fbDb || !window._fbRef || !window._fbSet) return;
+    var projects = (data.plan || []).map(function(p, i) {
         var images = (p.media || []).map(function(m) {
-            var src = (typeof m === 'string') ? m : (m && m.src ? m.src : '');
-            return (src && !src.startsWith('data:')) ? src : '';
+            var s = typeof m === 'string' ? m : (m && m.src ? m.src : '');
+            return (s && !s.startsWith('data:')) ? s : '';
         }).filter(Boolean);
-        return { id:p.id, title:p.title||'', desc:p.desc||'',
-            category:p.cat||p.category||'', community:p.community||'',
-            year:p.year||'', status:p.status||'Ongoing',
-            pct:p.pct||0, budget:p.budget||0, spent:p.spent||0,
-            funding:p.funding||'', contractor:p.contractor||'',
-            start:p.start||'', end:p.end||'',
-            lat:p.lat||5.8978, lng:p.lng||-0.8823,
-            images:images, timeline:p.timeline||[] };
+        return { id: p.id||(i+1), title: p.title||'', desc: p.desc||'',
+            category: p.cat||p.category||'', community: p.community||'',
+            year: p.year||'', status: p.status||'Ongoing', pct: p.pct||0,
+            budget: p.budget||0, spent: p.spent||0,
+            funding: p.funding||'', contractor: p.contractor||'',
+            start: p.start||'', end: p.end||'',
+            lat: p.lat||5.8978, lng: p.lng||-0.8823,
+            images: images, timeline: p.timeline||[] };
     });
-    window._fbSet(window._fbRef(window._fbDb,'projects'), projects)
-        .then(function(){ showToast('✅ Projects saved & live on public website'); logActivity('Projects synced to Firebase'); })
-        .catch(function(err){ console.error('Firebase projects sync FAILED:',err); showToast('⚠️ Saved locally - Firebase sync failed'); });
+    window._fbSet(window._fbRef(window._fbDb, 'projects'), projects)
+        .then(function() { showToast('✅ Projects live on public website'); logActivity('Projects synced to Firebase'); })
+        .catch(function(e) { console.error('savePubs Firebase FAILED:', e); showToast('⚠️ Firebase sync failed'); });
 }
 
 var _projMedia=[], _projTimeline=[];
@@ -2222,7 +2208,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-
+<!-- ═══════════════════════════════════════════════
+     FIREBASE INTEGRATION — saves leadership &
+     publications to Firestore so all visitors see
+     the latest content on the public pages.
+═══════════════════════════════════════════════ -->
 
 </body>
 </html>
