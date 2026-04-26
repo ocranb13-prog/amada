@@ -2228,26 +2228,29 @@ window.savePublicationsToFirebase = async function() {
         }
         if (!pubs) return false;
 
-        // Upload project media images that are base64
-        if (pubs.plan) {
-            for (var proj of pubs.plan) {
-                if (proj.media) {
-                    for (var i = 0; i < proj.media.length; i++) {
-                        var m = proj.media[i];
-                        if (m.src && m.src.startsWith('data:image')) {
-                            var url = await uploadPhoto('proj_' + proj.id + '_' + i, m.src);
-                            proj.media[i].src = url;
-                        }
-                    }
-                }
-                // Remove cover photo base64 if it's already in media
-                if (proj.coverPhoto && proj.coverPhoto.startsWith('data:')) {
-                    proj.coverPhoto = await uploadPhoto('cover_' + proj.id, proj.coverPhoto);
-                }
+        /* Deep-clone and strip ALL base64 strings before writing to Firestore.
+           Reason: base64 image data can be several MB per image, which exceeds
+           Firestore's hard 1MB document size limit, causing setDoc() to throw
+           "Document exceeds maximum size" — caught silently, nothing gets saved.
+           Images are stored in localStorage for the admin view only.           */
+        function stripB64(val) {
+            if (typeof val === 'string') {
+                return (val.length > 200 && val.startsWith('data:')) ? '' : val;
             }
+            if (Array.isArray(val)) return val.map(stripB64);
+            if (val && typeof val === 'object') {
+                var out = {};
+                for (var k in val) {
+                    if (Object.prototype.hasOwnProperty.call(val, k)) out[k] = stripB64(val[k]);
+                }
+                return out;
+            }
+            return val;
         }
 
-        await setDoc(doc(db, 'site_content', 'publications'), pubs, { merge: false });
+        var cleanPubs = stripB64(JSON.parse(JSON.stringify(pubs)));
+
+        await setDoc(doc(db, 'site_content', 'publications'), cleanPubs, { merge: false });
         return true;
     } catch(e) {
         console.error('Firebase publications save failed:', e);

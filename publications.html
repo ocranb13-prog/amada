@@ -374,10 +374,10 @@ try {
         storageBucket: "asmda-576a4.firebasestorage.app",
         messagingSenderId: "593311894920",
         appId: "1:593311894920:web:8a1a90b740d87b9c3f7e3d"
-    }, 'pub-firestore');
+    }, 'pub-fs');
     db = getFirestore(app);
 } catch(e) {
-    console.error('Publications Firestore init failed:', e.message);
+    console.error('Firestore init failed:', e.message);
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -442,7 +442,7 @@ function makeProjCard(p, idx) {
 window._fbProjects = [];
 
 async function loadPublications() {
-    if (!db) { console.error('Firestore not initialised — publications cannot load'); return; }
+    if (!db) { console.error('Firestore not ready'); return; }
     try {
         const snap = await getDoc(doc(db, 'site_content', 'publications'));
         if (!snap.exists()) return;
