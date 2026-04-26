@@ -1975,8 +1975,27 @@ function savePubs(data) {
             images: images, timeline: p.timeline||[] };
     });
     window._fbSet(window._fbRef(window._fbDb, 'projects'), projects)
-        .then(function() { showToast('✅ Projects live on public website'); logActivity('Projects synced to Firebase'); })
-        .catch(function(e) { console.error('savePubs Firebase FAILED:', e); showToast('⚠️ Firebase sync failed'); });
+        .then(function() { logActivity('Projects synced to Firebase'); })
+        .catch(function(e) { console.error('savePubs projects FAILED:', e); });
+
+    /* ── Sync docs / reports / resolutions to Firebase ── */
+    var pubsPayload = {
+        budget: (data.budget || []).map(function(p) {
+            return { id:p.id||'', title:p.title||'', desc:p.desc||'', year:p.year||'',
+                yearDisplay:p.yearDisplay||'', dept:p.dept||'', link:p.link||'', status:p.status||'soon' };
+        }),
+        report: (data.report || []).map(function(p) {
+            return { id:p.id||'', title:p.title||'', desc:p.desc||'', year:p.year||'',
+                yearDisplay:p.yearDisplay||'', period:p.period||'', dept:p.dept||'', link:p.link||'', status:p.status||'soon' };
+        }),
+        resolution: (data.resolution || []).map(function(p) {
+            return { id:p.id||'', title:p.title||'', desc:p.desc||'', year:p.year||'',
+                yearDisplay:p.yearDisplay||'', period:p.period||'', link:p.link||'', status:p.status||'soon' };
+        })
+    };
+    window._fbSet(window._fbRef(window._fbDb, 'sections/publications'), pubsPayload)
+        .then(function() { showToast('✅ Publications live on public website'); logActivity('Publications synced to Firebase'); })
+        .catch(function(e) { console.error('savePubs publications FAILED:', e); showToast('⚠️ Firebase sync failed'); });
 }
 
 var _projMedia=[], _projTimeline=[];
