@@ -39,8 +39,8 @@
 <section class="hero">
     <div class="container">
         <div class="hero-content">
-            <h2 id="fb-hero-heading">Welcome to Asene Manso Akroso District Assembly</h2>
-            <p id="fb-hero-subtitle">To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
+            <h2>Welcome to Asene Manso Akroso District Assembly</h2>
+            <p>To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
             <div class="hero-buttons">
                 <a href="publications.html" class="btn btn-secondary"><i class="fas fa-file-alt"></i> View Publications</a>
                 <a href="#events" onclick="document.getElementById('latestEvents').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-outline"><i class="fas fa-calendar-alt"></i> Latest Events</a>
@@ -53,13 +53,13 @@
 <div class="hero-stats-strip">
     <div class="container">
         <div class="hero-stats-grid">
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-pop">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-area">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-comm">55+</span><span class="hero-stat-label">Communities</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">55+</span><span class="hero-stat-label">Communities</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-year">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
         </div>
     </div>
 </div>
@@ -101,8 +101,7 @@
 <div class="section section-alt">
     <div class="container">
         <h2 class="section-title" id="latestEvents">Latest Events</h2>
-        <div class="news-grid" id="fb-news-cards">
-            <!-- Populated by Firebase → amada_firebase_reader.js; fallback below -->
+        <div class="news-grid" id="news-grid">
             <div class="news-card">
                 <div class="news-image"><img src="img1.jpg" alt="Sod-Cutting Ceremony"></div>
                 <div class="news-content">
@@ -133,7 +132,7 @@
         </div>
 
         <h2 class="section-title" style="margin-top:56px;" id="upcomingAnnouncements">Upcoming Announcements</h2>
-        <div class="events-container">
+        <div class="events-container" id="annc-grid">
             <div class="event-card">
                 <div class="event-date"><i class="fas fa-calendar-day"></i> 20th &amp; 21st November 2025</div>
                 <h3 class="event-title">Sod-Cutting Ceremony for 6 Projects</h3>
@@ -242,9 +241,7 @@
 </div>
 
 <script src="amada_shared.js"></script>
-<script src="amada_firebase_reader.js"></script>
-<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();
-document.addEventListener('DOMContentLoaded', function(){ amadaLoadPage('home'); });</script>
+<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
 <script>
 var NEWS = {
     1: { title:'Sod-Cutting Ceremony for 6 Projects', date:'20th & 21st November 2025', category:'Announcements', images:['img1.jpg','img2.jpg','img4.jpg'],
@@ -270,5 +267,92 @@ function openNewsModal(id) {
 </script>
 
 <a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════
+   HOME PAGE — Load News & Announcements from Firebase
+   Admin writes: /home/news  and  /home/anncs
+   This page reads those paths and re-renders the grids
+══════════════════════════════════════════════════════ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
+
+let _db;
+try {
+    var _app = initializeApp({
+        apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+        authDomain: "asmda-website.firebaseapp.com",
+        databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
+        projectId: "asmda-website",
+        storageBucket: "asmda-website.firebasestorage.app",
+        messagingSenderId: "699818483381",
+        appId: "1:699818483381:web:09c926a48830d46ae228fc"
+    }, 'home-rtdb');
+    _db = getDatabase(_app);
+} catch(e) { console.error('Home Firebase init failed:', e.message); }
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+if (_db) {
+    /* ── Load Latest Events (news) ── */
+    get(ref(_db, 'home/news')).then(function(snap) {
+        if (!snap.exists()) return;
+        var raw  = snap.val();
+        var news = Array.isArray(raw) ? raw : Object.values(raw);
+        news = news.filter(Boolean);
+        if (!news.length) return;
+
+        var grid = document.getElementById('news-grid');
+        if (!grid) return;
+
+        /* Update global NEWS object so openNewsModal() still works */
+        window.NEWS = {};
+        grid.innerHTML = news.map(function(n, i) {
+            var id   = i + 1;
+            var img  = (n.media && n.media[0]) ? (n.media[0].src||n.media[0]) : 'img1.jpg';
+            var imgs = (n.media||[]).map(function(m){ return m.src||m; });
+            window.NEWS[id] = {
+                title: n.title||'', date: n.dateDisplay||n.date||'',
+                category: n.category||'News', images: imgs, content: n.content||''
+            };
+            return '<div class="news-card">'
+                + '<div class="news-image"><img src="' + esc(img) + '" alt="' + esc(n.title) + '" onerror="this.src='img1.jpg'"></div>'
+                + '<div class="news-content">'
+                + '<span class="news-category">' + esc(n.category||'News') + '</span>'
+                + '<h3 class="news-title">' + esc(n.title) + '</h3>'
+                + '<p class="news-date"><i class="fas fa-calendar"></i> ' + esc(n.dateDisplay||n.date||'') + '</p>'
+                + '<button class="btn" onclick="openNewsModal(' + id + ')">Read More</button>'
+                + '</div></div>';
+        }).join('');
+    }).catch(function(e){ console.error('News Firebase read FAILED:', e.message); });
+
+    /* ── Load Upcoming Announcements ── */
+    get(ref(_db, 'home/anncs')).then(function(snap) {
+        if (!snap.exists()) return;
+        var raw   = snap.val();
+        var anncs = Array.isArray(raw) ? raw : Object.values(raw);
+        anncs = anncs.filter(Boolean);
+        if (!anncs.length) return;
+
+        var grid = document.getElementById('annc-grid');
+        if (!grid) return;
+
+        grid.innerHTML = anncs.map(function(a) {
+            var timeLocation = '';
+            if (a.time)     timeLocation += '<i class="fas fa-clock"></i> ' + esc(a.time);
+            if (a.time && a.location) timeLocation += ' &nbsp;|&nbsp; ';
+            if (a.location) timeLocation += '<i class="fas fa-map-marker-alt"></i> ' + esc(a.location);
+            return '<div class="event-card">'
+                + '<div class="event-date"><i class="fas fa-calendar-day"></i> ' + esc(a.dateDisplay||a.date||'') + '</div>'
+                + '<h3 class="event-title">' + esc(a.title) + '</h3>'
+                + (timeLocation ? '<p>' + timeLocation + '</p>' : '')
+                + (a.desc ? '<p>' + esc(a.desc) + '</p>' : '')
+                + '</div>';
+        }).join('');
+    }).catch(function(e){ console.error('Anncs Firebase read FAILED:', e.message); });
+}
+</script>
 </body>
 </html>
