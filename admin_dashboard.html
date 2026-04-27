@@ -1920,7 +1920,24 @@ var DEFAULT_PUBS = {
     ]
 };
 function getPubs(){return getLS('publications',DEFAULT_PUBS);}
-function savePubs(data){setLS('publications',data);}
+function savePubs(data) {
+    setLS('publications', data);
+    if (!window._fbDb || !window._fbRef || !window._fbSet) return;
+    function stripB64(v) {
+        if (typeof v === 'string') return (v.length > 200 && v.startsWith('data:')) ? '' : v;
+        if (Array.isArray(v)) return v.map(stripB64);
+        if (v && typeof v === 'object') {
+            var o = {};
+            for (var k in v) { if (Object.prototype.hasOwnProperty.call(v,k)) o[k] = stripB64(v[k]); }
+            return o;
+        }
+        return v;
+    }
+    var clean = stripB64(JSON.parse(JSON.stringify(data)));
+    window._fbSet(window._fbRef(window._fbDb, 'publications'), clean)
+        .then(function() { showToast('✅ Publications live on public website'); logActivity('Publications synced'); })
+        .catch(function(err) { console.error('Publications sync FAILED:', err); showToast('⚠️ Sync failed - check console'); });
+}
 
 var _projMedia=[], _projTimeline=[];
 
@@ -2156,144 +2173,7 @@ document.addEventListener('DOMContentLoaded', function() {
      publications to Firestore so all visitors see
      the latest content on the public pages.
 ═══════════════════════════════════════════════ -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-const app = initializeApp({
-    apiKey: "AIzaSyC4q2KlFeO10oukA5cjBzRytmqGt-thrA0",
-    authDomain: "asmda-576a4.firebaseapp.com",
-    projectId: "asmda-576a4",
-    storageBucket: "asmda-576a4.firebasestorage.app",
-    messagingSenderId: "593311894920",
-    appId: "1:593311894920:web:8a1a90b740d87b9c3f7e3d"
-});
-const db      = getFirestore(app);
-const storage = getStorage(app);
-
-/* ── Upload base64 image to Firebase Storage, return URL ── */
-async function uploadPhoto(role, base64Data) {
-    if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
-    try {
-        const storageRef = ref(storage, 'leaders/' + role + '_' + Date.now() + '.jpg');
-        await uploadString(storageRef, base64Data, 'data_url');
-        const url = await getDownloadURL(storageRef);
-        return url;
-    } catch(e) {
-        console.warn('Photo upload failed:', e);
-        return base64Data; // fallback to base64
-    }
-}
-
-/* ── Save Leadership to Firestore ── */
-window.saveLeadershipToFirebase = async function() {
-    try {
-        // Gather field values
-        var fields = ['dce_name','dce_role','dce_bio','dce_phone','dce_email','dce_office',
-                      'dcd_name','dcd_role','dcd_bio','dcd_phone','dcd_email','dcd_office',
-                      'pm_name','pm_role','pm_bio','pm_phone','pm_email','pm_office'];
-        var data = {};
-        fields.forEach(function(id) {
-            var el = document.getElementById(id); if (el) data[id] = el.value || '';
-        });
-
-        // Upload photos if they are base64 (new uploads)
-        for (var role of ['dce','dcd','pm']) {
-            var preview = document.getElementById(role + '_photo_preview');
-            if (preview && preview.src && preview.style.display !== 'none') {
-                var src = preview.src;
-                if (src.startsWith('data:')) {
-                    data[role + '_photo'] = await uploadPhoto(role, src);
-                } else if (src.startsWith('http')) {
-                    data[role + '_photo'] = src; // already a URL
-                }
-            }
-        }
-
-        await setDoc(doc(db, 'site_content', 'leadership'), data, { merge: true });
-        return true;
-    } catch(e) {
-        console.error('Firebase leadership save failed:', e);
-        return false;
-    }
-};
-
-/* ── Save Publications to Firestore ── */
-window.savePublicationsToFirebase = async function() {
-    try {
-        var pubs = window.getPubs ? window.getPubs() : null;
-        if (!pubs) {
-            try { var raw = localStorage.getItem('amada_publications'); pubs = raw ? JSON.parse(raw) : null; } catch(e) {}
-        }
-        if (!pubs) return false;
-
-        /* Deep-clone and strip ALL base64 strings before writing to Firestore.
-           Reason: base64 image data can be several MB per image, which exceeds
-           Firestore's hard 1MB document size limit, causing setDoc() to throw
-           "Document exceeds maximum size" — caught silently, nothing gets saved.
-           Images are stored in localStorage for the admin view only.           */
-        function stripB64(val) {
-            if (typeof val === 'string') {
-                return (val.length > 200 && val.startsWith('data:')) ? '' : val;
-            }
-            if (Array.isArray(val)) return val.map(stripB64);
-            if (val && typeof val === 'object') {
-                var out = {};
-                for (var k in val) {
-                    if (Object.prototype.hasOwnProperty.call(val, k)) out[k] = stripB64(val[k]);
-                }
-                return out;
-            }
-            return val;
-        }
-
-        var cleanPubs = stripB64(JSON.parse(JSON.stringify(pubs)));
-
-        await setDoc(doc(db, 'site_content', 'publications'), cleanPubs, { merge: false });
-        return true;
-    } catch(e) {
-        console.error('Firebase publications save failed:', e);
-        return false;
-    }
-};
-
-/* ── Override saveSection to ALSO save to Firebase ── */
-var _origSaveSection = window.saveSection;
-window.saveSection = async function(section) {
-    // Run original localStorage save first
-    if (_origSaveSection) _origSaveSection(section);
-
-    var key = section.replace('edit-','');
-
-    if (key === 'leadership') {
-        var toast = document.getElementById('saveToast');
-        var toastTxt = document.getElementById('toastText');
-        if (toastTxt) toastTxt.textContent = 'Saving to Firebase...';
-        if (toast) toast.classList.add('show');
-        var ok = await window.saveLeadershipToFirebase();
-        if (toastTxt) toastTxt.textContent = ok ? '✓ Leadership saved & published!' : '✓ Saved locally (Firebase error)';
-        setTimeout(function(){ if (toast) toast.classList.remove('show'); }, 3500);
-    }
-};
-
-/* ── Override savePubs to ALSO save to Firebase ── */
-var _origSavePubs = window.savePubs;
-window.savePubs = function(data) {
-    if (_origSavePubs) _origSavePubs(data);
-    // Async save to Firebase
-    window.savePublicationsToFirebase().then(function(ok) {
-        if (ok) {
-            var toastTxt = document.getElementById('toastText');
-            var toast = document.getElementById('saveToast');
-            if (toastTxt) toastTxt.textContent = '✓ Publications saved & published!';
-            if (toast) { toast.classList.add('show'); setTimeout(function(){ toast.classList.remove('show'); }, 3000); }
-        }
-    });
-};
-
-console.log('Firebase integration loaded ✓');
-</script>
 
 </body>
 </html>
