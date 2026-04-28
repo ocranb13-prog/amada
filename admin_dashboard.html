@@ -1744,13 +1744,6 @@ function saveNewsItems(parentData) {
     });
     setLS('home_anncs', anncs);
     if (parentData) setLS('section_home', parentData);
-    if (window._fbDb && window._fbRef && window._fbSet) {
-        window._fbSet(window._fbRef(window._fbDb, 'home/news'),  news)
-            .catch(function(e){ console.error('News sync FAILED:', e); });
-        window._fbSet(window._fbRef(window._fbDb, 'home/anncs'), anncs)
-            .catch(function(e){ console.error('Anncs sync FAILED:', e); });
-        showToast('✅ News & Announcements live on public website');
-    }
 }
 function addNewsMedia(idx, input) {
     var files = Array.from(input.files);
@@ -1943,7 +1936,7 @@ function savePubs(data) {
     var clean = stripB64(JSON.parse(JSON.stringify(data)));
     window._fbSet(window._fbRef(window._fbDb, 'publications'), clean)
         .then(function() { showToast('✅ Publications live on public website'); logActivity('Publications synced'); })
-        .catch(function(e) { console.error('Publications sync FAILED:', e); showToast('⚠️ Sync failed'); });
+        .catch(function(err) { console.error('Publications sync FAILED:', err); showToast('⚠️ Sync failed - check console'); });
 }
 
 var _projMedia=[], _projTimeline=[];
