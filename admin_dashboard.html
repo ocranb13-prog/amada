@@ -673,14 +673,20 @@
                         Up to <strong>10 images/videos</strong> per card.
                     </p>
                     <div id="newsItemsEditor"></div>
-                    <button class="btn btn-primary btn-sm" onclick="addNewsItem()" style="margin-top:4px;"><i class="fas fa-plus"></i> Add News Card</button>
+                    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                        <button class="btn btn-primary btn-sm" onclick="addNewsItem()"><i class="fas fa-plus"></i> Add News Card</button>
+                        <button class="btn btn-primary btn-sm" onclick="saveSection('home')" style="background:#28a745;border-color:#28a745;"><i class="fas fa-cloud-upload-alt"></i> Save & Sync to Live Site</button>
+                    </div>
                 </div></div>
             </div>
             <div class="edit-tabpanel" id="home-announcements">
                 <div class="card"><div class="card-body">
                     <p style="font-size:0.85rem;color:var(--text3);margin-bottom:16px;">Edit the upcoming announcements/events displayed below the news section.</p>
                     <div id="announcementsEditor"></div>
-                    <button class="btn btn-outline btn-sm" onclick="addAnnouncement()"><i class="fas fa-plus"></i> Add Announcement</button>
+                    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="addAnnouncement()"><i class="fas fa-plus"></i> Add Announcement</button>
+                        <button class="btn btn-primary btn-sm" onclick="saveSection('home')" style="background:#28a745;border-color:#28a745;"><i class="fas fa-cloud-upload-alt"></i> Save & Sync to Live Site</button>
+                    </div>
                 </div></div>
             </div>
         </div>
@@ -1744,6 +1750,30 @@ function saveNewsItems(parentData) {
     });
     setLS('home_anncs', anncs);
     if (parentData) setLS('section_home', parentData);
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        /* Strip base64 images from news before Firebase save (too large for RTDB).
+           The public page shows a fallback image if media is absent — text/dates sync fine. */
+        function stripNewsB64(arr) {
+            return arr.map(function(item) {
+                var clean = JSON.parse(JSON.stringify(item));
+                if (clean.media) {
+                    clean.media = clean.media.map(function(m) {
+                        return { src: (m.src && m.src.length > 200 && m.src.startsWith('data:')) ? '' : (m.src||''), type: m.type||'image', name: m.name||'' };
+                    }).filter(function(m){ return m.src !== ''; });
+                }
+                return clean;
+            });
+        }
+        var newsClean = stripNewsB64(news);
+        var anncsClean = JSON.parse(JSON.stringify(anncs));
+        window._fbSet(window._fbRef(window._fbDb, 'home/news'),  newsClean)
+            .then(function(){ console.log('News synced to Firebase'); })
+            .catch(function(e){ console.error('News sync FAILED:', e); showToast('⚠️ News sync failed — check Firebase'); });
+        window._fbSet(window._fbRef(window._fbDb, 'home/anncs'), anncsClean)
+            .then(function(){ console.log('Anncs synced to Firebase'); })
+            .catch(function(e){ console.error('Anncs sync FAILED:', e); showToast('⚠️ Announcements sync failed — check Firebase'); });
+        showToast('✅ News & Announcements live on public website');
+    }
 }
 function addNewsMedia(idx, input) {
     var files = Array.from(input.files);
@@ -1923,20 +1953,13 @@ function getPubs(){return getLS('publications',DEFAULT_PUBS);}
 function savePubs(data) {
     setLS('publications', data);
     if (!window._fbDb || !window._fbRef || !window._fbSet) return;
-    function stripB64(v) {
-        if (typeof v === 'string') return (v.length > 200 && v.startsWith('data:')) ? '' : v;
-        if (Array.isArray(v)) return v.map(stripB64);
-        if (v && typeof v === 'object') {
-            var o = {};
-            for (var k in v) { if (Object.prototype.hasOwnProperty.call(v,k)) o[k] = stripB64(v[k]); }
-            return o;
-        }
-        return v;
-    }
-    var clean = stripB64(JSON.parse(JSON.stringify(data)));
+    /* NOTE: Images are stored as base64 in Firebase Realtime DB.
+       Keep images small (< 500KB each) to stay within Firebase limits.
+       We no longer strip base64 so project cover images reach the public site. */
+    var clean = JSON.parse(JSON.stringify(data));
     window._fbSet(window._fbRef(window._fbDb, 'publications'), clean)
         .then(function() { showToast('✅ Publications live on public website'); logActivity('Publications synced'); })
-        .catch(function(err) { console.error('Publications sync FAILED:', err); showToast('⚠️ Sync failed - check console'); });
+        .catch(function(e) { console.error('Publications sync FAILED:', e); showToast('⚠️ Sync failed — images may be too large. Try smaller images.'); });
 }
 
 var _projMedia=[], _projTimeline=[];
