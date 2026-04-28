@@ -421,8 +421,13 @@ var PROJECTS = [
           Financial · Timeline · Map
 ═══════════════════════════════════ */
 function openProjectModal(id) {
-    var p = PROJECTS.find(function(x){ return x.id == id || String(x.id) === String(id); });
-    if (!p) return;
+    /* Use window.PROJECTS (updated by Firebase) if available, else fall back to local PROJECTS */
+    var pool = (window.PROJECTS && window.PROJECTS.length) ? window.PROJECTS : PROJECTS;
+    var p = pool.find(function(x){ return x.id == id || String(x.id) === String(id); });
+    if (!p) {
+        console.warn('openProjectModal: no project found for id=' + id + '. Available ids:', pool.map(function(x){return x.id;}));
+        return;
+    }
     document.getElementById('projectModalTitle').textContent = p.title;
 
     var pcolor = p.pct <= 30 ? '#dc3545' : p.pct <= 70 ? '#ffc107' : '#28a745';

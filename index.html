@@ -326,7 +326,7 @@ if (_db) {
             var imgs = (n.media||[]).map(function(m){ return m.src||m; });
             window.NEWS[id] = { title:n.title||'', date:n.dateDisplay||n.date||'', category:n.category||'News', images:imgs, content:n.content||'' };
             return '<div class="news-card">'
-                + '<div class="news-image"><img src="' + esc(img) + '" alt="' + esc(n.title) + '" onerror="this.src='img1.jpg'"></div>'
+                + '<div class="news-image"><img src="' + esc(img) + '" alt="' + esc(n.title) + '" onerror="this.onerror=null;this.src=&quot;img1.jpg&quot;"></div>'
                 + '<div class="news-content">'
                 + '<span class="news-category">' + esc(n.category||'News') + '</span>'
                 + '<h3 class="news-title">' + esc(n.title) + '</h3>'
