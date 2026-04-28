@@ -587,38 +587,66 @@ function openReportModal() { openModal('reportModal'); }
 
 
 
+
+
 <script type="module">
+/* Publications reader — checks /publications first, falls back to /projects */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
 var _db;
 try {
     _db = getDatabase(initializeApp({
-        apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
-        authDomain:"asmda-website.firebaseapp.com",
-        databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
-        projectId:"asmda-website",storageBucket:"asmda-website.firebasestorage.app",
-        messagingSenderId:"699818483381",appId:"1:699818483381:web:09c926a48830d46ae228fc"
-    }, 'pub-rtdb'));
-} catch(e){ console.error('pub-rtdb init:',e.message); }
+        apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",authDomain:"asmda-website.firebaseapp.com",
+        databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",projectId:"asmda-website",
+        storageBucket:"asmda-website.firebasestorage.app",messagingSenderId:"699818483381",
+        appId:"1:699818483381:web:09c926a48830d46ae228fc"
+    }, 'pub-v2'));
+} catch(e){ console.error('pub-v2 init:',e.message); }
+
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function pclass(p){return p<=30?'progress-red':p<=70?'progress-yellow':'progress-green';}
-function makeDocCard(p){var btn=(p.status==='available'&&p.link)?'<a href="'+esc(p.link)+'" target="_blank" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>':'<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';return '<div class="publication-card"><div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div><div class="publication-content"><h4>'+esc(p.title)+'</h4><p>'+esc(p.desc||'')+'</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> '+esc(p.yearDisplay||p.year||'')+'</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div>'+btn+'</div></div>';}
-function makeReportCard(p){var btn=(p.status==='available'&&p.link)?'<a href="'+esc(p.link)+'" target="_blank" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>':'<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';return '<div class="publication-card"><div class="publication-icon"><i class="fas fa-chart-bar" style="color:#0d5ba7;"></i></div><div class="publication-content"><h4>'+esc(p.title)+'</h4><p>'+esc(p.desc||'')+'</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> '+esc(p.yearDisplay||p.year||'')+'</span></div>'+btn+'</div></div>';}
-function makeResCard(p){var btn=(p.status==='available'&&p.link)?'<a href="'+esc(p.link)+'" target="_blank" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>':'<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';return '<div class="publication-card"><div class="publication-icon"><i class="fas fa-gavel" style="color:#C9A227;"></i></div><div class="publication-content"><h4>'+esc(p.title)+'</h4><p>'+esc(p.desc||'')+'</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> '+esc(p.yearDisplay||p.year||'')+'</span></div>'+btn+'</div></div>';}
-function makeProjCard(p){var pct=p.pct||0;var badge=p.status==='Completed'?'status-completed':'status-ongoing';var cover=(p.media&&p.media[0]&&p.media[0].src)?p.media[0].src:'';var imgHtml=cover?'<img src="'+esc(cover)+'" alt="'+esc(p.title)+'" onerror="this.style.display='none'">'  :'';return '<div class="development-project-card"><div class="development-image-container">'+imgHtml+'<span class="project-status-badge '+badge+'">'+esc(p.status)+'</span></div><div class="project-card-body"><span class="project-category-tag">'+esc(p.cat||p.category||'')+'</span><h4 class="project-card-title">'+esc(p.title)+'</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> '+esc(p.community||'')+'</span><span><i class="fas fa-calendar"></i> '+esc(p.year||'')+'</span></div><div class="project-progress-bar"><div class="project-progress-fill '+pclass(pct)+'" style="width:'+pct+'%"></div></div><span class="progress-label">'+pct+'% Complete</span><button class="project-view-btn" onclick="openProjectModal('+p.id+')"><i class="fas fa-info-circle"></i> View Details</button></div></div>';}
-if(_db){get(ref(_db,'publications')).then(function(snap){
-    if(!snap.exists()){console.log('No publications in Firebase yet');return;}
-    var data=snap.val();
+
+function makeDocCard(p){
+    var btn=(p.status==='available'&&p.link)?'<a href="'+esc(p.link)+'" target="_blank" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>':'<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';
+    return '<div class="publication-card"><div class="publication-icon"><i class="fas fa-file-invoice-dollar" style="color:#dc3545;"></i></div><div class="publication-content"><h4>'+esc(p.title)+'</h4><p>'+esc(p.desc||'')+'</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> '+esc(p.yearDisplay||p.year||'')+'</span><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span></div>'+btn+'</div></div>';
+}
+function makeReportCard(p){
+    var btn=(p.status==='available'&&p.link)?'<a href="'+esc(p.link)+'" target="_blank" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>':'<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';
+    return '<div class="publication-card"><div class="publication-icon"><i class="fas fa-chart-bar" style="color:#0d5ba7;"></i></div><div class="publication-content"><h4>'+esc(p.title)+'</h4><p>'+esc(p.desc||'')+'</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> '+esc(p.yearDisplay||p.year||'')+'</span></div>'+btn+'</div></div>';
+}
+function makeResCard(p){
+    var btn=(p.status==='available'&&p.link)?'<a href="'+esc(p.link)+'" target="_blank" class="pub-download-btn"><i class="fas fa-eye"></i> View</a>':'<span class="pub-download-btn" style="background:#e0e8e0;color:#7a8e7a;cursor:not-allowed;"><i class="fas fa-clock"></i> Coming Soon</span>';
+    return '<div class="publication-card"><div class="publication-icon"><i class="fas fa-gavel" style="color:#C9A227;"></i></div><div class="publication-content"><h4>'+esc(p.title)+'</h4><p>'+esc(p.desc||'')+'</p><div class="publication-meta"><span><i class="fas fa-calendar"></i> '+esc(p.yearDisplay||p.year||'')+'</span></div>'+btn+'</div></div>';
+}
+function makeProjCard(p){
+    var pct=p.pct||0;var badge=p.status==='Completed'?'status-completed':'status-ongoing';
+    var cover=(p.media&&p.media[0]&&p.media[0].src)?p.media[0].src:'';
+    var imgHtml=cover?'<img src="'+esc(cover)+'" alt="'+esc(p.title)+'" onerror="this.style.display='none'">'  :'';
+    return '<div class="development-project-card"><div class="development-image-container">'+imgHtml+'<span class="project-status-badge '+badge+'">'+esc(p.status)+'</span></div><div class="project-card-body"><span class="project-category-tag">'+esc(p.cat||p.category||'')+'</span><h4 class="project-card-title">'+esc(p.title)+'</h4><div class="project-meta-row"><span><i class="fas fa-map-marker-alt"></i> '+esc(p.community||'')+'</span><span><i class="fas fa-calendar"></i> '+esc(p.year||'')+'</span></div><div class="project-progress-bar"><div class="project-progress-fill '+pclass(pct)+'" style="width:'+pct+'%"></div></div><span class="progress-label">'+pct+'% Complete</span><button class="project-view-btn" onclick="openProjectModal('+p.id+')"><i class="fas fa-info-circle"></i> View Details</button></div></div>';
+}
+
+function renderAll(data) {
     function toArr(v){return Array.isArray(v)?v:(v?Object.values(v):[]);}
     var budget=toArr(data.budget).filter(Boolean);
     var report=toArr(data.report).filter(Boolean);
     var resolution=toArr(data.resolution).filter(Boolean);
     var plan=toArr(data.plan).filter(Boolean);
     var total=budget.length+report.length+resolution.length+plan.length;
-    if(total===0){console.log('Publications empty');return;}
-    if(plan.length){window.PROJECTS=plan.map(function(p,i){return{id:p.id||(i+1),title:p.title||'',category:p.cat||p.category||'',community:p.community||'',year:p.year||'',status:p.status||'Ongoing',pct:p.pct||0,budget:p.budget||0,spent:p.spent||0,startDate:p.start||'',endDate:p.end||'',fundingSource:p.funding||'',contractor:p.contractor||'',images:(p.media||[]).map(function(m){return m.src||'';}).filter(Boolean),lat:p.lat||5.8978,lng:p.lng||-0.8823,desc:p.desc||'',timeline:p.timeline||[]};});}
+    if(total===0){console.log('Publications data empty');return;}
+    if(plan.length){
+        window.PROJECTS=plan.map(function(p,i){
+            return{id:p.id||(i+1),title:p.title||'',category:p.cat||p.category||'',
+                community:p.community||'',year:p.year||'',status:p.status||'Ongoing',
+                pct:p.pct||0,budget:p.budget||0,spent:p.spent||0,
+                startDate:p.start||p.startDate||'',endDate:p.end||p.endDate||'',
+                fundingSource:p.funding||p.fundingSource||'',contractor:p.contractor||'',
+                images:(p.media||[]).map(function(m){return m.src||'';}).filter(Boolean),
+                lat:p.lat||5.8978,lng:p.lng||-0.8823,desc:p.desc||'',timeline:p.timeline||[]};
+        });
+    }
     function setCount(id,n){var el=document.getElementById(id);if(el){var c=el.querySelector('.tab-count');if(c)c.textContent=n;}}
-    setCount('tab-all',total);setCount('tab-documents',budget.length);setCount('tab-reports',report.length);setCount('tab-resolutions',resolution.length);setCount('tab-projects',plan.length);
+    setCount('tab-all',total);setCount('tab-documents',budget.length);
+    setCount('tab-reports',report.length);setCount('tab-resolutions',resolution.length);setCount('tab-projects',plan.length);
     function render(sel,items,fn){var el=document.querySelector(sel);if(el&&items.length)el.innerHTML=items.map(fn).join('');}
     render('#panel-documents .publications-grid',budget,makeDocCard);
     render('#panel-reports .publications-grid',report,makeReportCard);
@@ -628,7 +656,25 @@ if(_db){get(ref(_db,'publications')).then(function(snap){
     render('#panel-all .section-gap:nth-child(2) .publications-grid',report.slice(0,2),makeReportCard);
     render('#panel-all .section-gap:nth-child(3) .publications-grid',resolution.slice(0,2),makeResCard);
     render('#panel-all .section-gap:nth-child(4) .publications-grid',plan.slice(0,3),makeProjCard);
-}).catch(function(e){console.error('Publications read FAILED:',e.message);});}
+}
+
+if(_db){
+    /* Try /publications first (new path), fall back to /projects (legacy) */
+    get(ref(_db,'publications')).then(function(snap){
+        if(snap.exists()&&snap.val()&&(snap.val().budget||snap.val().report||snap.val().resolution||snap.val().plan)){
+            console.log('Reading from /publications');
+            renderAll(snap.val());
+        } else {
+            console.log('No data at /publications, trying /projects (legacy)');
+            return get(ref(_db,'projects')).then(function(snap2){
+                if(!snap2.exists())return;
+                var raw=snap2.val();
+                var arr=Array.isArray(raw)?raw:Object.values(raw);
+                renderAll({plan:arr.filter(Boolean)});
+            });
+        }
+    }).catch(function(e){console.error('Publications read FAILED:',e.message);});
+}
 </script>
 </body>
 </html>
