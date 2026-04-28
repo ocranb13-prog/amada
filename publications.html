@@ -607,6 +607,15 @@ try {
     _db = getDatabase(_app);
 } catch(e) { console.error('Publications Firebase init failed:', e.message); }
 
+/* ── Immediately clear hardcoded project HTML ── */
+(function() {
+    var spinner = '<div style="text-align:center;padding:40px;color:#7a8e7a;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#1F6B3A;"></i>Loading...</div>';
+    var projGrid = document.querySelector('#panel-projects .publications-grid');
+    if (projGrid) projGrid.innerHTML = spinner;
+    var allProj = document.querySelector('#panel-all .section-gap:nth-child(4) .publications-grid');
+    if (allProj) allProj.innerHTML = spinner;
+})();
+
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function makeDocCard(p) {
@@ -645,11 +654,15 @@ function makeResCard(p) {
 
 function pclass(pct) { return pct <= 30 ? 'progress-red' : pct <= 70 ? 'progress-yellow' : 'progress-green'; }
 
-function makeProjCard(p) {
+function makeProjCard(p, _unused, _arr) {
+    /* _unused is the array index from .map() — not used here because
+       window.PROJECTS is keyed by p._fbIdx set in the Firebase loader */
     var pct = p.pct || 0;
     var badge = p.status === 'Completed' ? 'status-completed' : 'status-ongoing';
     var cover = (p.media && p.media[0] && p.media[0].src) ? p.media[0].src : '';
     var imgHtml = cover ? '<img src="' + esc(cover) + '" alt="' + esc(p.title) + '" onerror="this.style.display=\'none\'">' : '';
+    /* Always use the numeric id stored in p.id (guaranteed numeric by the loader) */
+    var numId = parseInt(p.id, 10) || p.id;
     return '<div class="development-project-card">'
         + '<div class="development-image-container">' + imgHtml
         + '<span class="project-status-badge ' + badge + '">' + esc(p.status) + '</span></div>'
@@ -661,7 +674,7 @@ function makeProjCard(p) {
         + '<span><i class="fas fa-calendar"></i> ' + esc(p.year||'') + '</span></div>'
         + '<div class="project-progress-bar"><div class="project-progress-fill ' + pclass(pct) + '" style="width:' + pct + '%"></div></div>'
         + '<span class="progress-label">' + pct + '% Complete</span>'
-        + '<button class="project-view-btn" onclick="openProjectModal(' + p.id + ')"><i class="fas fa-info-circle"></i> View Details</button>'
+        + '<button class="project-view-btn" onclick="openProjectModal(' + JSON.stringify(numId) + ')"><i class="fas fa-info-circle"></i> View Details</button>'
         + '</div></div>';
 }
 
@@ -679,13 +692,17 @@ if (_db) {
         if (total === 0) { console.log('Publications data empty'); return; }
 
         if (plan.length) {
+            /* Always use sequential numeric IDs (1-based) so openProjectModal()
+               can find them via  PROJECTS.find(x => x.id == id)  regardless of
+               whatever string-id the admin assigned (e.g. "p1", "p2"). */
             window.PROJECTS = plan.map(function(p, i) {
-                return { id:p.id||(i+1), title:p.title||'', category:p.cat||p.category||'',
+                var numId = i + 1;   // guaranteed numeric, matches makeProjCard output
+                return { id:numId, title:p.title||'', category:p.cat||p.category||'',
                     community:p.community||'', year:p.year||'', status:p.status||'Ongoing',
                     pct:p.pct||0, budget:p.budget||0, spent:p.spent||0,
-                    startDate:p.start||'', endDate:p.end||'',
-                    fundingSource:p.funding||'', contractor:p.contractor||'',
-                    images:(p.media||[]).map(function(m){ return m.src||''; }).filter(Boolean),
+                    startDate:p.start||p.startDate||'', endDate:p.end||p.endDate||'',
+                    fundingSource:p.funding||p.fundingSource||'', contractor:p.contractor||'',
+                    images:(p.media||[]).map(function(m){ return m.src||m||''; }).filter(Boolean),
                     lat:p.lat||5.8978, lng:p.lng||-0.8823, desc:p.desc||'', timeline:p.timeline||[] };
             });
         }

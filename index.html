@@ -272,10 +272,23 @@ function openNewsModal(id) {
 /* ══════════════════════════════════════════════════════
    HOME PAGE — Load News & Announcements from Firebase
    Admin writes: /home/news  and  /home/anncs
-   This page reads those paths and re-renders the grids
+   FIX: Hardcoded placeholder HTML is cleared immediately
+        on page load; only Firebase data is ever shown.
 ══════════════════════════════════════════════════════ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+var SPINNER = '<div style="text-align:center;padding:32px;color:#7a8e7a;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#1F6B3A;"></i>Loading...</div>';
+
+/* ── Immediately clear hardcoded placeholder content ── */
+var newsGrid = document.getElementById('news-grid');
+var anncGrid = document.getElementById('annc-grid');
+if (newsGrid) newsGrid.innerHTML = SPINNER;
+if (anncGrid) anncGrid.innerHTML = SPINNER;
 
 let _db;
 try {
@@ -289,34 +302,29 @@ try {
         appId: "1:699818483381:web:09c926a48830d46ae228fc"
     }, 'home-rtdb');
     _db = getDatabase(_app);
-} catch(e) { console.error('Home Firebase init failed:', e.message); }
-
-function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+} catch(e) {
+    console.error('Home Firebase init failed:', e.message);
+    if (newsGrid) newsGrid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Events unavailable.</p>';
+    if (anncGrid) anncGrid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Announcements unavailable.</p>';
 }
 
 if (_db) {
     /* ── Load Latest Events (news) ── */
     get(ref(_db, 'home/news')).then(function(snap) {
-        if (!snap.exists()) return;
+        var grid = document.getElementById('news-grid');
+        if (!grid) return;
+        if (!snap.exists()) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>'; return; }
         var raw  = snap.val();
         var news = Array.isArray(raw) ? raw : Object.values(raw);
         news = news.filter(Boolean);
-        if (!news.length) return;
+        if (!news.length) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>'; return; }
 
-        var grid = document.getElementById('news-grid');
-        if (!grid) return;
-
-        /* Update global NEWS object so openNewsModal() still works */
         window.NEWS = {};
         grid.innerHTML = news.map(function(n, i) {
             var id   = i + 1;
             var img  = (n.media && n.media[0]) ? (n.media[0].src||n.media[0]) : 'img1.jpg';
             var imgs = (n.media||[]).map(function(m){ return m.src||m; });
-            window.NEWS[id] = {
-                title: n.title||'', date: n.dateDisplay||n.date||'',
-                category: n.category||'News', images: imgs, content: n.content||''
-            };
+            window.NEWS[id] = { title:n.title||'', date:n.dateDisplay||n.date||'', category:n.category||'News', images:imgs, content:n.content||'' };
             return '<div class="news-card">'
                 + '<div class="news-image"><img src="' + esc(img) + '" alt="' + esc(n.title) + '" onerror="this.src='img1.jpg'"></div>'
                 + '<div class="news-content">'
@@ -326,18 +334,21 @@ if (_db) {
                 + '<button class="btn" onclick="openNewsModal(' + id + ')">Read More</button>'
                 + '</div></div>';
         }).join('');
-    }).catch(function(e){ console.error('News Firebase read FAILED:', e.message); });
+    }).catch(function(e){
+        console.error('News Firebase read FAILED:', e.message);
+        var grid = document.getElementById('news-grid');
+        if (grid) grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Events unavailable at this time.</p>';
+    });
 
     /* ── Load Upcoming Announcements ── */
     get(ref(_db, 'home/anncs')).then(function(snap) {
-        if (!snap.exists()) return;
+        var grid = document.getElementById('annc-grid');
+        if (!grid) return;
+        if (!snap.exists()) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>'; return; }
         var raw   = snap.val();
         var anncs = Array.isArray(raw) ? raw : Object.values(raw);
         anncs = anncs.filter(Boolean);
-        if (!anncs.length) return;
-
-        var grid = document.getElementById('annc-grid');
-        if (!grid) return;
+        if (!anncs.length) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>'; return; }
 
         grid.innerHTML = anncs.map(function(a) {
             var timeLocation = '';
@@ -351,7 +362,11 @@ if (_db) {
                 + (a.desc ? '<p>' + esc(a.desc) + '</p>' : '')
                 + '</div>';
         }).join('');
-    }).catch(function(e){ console.error('Anncs Firebase read FAILED:', e.message); });
+    }).catch(function(e){
+        console.error('Anncs Firebase read FAILED:', e.message);
+        var grid = document.getElementById('annc-grid');
+        if (grid) grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Announcements unavailable at this time.</p>';
+    });
 }
 </script>
 </body>
