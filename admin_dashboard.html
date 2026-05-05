@@ -1753,18 +1753,9 @@ function saveNewsItems(parentData) {
     if (window._fbDb && window._fbRef && window._fbSet) {
         /* Strip base64 images from news before Firebase save (too large for RTDB).
            The public page shows a fallback image if media is absent — text/dates sync fine. */
-        function stripNewsB64(arr) {
-            return arr.map(function(item) {
-                var clean = JSON.parse(JSON.stringify(item));
-                if (clean.media) {
-                    clean.media = clean.media.map(function(m) {
-                        return { src: (m.src && m.src.length > 200 && m.src.startsWith('data:')) ? '' : (m.src||''), type: m.type||'image', name: m.name||'' };
-                    }).filter(function(m){ return m.src !== ''; });
-                }
-                return clean;
-            });
-        }
-        var newsClean = stripNewsB64(news);
+        /* Keep images in Firebase - they are stored as base64.
+           Keep news images under 300KB each for best performance. */
+        var newsClean = JSON.parse(JSON.stringify(news));
         var anncsClean = JSON.parse(JSON.stringify(anncs));
         window._fbSet(window._fbRef(window._fbDb, 'home/news'),  newsClean)
             .then(function(){ console.log('News synced to Firebase'); })

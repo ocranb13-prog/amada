@@ -503,8 +503,8 @@ function openProjectModal(id) {
     + '<div class="budget-item"><div class="budget-item-label">Amount Spent</div><div class="budget-item-value">GHS ' + p.spent.toLocaleString() + '</div></div>'
     + '<div style="margin-top:12px;">'
     + '<div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#7a8e7a;margin-bottom:4px;">Budget Utilisation</div>'
-    + '<div style="background:#e0e8e0;border-radius:4px;height:7px;overflow:hidden;"><div style="height:100%;width:'+Math.round((p.spent/p.budget)*100)+'%;background:var(--secondary);border-radius:4px;"></div></div>'
-    + '<div style="font-size:0.77rem;color:#7a8e7a;margin-top:3px;">' + Math.round((p.spent/p.budget)*100) + '% of budget utilised</div>'
+    + '<div style="background:#e0e8e0;border-radius:4px;height:7px;overflow:hidden;"><div style="height:100%;width:'+Math.round(p.budget>0?(p.spent/p.budget)*100:0)+'%;background:var(--secondary);border-radius:4px;"></div></div>'
+    + '<div style="font-size:0.77rem;color:#7a8e7a;margin-top:3px;">' + Math.round(p.budget>0?(p.spent/p.budget)*100:0) + '% of budget utilised</div>'
     + '</div>'
     + '</div>'
 
