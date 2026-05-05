@@ -1841,7 +1841,50 @@ function renderDeptHeads() {
 }
 function previewDeptPhoto(key,input){var file=input.files[0];if(!file)return;if(file.size>5*1024*1024){alert('Max 5MB');return;}var r=new FileReader();r.onload=function(e){var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);if(pp){pp.src=e.target.result;pp.style.display='block';}if(pz)pz.classList.add('has-image');var dd=getLS('dept_data',{});if(!dd[key])dd[key]={};dd[key].photo=e.target.result;setLS('dept_data',dd);showToast('Photo uploaded');};r.readAsDataURL(file);}
 function clearDeptPhoto(key,e){if(e&&e.stopPropagation)e.stopPropagation();var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);var inp=document.getElementById('dpt_'+key);if(pp){pp.src='';pp.style.display='none';}if(pz)pz.classList.remove('has-image');if(inp)inp.value='';var dd=getLS('dept_data',{});if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}showToast('Photo removed');}
-function saveDeptHeads(){var data=getLS('dept_data',{});document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el){var k=el.dataset.dept,f=el.dataset.dfield;if(!data[k])data[k]={};data[k][f]=el.value;});document.querySelectorAll('[data-dept][data-unit]').forEach(function(el){var k=el.dataset.dept,u=parseInt(el.dataset.unit);if(!data[k])data[k]={};if(!data[k].units)data[k].units=[];data[k].units[u]=el.value;});setLS('dept_data',data);logActivity('Departments updated');showToast('Departments saved');}
+function saveDeptHeads(){
+    var data=getLS('dept_data',{});
+    document.querySelectorAll('[data-dept][data-dfield]').forEach(function(el){
+        var k=el.dataset.dept,f=el.dataset.dfield;
+        if(!data[k])data[k]={};
+        data[k][f]=el.value;
+    });
+    document.querySelectorAll('[data-dept][data-unit]').forEach(function(el){
+        var k=el.dataset.dept,u=parseInt(el.dataset.unit);
+        if(!data[k])data[k]={};
+        if(!data[k].units)data[k].units=[];
+        data[k].units[u]=el.value;
+    });
+    setLS('dept_data',data);
+    logActivity('Departments updated');
+
+    /* ── Sync to Firebase ── */
+    if (!window._fbDb || !window._fbRef || !window._fbSet) {
+        showToast('Departments saved locally (Firebase not ready)');
+        return;
+    }
+    /* Strip base64 photos - saved separately via dept_photos path */
+    var fbData = {};
+    Object.keys(data).forEach(function(k){
+        var d = data[k];
+        fbData[k] = { head:d.head||'', title:d.title||'', desc:d.desc||'', staff:d.staff||'', funding:d.funding||'', units:d.units||[] };
+    });
+    /* Save dept text fields to sections/departments (matches departments.html reader) */
+    window._fbSet(window._fbRef(window._fbDb,'sections/departments'), fbData)
+        .then(function(){
+            /* Also save photos to dept_photos (matches departments.html reader) */
+            var photos = {};
+            Object.keys(data).forEach(function(k){ if(data[k].photo) photos[k]=data[k].photo; });
+            return window._fbSet(window._fbRef(window._fbDb,'dept_photos'), photos);
+        })
+        .then(function(){
+            showToast('✅ Departments live on public website');
+            logActivity('Departments synced to Firebase');
+        })
+        .catch(function(e){
+            console.error('Departments sync FAILED:',e);
+            showToast('⚠️ Departments sync failed - check Firebase');
+        });
+}
 
 /* ── 14b. PDF UPLOAD HELPERS ── */
 var _pdfStore = { pub:'', rep:'', res:'' }; // stores base64 or filename

@@ -430,6 +430,21 @@ function openProjectModal(id) {
     }
     document.getElementById('projectModalTitle').textContent = p.title;
 
+    /* Coerce Firebase string values to correct types so modal never crashes */
+    p.budget        = Number(p.budget)        || 0;
+    p.spent         = Number(p.spent)         || 0;
+    p.pct           = Number(p.pct)           || 0;
+    p.lat           = Number(p.lat)           || 5.8978;
+    p.lng           = Number(p.lng)           || -0.8823;
+    p.images        = Array.isArray(p.images)   ? p.images   : [];
+    p.timeline      = Array.isArray(p.timeline) ? p.timeline : [];
+    p.category      = p.category      || p.cat      || '';
+    p.community     = p.community     || '';
+    p.fundingSource = p.fundingSource || p.funding   || '';
+    p.startDate     = p.startDate     || p.start     || '';
+    p.endDate       = p.endDate       || p.end       || '';
+    p.desc          = p.desc          || '';
+
     var pcolor = p.pct <= 30 ? '#dc3545' : p.pct <= 70 ? '#ffc107' : '#28a745';
     var sicon  = p.status === 'Completed' ? '✔' : '⏳';
 

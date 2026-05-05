@@ -192,11 +192,18 @@
 
   /* ── LEADERSHIP ── */
   function loadLeadership(db, ref, get) {
-    get(ref(db, 'sections/leadership')).then(function (snap) {
-      if (!snap.exists()) return;
-      var d = snap.val();
+    /* Fetch text fields (sections/leadership) AND photos (photos/) in parallel.
+       Admin saves photos to  photos/dce, photos/dcd, photos/pm  via previewLeaderPhoto.
+       Text is saved to  sections/leadership  via saveSection('leadership'). */
+    Promise.all([
+      get(ref(db, 'sections/leadership')),
+      get(ref(db, 'photos'))
+    ]).then(function(results) {
+      var snap      = results[0];
+      var photoSnap = results[1];
+      var d         = snap.exists()      ? snap.val()      : {};
+      var photoData = photoSnap.exists() ? photoSnap.val() : {};
 
-      // Text fields
       ['dce','dcd','pm'].forEach(function(role) {
         setText('fb-'+role+'-name',   d[role+'_name']);
         setText('fb-'+role+'-role',   d[role+'_role']);
@@ -207,15 +214,12 @@
         if (d[role+'_email']) setAttr('fb-'+role+'-email-link', 'href', 'mailto:'+d[role+'_email']);
         if (d[role+'_phone']) setAttr('fb-'+role+'-phone-link', 'href', 'tel:'+d[role+'_phone']);
 
-        // Photos — admin saves as  photo_dce / photo_dcd / photo_pm
-        var photoSrc = d['photo_' + role] || d[role + '_photo_url'];
+        /* Photos: check sections/leadership inline first, then photos/<role> path */
+        var photoSrc = d['photo_' + role] || d[role + '_photo_url'] || photoData[role] || '';
         if (photoSrc) {
-          var img = document.getElementById('fb-' + role + '-photo');
+          var img         = document.getElementById('fb-' + role + '-photo');
           var placeholder = document.getElementById(role + '-photo-placeholder');
-          if (img) {
-            img.src = photoSrc;
-            img.style.display = 'block';
-          }
+          if (img) { img.src = photoSrc; img.style.display = 'block'; }
           if (placeholder) placeholder.style.display = 'none';
         }
       });
@@ -224,7 +228,7 @@
     });
   }
 
-  /* ── CONTACT ── */
+
   function loadContact(db, ref, get) {
     get(ref(db, 'sections/contact')).then(function (snap) {
       if (!snap.exists()) return;
