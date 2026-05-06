@@ -39,8 +39,8 @@
 <section class="hero">
     <div class="container">
         <div class="hero-content">
-            <h2>Welcome to Asene Manso Akroso District Assembly</h2>
-            <p>To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
+            <h2 id="fb-hero-heading">Welcome to Asene Manso Akroso District Assembly</h2>
+            <p id="fb-hero-subtitle">To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
             <div class="hero-buttons">
                 <a href="publications.html" class="btn btn-secondary"><i class="fas fa-file-alt"></i> View Publications</a>
                 <a href="#events" onclick="document.getElementById('latestEvents').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-outline"><i class="fas fa-calendar-alt"></i> Latest Events</a>
@@ -53,13 +53,13 @@
 <div class="hero-stats-strip">
     <div class="container">
         <div class="hero-stats-grid">
-            <div class="hero-stat"><span class="hero-stat-number">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-pop">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-area">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">55+</span><span class="hero-stat-label">Communities</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-comm">55+</span><span class="hero-stat-label">Communities</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-year">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
         </div>
     </div>
 </div>
@@ -270,10 +270,11 @@ function openNewsModal(id) {
 
 <script type="module">
 /* ══════════════════════════════════════════════════════
-   HOME PAGE — Load News & Announcements from Firebase
-   Admin writes: /home/news  and  /home/anncs
-   FIX: Hardcoded placeholder HTML is cleared immediately
-        on page load; only Firebase data is ever shown.
+   HOME PAGE — Load ALL dynamic content from Firebase
+   Admin writes:
+     sections/home  → hero heading, subtitle, stats
+     home/news      → latest events cards
+     home/anncs     → announcements
 ══════════════════════════════════════════════════════ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
@@ -281,16 +282,21 @@ import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.
 function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+function setText(id, val) {
+    if (!val) return;
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
 
 var SPINNER = '<div style="text-align:center;padding:32px;color:#7a8e7a;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#1F6B3A;"></i>Loading...</div>';
 
-/* ── Immediately clear hardcoded placeholder content ── */
+/* ── Immediately clear hardcoded placeholder grids ── */
 var newsGrid = document.getElementById('news-grid');
 var anncGrid = document.getElementById('annc-grid');
 if (newsGrid) newsGrid.innerHTML = SPINNER;
 if (anncGrid) anncGrid.innerHTML = SPINNER;
 
-let _db;
+var _db;
 try {
     var _app = initializeApp({
         apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
@@ -309,24 +315,47 @@ try {
 }
 
 if (_db) {
-    /* ── Load Latest Events (news) ── */
+
+    /* ── 1. Hero section + Stats (sections/home) ── */
+    get(ref(_db, 'sections/home')).then(function(snap) {
+        if (!snap.exists()) return;
+        var d = snap.val();
+        setText('fb-hero-heading',  d.hero_heading);
+        setText('fb-hero-subtitle', d.hero_subtitle);
+        setText('fb-stat-pop',      d.stat_pop);
+        setText('fb-stat-area',     d.stat_area);
+        setText('fb-stat-comm',     d.stat_comm);
+        setText('fb-stat-year',     d.stat_year);
+    }).catch(function(e) {
+        console.error('Hero/stats Firebase read FAILED:', e.message);
+    });
+
+    /* ── 2. Latest Events (home/news) ── */
     get(ref(_db, 'home/news')).then(function(snap) {
         var grid = document.getElementById('news-grid');
         if (!grid) return;
-        if (!snap.exists()) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>'; return; }
+        if (!snap.exists()) {
+            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>';
+            return;
+        }
         var raw  = snap.val();
         var news = Array.isArray(raw) ? raw : Object.values(raw);
         news = news.filter(Boolean);
-        if (!news.length) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>'; return; }
-
+        if (!news.length) {
+            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>';
+            return;
+        }
         window.NEWS = {};
         grid.innerHTML = news.map(function(n, i) {
-            var id   = i + 1;
-            var img  = (n.media && n.media[0]) ? (n.media[0].src||n.media[0]) : 'img1.jpg';
-            var imgs = (n.media||[]).map(function(m){ return m.src||m; });
-            window.NEWS[id] = { title:n.title||'', date:n.dateDisplay||n.date||'', category:n.category||'News', images:imgs, content:n.content||'' };
-            /* Use first media item if available, else fallback image */
-            var imgSrc = (n.media && n.media[0] && n.media[0].src) ? n.media[0].src : img;
+            var id     = i + 1;
+            var imgSrc = (n.media && n.media[0] && n.media[0].src) ? n.media[0].src
+                       : (n.media && n.media[0])                   ? n.media[0]
+                       : 'img1.jpg';
+            var imgs = (n.media||[]).map(function(m){ return m.src||m||''; }).filter(Boolean);
+            window.NEWS[id] = {
+                title: n.title||'', date: n.dateDisplay||n.date||'',
+                category: n.category||'News', images: imgs, content: n.content||''
+            };
             return '<div class="news-card">'
                 + '<div class="news-image"><img src="' + esc(imgSrc) + '" alt="' + esc(n.title) + '" onerror="this.onerror=null;this.src='img1.jpg'"></div>'
                 + '<div class="news-content">'
@@ -336,27 +365,32 @@ if (_db) {
                 + '<button class="btn" onclick="openNewsModal(' + id + ')">Read More</button>'
                 + '</div></div>';
         }).join('');
-    }).catch(function(e){
+    }).catch(function(e) {
         console.error('News Firebase read FAILED:', e.message);
         var grid = document.getElementById('news-grid');
         if (grid) grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Events unavailable at this time.</p>';
     });
 
-    /* ── Load Upcoming Announcements ── */
+    /* ── 3. Announcements (home/anncs) ── */
     get(ref(_db, 'home/anncs')).then(function(snap) {
         var grid = document.getElementById('annc-grid');
         if (!grid) return;
-        if (!snap.exists()) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>'; return; }
+        if (!snap.exists()) {
+            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>';
+            return;
+        }
         var raw   = snap.val();
         var anncs = Array.isArray(raw) ? raw : Object.values(raw);
         anncs = anncs.filter(Boolean);
-        if (!anncs.length) { grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>'; return; }
-
+        if (!anncs.length) {
+            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>';
+            return;
+        }
         grid.innerHTML = anncs.map(function(a) {
             var timeLocation = '';
-            if (a.time)     timeLocation += '<i class="fas fa-clock"></i> ' + esc(a.time);
+            if (a.time)              timeLocation += '<i class="fas fa-clock"></i> ' + esc(a.time);
             if (a.time && a.location) timeLocation += ' &nbsp;|&nbsp; ';
-            if (a.location) timeLocation += '<i class="fas fa-map-marker-alt"></i> ' + esc(a.location);
+            if (a.location)          timeLocation += '<i class="fas fa-map-marker-alt"></i> ' + esc(a.location);
             return '<div class="event-card">'
                 + '<div class="event-date"><i class="fas fa-calendar-day"></i> ' + esc(a.dateDisplay||a.date||'') + '</div>'
                 + '<h3 class="event-title">' + esc(a.title) + '</h3>'
@@ -364,11 +398,12 @@ if (_db) {
                 + (a.desc ? '<p>' + esc(a.desc) + '</p>' : '')
                 + '</div>';
         }).join('');
-    }).catch(function(e){
+    }).catch(function(e) {
         console.error('Anncs Firebase read FAILED:', e.message);
         var grid = document.getElementById('annc-grid');
         if (grid) grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Announcements unavailable at this time.</p>';
     });
+
 }
 </script>
 </body>
