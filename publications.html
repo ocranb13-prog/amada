@@ -681,8 +681,8 @@ function makeProjCard(p, _unused, _arr) {
     var badge = p.status === 'Completed' ? 'status-completed' : 'status-ongoing';
     var cover = (p.media && p.media[0] && p.media[0].src) ? p.media[0].src : '';
     var imgHtml = cover ? '<img src="' + esc(cover) + '" alt="' + esc(p.title) + '" onerror="this.style.display=\'none\'">' : '';
-    /* Always use the numeric id stored in p.id (guaranteed numeric by the loader) */
-    var numId = parseInt(p.id, 10) || p.id;
+    /* Use _fbId stamped by the Firebase loader (sequential 1-based integer) */
+    var numId = p._fbId || parseInt(p.id, 10) || p.id;
     return '<div class="development-project-card">'
         + '<div class="development-image-container">' + imgHtml
         + '<span class="project-status-badge ' + badge + '">' + esc(p.status) + '</span></div>'
@@ -738,6 +738,9 @@ if (_db) {
         render('#panel-documents .publications-grid',   budget,     makeDocCard);
         render('#panel-reports .publications-grid',     report,     makeReportCard);
         render('#panel-resolutions .publications-grid', resolution, makeResCard);
+        /* Stamp sequential numeric ids onto plan items so makeProjCard
+           generates correct onclick IDs matching window.PROJECTS */
+        plan.forEach(function(p, i){ p._fbId = i + 1; });
         render('#panel-projects .publications-grid',    plan,       makeProjCard);
         render('#panel-all .section-gap:nth-child(1) .publications-grid', budget.slice(0,2),     makeDocCard);
         render('#panel-all .section-gap:nth-child(2) .publications-grid', report.slice(0,2),     makeReportCard);
