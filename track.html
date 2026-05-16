@@ -250,12 +250,69 @@ var STATUS_MESSAGES = {
     }
 };
 
-/* ── Get all saved applications from localStorage ── */
+/* ── Firebase setup for track page ── */
+var _trackDb = null;
+(function() {
+    var s1 = document.createElement('script');
+    s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+    s1.onload = function() {
+        var s2 = document.createElement('script');
+        s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
+        s2.onload = function() {
+            try {
+                var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp({
+                    apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+                    authDomain:"asmda-website.firebaseapp.com",
+                    databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
+                    projectId:"asmda-website",
+                    storageBucket:"asmda-website.firebasestorage.app",
+                    messagingSenderId:"699818483381",
+                    appId:"1:699818483381:web:09c926a48830d46ae228fc"
+                });
+                _trackDb = firebase.database();
+            } catch(e) { console.warn('Track Firebase init failed:', e.message); }
+        };
+        document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+})();
+
+/* ── Get all saved applications (localStorage + Firebase) ── */
 function getSavedApplications() {
     try {
         var raw = localStorage.getItem('amada_applications');
         return raw ? JSON.parse(raw) : {};
     } catch(e) { return {}; }
+}
+
+/* ── Track an application by tracking number ── */
+function trackApplicationFirebase(raw, errEl, resultEl) {
+    if (!_trackDb) { trackApplicationLocal(raw, errEl, resultEl); return; }
+    _trackDb.ref('applications/' + raw).get().then(function(snap) {
+        if (snap.exists()) {
+            renderResult(snap.val(), resultEl);
+        } else {
+            trackApplicationLocal(raw, errEl, resultEl);
+        }
+    }).catch(function() { trackApplicationLocal(raw, errEl, resultEl); });
+}
+
+function trackApplicationLocal(raw, errEl, resultEl) {
+    var apps = getSavedApplications();
+    var app  = apps[raw];
+    if (!app) {
+        var parts = raw.split('-');
+        if (parts.length === 3 && parts[0]==='AMADA' && parts[1].match(/^\d{4}$/) && parts[2].length >= 4) {
+            app = { tracking: raw, service: 'Application', dateSubmitted: 'Unknown — slip required', status: 'submitted',
+                    message: 'Your application has been received. Please allow 5–10 working days for processing.' };
+            renderResult(app, resultEl);
+        } else {
+            errEl.textContent = 'No application found with that tracking number. Please check and try again.';
+            errEl.style.display = 'block';
+        }
+        return;
+    }
+    renderResult(app, resultEl);
 }
 
 /* ── Track an application by tracking number ── */
@@ -279,30 +336,48 @@ function trackApplication() {
         return;
     }
 
-    var apps = getSavedApplications();
-    var app  = apps[raw];
-
-    /* If not found locally, check if the format is valid and show a "submitted" demo */
-    if (!app) {
-        /* Check if it looks like a valid tracking number */
-        var parts = raw.split('-');
-        if (parts.length === 3 && parts[0]==='AMADA' && parts[1].match(/^\d{4}$/) && parts[2].length >= 4) {
-            /* Show "Application submitted — not yet processed" state */
-            app = {
-                tracking: raw,
-                service: 'Application',
-                dateSubmitted: 'Unknown — slip required',
-                status: 'submitted',
-                statusHistory: [
-                    { status:'submitted', date: new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}), note:'Application submitted via online portal' }
-                ]
-            };
-        } else {
-            showNotFound(raw);
-            return;
-        }
+    // Try Firebase first, then fall back to localStorage
+    if (_trackDb) {
+        var loadingEl = document.createElement('div');
+        loadingEl.style.cssText = 'text-align:center;padding:24px;color:#7a8e7a;';
+        loadingEl.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#1F6B3A;font-size:1.4rem;display:block;margin-bottom:8px;"></i>Looking up application...';
+        resultEl.appendChild(loadingEl);
+        resultEl.classList.add('visible');
+        _trackDb.ref('applications/' + raw).get().then(function(snap) {
+            resultEl.innerHTML = '';
+            resultEl.classList.remove('visible');
+            if (snap.exists()) {
+                showResult(snap.val());
+            } else {
+                // fallback to localStorage
+                var localApp = getSavedApplications()[raw];
+                if (localApp) { showResult(localApp); return; }
+                var parts = raw.split('-');
+                if (parts.length === 3 && parts[0]==='AMADA' && parts[1].match(/^\d{4}$/) && parts[2].length >= 4) {
+                    showResult({ tracking: raw, service: 'Application', dateSubmitted: 'Unknown — slip required', status: 'submitted',
+                        statusHistory: [{ status:'submitted', date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}), note:'Application received. Awaiting processing.' }] });
+                } else { showNotFound(raw); }
+            }
+        }).catch(function(err) {
+            console.warn('Firebase track lookup failed:', err);
+            resultEl.innerHTML = '';
+            resultEl.classList.remove('visible');
+            var localApp = getSavedApplications()[raw];
+            if (localApp) { showResult(localApp); } else { showNotFound(raw); }
+        });
+        return;
     }
 
+    // No Firebase — use localStorage only
+    var apps = getSavedApplications();
+    var app  = apps[raw];
+    if (!app) {
+        var parts = raw.split('-');
+        if (parts.length === 3 && parts[0]==='AMADA' && parts[1].match(/^\d{4}$/) && parts[2].length >= 4) {
+            app = { tracking: raw, service: 'Application', dateSubmitted: 'Unknown — slip required', status: 'submitted',
+                statusHistory: [{ status:'submitted', date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}), note:'Application submitted via online portal' }] };
+        } else { showNotFound(raw); return; }
+    }
     showResult(app);
 }
 
