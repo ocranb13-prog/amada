@@ -700,18 +700,30 @@ function makeProjCard(p, _unused, _arr) {
         + '</div></div>';
 }
 
-if (_db) {
-    get(ref(_db, 'publications')).then(function(snap) {
-        if (!snap.exists()) { console.log('No publications in Firebase yet'); return; }
-        var data = snap.val();
+/* ── Default publications shown if Firebase has no data yet ── */
+var FALLBACK_PUBS = {
+    budget:[
+        {title:'2026 Approved Composite Budget',desc:'Composite Budget for 2026-2029',year:'2026',yearDisplay:'2026',dept:'Finance Department',link:'2026 BUDGET HEARING - AMADA.pdf',status:'available'},
+        {title:'2025 Approved Composite Budget',desc:'Composite Budget for 2025-2028',year:'2025',yearDisplay:'2025',dept:'Finance Department',link:'2025 BUDGET HEARING - AMADA.pdf',status:'available'}
+    ],
+    report:[
+        {title:'Annual Progress Report 2024',desc:'Progress on development projects and Assembly programmes',year:'2024',yearDisplay:'2024',dept:'Central Administration',link:'',status:'soon'},
+        {title:'Revenue Mobilisation Report 2025',desc:'IGF and revenue collection activities for 2025',year:'2025',yearDisplay:'2025',dept:'Finance Dept.',link:'',status:'soon'}
+    ],
+    resolution:[
+        {title:'District Assembly Bye-Laws',desc:'Official Bye-Laws governing the district',year:'2024',yearDisplay:'2024',link:'BYE-LAWS.pdf',status:'available'}
+    ],
+    plan:[]
+};
 
-        function toArr(v) { return Array.isArray(v) ? v : (v ? Object.values(v) : []); }
-        var budget     = toArr(data.budget).filter(Boolean);
-        var report     = toArr(data.report).filter(Boolean);
-        var resolution = toArr(data.resolution).filter(Boolean);
-        var plan       = toArr(data.plan).filter(Boolean);
-        var total = budget.length + report.length + resolution.length + plan.length;
-        if (total === 0) { console.log('Publications data empty'); return; }
+function renderPublicationsData(data) {
+    function toArr(v) { return Array.isArray(v) ? v : (v ? Object.values(v) : []); }
+    var budget     = toArr(data.budget).filter(Boolean);
+    var report     = toArr(data.report).filter(Boolean);
+    var resolution = toArr(data.resolution).filter(Boolean);
+    var plan       = toArr(data.plan).filter(Boolean);
+    var total = budget.length + report.length + resolution.length + plan.length;
+    if (total === 0) return false;
 
         if (plan.length) {
             /* Always use sequential numeric IDs (1-based) so openProjectModal()
@@ -740,16 +752,34 @@ if (_db) {
         render('#panel-documents .publications-grid',   budget,     makeDocCard);
         render('#panel-reports .publications-grid',     report,     makeReportCard);
         render('#panel-resolutions .publications-grid', resolution, makeResCard);
-        /* Stamp sequential numeric ids onto plan items so makeProjCard
-           generates correct onclick IDs matching window.PROJECTS */
         plan.forEach(function(p, i){ p._fbId = i + 1; });
         render('#panel-projects .publications-grid',    plan,       makeProjCard);
         render('#panel-all .section-gap:nth-child(1) .publications-grid', budget.slice(0,2),     makeDocCard);
         render('#panel-all .section-gap:nth-child(2) .publications-grid', report.slice(0,2),     makeReportCard);
         render('#panel-all .section-gap:nth-child(3) .publications-grid', resolution.slice(0,2), makeResCard);
         render('#panel-all .section-gap:nth-child(4) .publications-grid', plan.slice(0,3),       makeProjCard);
+        return true;
+}
 
-    }).catch(function(e) { console.error('Publications Firebase read FAILED:', e.message); });
+if (_db) {
+    get(ref(_db, 'publications')).then(function(snap) {
+        var loaded = false;
+        if (snap.exists()) {
+            loaded = renderPublicationsData(snap.val());
+        }
+        // If Firebase returned nothing, render the fallback defaults
+        if (!loaded) {
+            console.log('No publications in Firebase yet — showing defaults');
+            renderPublicationsData(FALLBACK_PUBS);
+        }
+    }).catch(function(e) {
+        console.error('Publications Firebase read FAILED:', e.message);
+        // On error, show fallback so page isn't blank
+        renderPublicationsData(FALLBACK_PUBS);
+    });
+} else {
+    // No Firebase connection — render fallback
+    renderPublicationsData(FALLBACK_PUBS);
 }
 </script>
 
