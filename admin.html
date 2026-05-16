@@ -6,6 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase Auth SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+    (function() {
+        var firebaseConfig = {
+            apiKey:            "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+            authDomain:        "asmda-website.firebaseapp.com",
+            databaseURL:       "https://asmda-website-default-rtdb.firebaseio.com",
+            projectId:         "asmda-website",
+            storageBucket:     "asmda-website.firebasestorage.app",
+            messagingSenderId: "699818483381",
+            appId:             "1:699818483381:web:09c926a48830d46ae228fc"
+        };
+        window._fbApp  = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(firebaseConfig);
+        window._fbAuth = firebase.auth();
+        window._fbDb   = firebase.database();
+    })();
+    </script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         body{
@@ -154,10 +174,10 @@
 
             <form onsubmit="doLogin(event)">
                 <div class="form-group">
-                    <label>Username</label>
+                    <label>Email Address</label>
                     <div class="input-wrap">
-                        <i class="fas fa-user"></i>
-                        <input type="text" class="login-input" id="username" placeholder="Enter username" autocomplete="username"  required>
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" class="login-input" id="username" placeholder="admin@asmda.gov.gh" autocomplete="email" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -182,68 +202,89 @@
     <div class="version-badge">AMADA Admin v1.0 &nbsp;|&nbsp; MIS Unit</div>
 
     <script>
-    var USERS = {
-        'AMADA1': { password:'3767AMADA', role:'superadmin', name:'Super Admin', access:'full' },
-        'AMADA2': { password:'3767AMADA', role:'publisher',  name:'Publisher',   access:'content' }
-    };
+    /* ── Which role pill is selected ── */
+    var _selectedRole = 'superadmin'; // default
 
     function fillAccount(type) {
-        if (type==='super') {
-            document.getElementById('username').value = 'AMADA1';
-            document.getElementById('pill-super').classList.add('active');
-            document.getElementById('pill-pub').classList.remove('active');
-        } else {
-            document.getElementById('username').value = 'AMADA2';
-            document.getElementById('pill-super').classList.remove('active');
-            document.getElementById('pill-pub').classList.add('active');
-        }
-        /* password not auto-filled for security */
+        _selectedRole = (type === 'super') ? 'superadmin' : 'publisher';
+        document.getElementById('pill-super').classList.toggle('active', type === 'super');
+        document.getElementById('pill-pub').classList.toggle('active',   type !== 'super');
     }
 
     function togglePw() {
         var inp = document.getElementById('password');
         var eye = document.getElementById('pwEye');
-        if (inp.type==='password') { inp.type='text'; eye.className='fas fa-eye-slash'; }
-        else { inp.type='password'; eye.className='fas fa-eye'; }
+        if (inp.type === 'password') { inp.type = 'text';     eye.className = 'fas fa-eye-slash'; }
+        else                         { inp.type = 'password'; eye.className = 'fas fa-eye'; }
+    }
+
+    function showError(msg) {
+        var errEl = document.getElementById('errorMsg');
+        document.getElementById('errorText').textContent = msg;
+        errEl.classList.add('show');
     }
 
     function doLogin(e) {
         e.preventDefault();
-        var username = document.getElementById('username').value.trim();
+        var email    = document.getElementById('username').value.trim();
         var password = document.getElementById('password').value;
-        var errEl    = document.getElementById('errorMsg');
         var btn      = document.getElementById('loginBtn');
 
-        errEl.classList.remove('show');
+        document.getElementById('errorMsg').classList.remove('show');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-        btn.disabled = true;
+        btn.disabled  = true;
 
-        setTimeout(function() {
-            var user = USERS[username];
-            if (!user || user.password !== password) {
-                errEl.classList.add('show');
-                document.getElementById('errorText').textContent = 'Invalid username or password. Please try again.';
+        window._fbAuth.signInWithEmailAndPassword(email, password)
+            .then(function(cred) {
+                var uid = cred.user.uid;
+                /* Read role from /admins/{uid} in Realtime DB */
+                return window._fbDb.ref('admins/' + uid).get().then(function(snap) {
+                    if (!snap.exists()) {
+                        window._fbAuth.signOut();
+                        throw new Error('no-role');
+                    }
+                    var data = snap.val();
+                    /* Enforce: pill selection must match stored role */
+                    if (data.role !== _selectedRole) {
+                        window._fbAuth.signOut();
+                        throw new Error('wrong-role');
+                    }
+                    /* Store session */
+                    sessionStorage.setItem('amada_admin_user', JSON.stringify({
+                        uid:       uid,
+                        email:     cred.user.email,
+                        role:      data.role,
+                        name:      data.name || cred.user.email,
+                        access:    data.role === 'superadmin' ? 'full' : 'content',
+                        loginTime: new Date().toISOString()
+                    }));
+                    btn.innerHTML = '<i class="fas fa-check"></i> Redirecting...';
+                    window.location.href = 'admin_dashboard.html';
+                });
+            })
+            .catch(function(err) {
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
-                btn.disabled = false;
-                return;
-            }
-            /* Save session */
-            sessionStorage.setItem('amada_admin_user', JSON.stringify({ username, role:user.role, name:user.name, access:user.access, loginTime: new Date().toISOString() }));
-            btn.innerHTML = '<i class="fas fa-check"></i> Redirecting...';
-            window.location.href = 'admin_dashboard.html';
-        }, 800);
+                btn.disabled  = false;
+                if (err.message === 'no-role') {
+                    showError('Your account has no admin role assigned. Contact the system administrator.');
+                } else if (err.message === 'wrong-role') {
+                    showError('Account role does not match the selected access type. Please select the correct role above.');
+                } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                    showError('Invalid email or password. Please try again.');
+                } else if (err.code === 'auth/too-many-requests') {
+                    showError('Too many failed attempts. Account temporarily locked. Try again later.');
+                } else {
+                    showError('Sign-in failed: ' + err.message);
+                }
+            });
     }
 
-    /* Highlight pill based on typed username */
-    document.getElementById('username').addEventListener('input', function() {
-        var v = this.value.toUpperCase();
-        if (v==='AMADA1')      { document.getElementById('pill-super').classList.add('active'); document.getElementById('pill-pub').classList.remove('active'); }
-        else if (v==='AMADA2') { document.getElementById('pill-pub').classList.add('active'); document.getElementById('pill-super').classList.remove('active'); }
-        else                    { document.getElementById('pill-super').classList.remove('active'); document.getElementById('pill-pub').classList.remove('active'); }
+    /* ── If already authenticated by Firebase, go straight to dashboard ── */
+    window._fbAuth.onAuthStateChanged(function(user) {
+        if (user && sessionStorage.getItem('amada_admin_user')) {
+            window.location.href = 'admin_dashboard.html';
+        }
     });
-
-    /* Check if already logged in */
-    if (sessionStorage.getItem('amada_admin_user')) window.location.href = 'admin_dashboard.html';
     </script>
 </body>
 </html>
