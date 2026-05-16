@@ -6,26 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK -->
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
-    const firebaseConfig = {
-        apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
-        authDomain: "asmda-website.firebaseapp.com",
-        databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
-        projectId: "asmda-website",
-        storageBucket: "asmda-website.firebasestorage.app",
-        messagingSenderId: "699818483381",
-        appId: "1:699818483381:web:09c926a48830d46ae228fc"
-    };
-    const _fbApp = initializeApp(firebaseConfig);
-    const _fbDb  = getDatabase(_fbApp);
-    // Expose to global scope so inline onclick handlers can use it
-    window._fbDb  = _fbDb;
-    window._fbRef = ref;
-    window._fbSet = set;
-    window._fbGet = get;
+    <!-- Firebase SDK (compat — synchronous globals, no module race condition) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+    (function() {
+        var firebaseConfig = {
+            apiKey:            "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+            authDomain:        "asmda-website.firebaseapp.com",
+            databaseURL:       "https://asmda-website-default-rtdb.firebaseio.com",
+            projectId:         "asmda-website",
+            storageBucket:     "asmda-website.firebasestorage.app",
+            messagingSenderId: "699818483381",
+            appId:             "1:699818483381:web:09c926a48830d46ae228fc"
+        };
+        // Avoid duplicate app error if script runs twice
+        var _fbApp = firebase.apps.length
+            ? firebase.apps[0]
+            : firebase.initializeApp(firebaseConfig);
+        var _db = firebase.database();
+
+        // Wrap compat API to match the modular API shape the rest of the code expects
+        window._fbDb  = _db;
+        window._fbRef = function(db, path) { return db.ref(path); };
+        window._fbSet = function(refObj, val) { return refObj.set(val); };
+        window._fbGet = function(refObj) {
+            return refObj.get().then(function(snap) {
+                // Make compat snapshot look like modular snapshot
+                snap.exists = function() { return snap.val() !== null; };
+                return snap;
+            });
+        };
+        console.log('✅ Firebase Admin SDK ready');
+    })();
     </script>
     <style>
     :root{
