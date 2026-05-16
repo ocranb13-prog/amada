@@ -126,6 +126,63 @@
         transition:var(--transition);border:1px solid rgba(255,255,255,0.08);
     }
     .sb-logout:hover{background:rgba(220,53,69,0.15);color:#ff8a8a;border-color:rgba(220,53,69,0.3);}
+    .sb-push-btn{
+        display:flex;align-items:center;gap:10px;margin-bottom:8px;
+        padding:10px 14px;border-radius:8px;cursor:pointer;
+        color:#C9A227;font-size:0.84rem;font-weight:700;
+        transition:var(--transition);border:1px solid rgba(201,162,39,0.3);
+        background:rgba(201,162,39,0.08);
+    }
+    .sb-push-btn:hover{background:rgba(201,162,39,0.18);border-color:rgba(201,162,39,0.6);}
+    .sb-push-btn .push-dot{
+        width:8px;height:8px;border-radius:50%;background:#C9A227;
+        animation:pulse-dot 2s infinite;flex-shrink:0;
+    }
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+    /* Push modal */
+    .push-modal-overlay{
+        display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+        z-index:9999;align-items:center;justify-content:center;
+    }
+    .push-modal-overlay.open{display:flex;}
+    .push-modal{
+        background:#0f2e1a;border:1px solid rgba(201,162,39,0.3);
+        border-radius:14px;padding:28px 28px 24px;width:min(520px,92vw);
+        box-shadow:0 20px 60px rgba(0,0,0,0.6);position:relative;
+    }
+    .push-modal h3{color:#C9A227;font-size:1rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+    .push-modal p{color:rgba(255,255,255,0.55);font-size:0.78rem;margin-bottom:18px;}
+    .push-step{
+        background:#071a0e;border:1px solid rgba(255,255,255,0.07);
+        border-radius:8px;padding:14px 16px;margin-bottom:10px;
+        display:flex;align-items:flex-start;gap:12px;
+    }
+    .push-step-num{
+        width:22px;height:22px;border-radius:50%;background:rgba(201,162,39,0.15);
+        color:#C9A227;font-size:0.7rem;font-weight:900;display:flex;
+        align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+    }
+    .push-step-body{flex:1;}
+    .push-step-label{color:rgba(255,255,255,0.5);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;}
+    .push-cmd{
+        font-family:monospace;font-size:0.82rem;color:#7fff9a;
+        background:#000;padding:8px 12px;border-radius:6px;
+        display:block;cursor:pointer;position:relative;word-break:break-all;
+        border:1px solid rgba(127,255,154,0.15);
+    }
+    .push-cmd:hover{border-color:rgba(127,255,154,0.4);}
+    .push-cmd-note{font-size:0.71rem;color:rgba(255,255,255,0.35);margin-top:5px;}
+    .push-close{
+        position:absolute;top:14px;right:16px;cursor:pointer;
+        color:rgba(255,255,255,0.3);font-size:1.1rem;
+    }
+    .push-close:hover{color:#fff;}
+    .push-firebase-note{
+        margin-top:14px;padding:10px 14px;border-radius:8px;
+        background:rgba(31,107,58,0.15);border:1px solid rgba(31,107,58,0.3);
+        font-size:0.75rem;color:rgba(255,255,255,0.5);line-height:1.6;
+    }
+    .push-firebase-note strong{color:#7fff9a;}
 
     /* ══════════ HEADER ══════════ */
     .main-header{
@@ -567,11 +624,69 @@
     </nav>
 
     <div class="sb-footer">
+        <div class="sb-push-btn" onclick="openPushModal()">
+            <span class="push-dot"></span>
+            <span><i class="fab fa-github" style="margin-right:4px;"></i> Push to GitHub</span>
+        </div>
         <div class="sb-logout" onclick="doLogout()">
             <i class="fas fa-sign-out-alt"></i> Sign Out
         </div>
     </div>
 </aside>
+
+<!-- ═══════════ PUSH TO GITHUB MODAL ═══════════ -->
+<div class="push-modal-overlay" id="pushModalOverlay" onclick="if(event.target===this)closePushModal()">
+    <div class="push-modal">
+        <span class="push-close" onclick="closePushModal()"><i class="fas fa-times"></i></span>
+        <h3><i class="fab fa-github"></i> Push Changes to GitHub</h3>
+        <p>Run these commands in your terminal inside the <strong style="color:#C9A227;">ASMDA WEBSITE</strong> folder to publish updates.</p>
+
+        <div class="push-step">
+            <div class="push-step-num">1</div>
+            <div class="push-step-body">
+                <div class="push-step-label">Stage all changes</div>
+                <code class="push-cmd" onclick="copyCmd(this)" title="Click to copy">git add -A</code>
+                <div class="push-cmd-note">Stages every modified, new and deleted file.</div>
+            </div>
+        </div>
+
+        <div class="push-step">
+            <div class="push-step-num">2</div>
+            <div class="push-step-body">
+                <div class="push-step-label">Commit with a message</div>
+                <code class="push-cmd" id="pushCommitCmd" onclick="copyCmd(this)" title="Click to copy">git commit -m "Admin update — <span id='pushTimestamp'></span>"</code>
+                <div class="push-cmd-note">Click to copy. Edit the message if needed.</div>
+            </div>
+        </div>
+
+        <div class="push-step">
+            <div class="push-step-num">3</div>
+            <div class="push-step-body">
+                <div class="push-step-label">Push to GitHub</div>
+                <code class="push-cmd" onclick="copyCmd(this)" title="Click to copy">git push</code>
+                <div class="push-cmd-note">Sends commits to origin/main on GitHub.</div>
+            </div>
+        </div>
+
+        <div class="push-step">
+            <div class="push-step-num">4</div>
+            <div class="push-step-body">
+                <div class="push-step-label">Deploy Firebase rules (if rules changed)</div>
+                <code class="push-cmd" onclick="copyCmd(this)" title="Click to copy">firebase deploy --only database,hosting</code>
+                <div class="push-cmd-note">Only needed when database.rules.json or hosting files change.</div>
+            </div>
+        </div>
+
+        <div class="push-firebase-note">
+            <strong>💡 One-liner shortcut</strong> (Steps 1–3 combined):<br>
+            <code style="font-family:monospace;color:#7fff9a;font-size:0.78rem;" id="oneLinerCmd" onclick="copyOneLiner()" title="Click to copy" class="push-cmd">git add -A && git commit -m "Admin update <span id='pushTimestamp2'></span>" && git push</code>
+        </div>
+
+        <div id="pushCopiedMsg" style="text-align:center;margin-top:12px;color:#7fff9a;font-size:0.78rem;font-weight:700;display:none;">
+            <i class="fas fa-check-circle"></i> Copied to clipboard!
+        </div>
+    </div>
+</div>
 
 <!-- ═══════════ MAIN WRAPPER ═══════════ -->
 <div class="main-wrapper" id="mainWrapper">
@@ -1387,6 +1502,45 @@ function initAuth() {
     return true;
 }
 
+function openPushModal() {
+    var now = new Date();
+    var ts = now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})
+             + ' ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    var el1 = document.getElementById('pushTimestamp');
+    var el2 = document.getElementById('pushTimestamp2');
+    if (el1) el1.textContent = ts;
+    if (el2) el2.textContent = ts;
+    document.getElementById('pushModalOverlay').classList.add('open');
+}
+function closePushModal() {
+    document.getElementById('pushModalOverlay').classList.remove('open');
+    var msg = document.getElementById('pushCopiedMsg');
+    if (msg) msg.style.display = 'none';
+}
+function copyCmd(el) {
+    var text = el.textContent || el.innerText;
+    navigator.clipboard.writeText(text.trim()).then(function() {
+        var msg = document.getElementById('pushCopiedMsg');
+        if (msg) { msg.style.display = 'block'; setTimeout(function(){ msg.style.display='none'; }, 2000); }
+    }).catch(function() {
+        var ta = document.createElement('textarea');
+        ta.value = text.trim();
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+        var msg = document.getElementById('pushCopiedMsg');
+        if (msg) { msg.style.display = 'block'; setTimeout(function(){ msg.style.display='none'; }, 2000); }
+    });
+}
+function copyOneLiner() {
+    var ts = document.getElementById('pushTimestamp2');
+    var text = 'git add -A && git commit -m "Admin update ' + (ts ? ts.textContent : '') + '" && git push';
+    navigator.clipboard.writeText(text).catch(function() {
+        var ta = document.createElement('textarea'); ta.value = text;
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    });
+    var msg = document.getElementById('pushCopiedMsg');
+    if (msg) { msg.style.display = 'block'; setTimeout(function(){ msg.style.display='none'; }, 2000); }
+}
 function doLogout() {
     if (!confirm('Sign out of AMADA Admin?')) return;
     sessionStorage.removeItem('amada_admin_user');
@@ -1414,7 +1568,11 @@ function showPanel(name) {
     if (bc) bc.textContent = PANEL_LABELS[name] || name;
     if (name === 'applications' || name === 'reports') loadApplications();
     if (name === 'edit-departments')  renderDeptHeads();
-    if (name === 'edit-publications') renderPublications();
+    if (name === 'edit-publications') {
+        // Always sync from Firebase first so admin sees live data, not stale localStorage
+        renderPublications(); // render immediately with cached data
+        loadPubsFromFirebase(function() { renderPublications(); }); // then reload from Firebase
+    }
     if (name === 'edit-home')         renderNewsEditor();
     if (name === 'edit-services')     renderFormsEditor();
     if (name === 'dashboard')         updateDashboardStats();
@@ -1998,17 +2156,59 @@ var DEFAULT_PUBS = {
         {id:'p2',title:'2-Unit KG Block At Akroso Presby',desc:'2-Unit KG Block with ancillary facilities at Akroso Presby.',year:'2025',cat:'Education',community:'Akroso',status:'Completed',pct:100,budget:450000,spent:445000,funding:'DACF',contractor:'Contracted Works Firm',start:'January 2024',end:'March 2025',lat:5.8978,lng:-0.8823,media:[],timeline:[{l:'Sod Cutting',d:'Nov 2023',c:'#1F6B3A'},{l:'Foundation',d:'Jan 2024',c:'#0d5ba7'},{l:'Commissioned',d:'March 2025',c:'#28a745'}]}
     ]
 };
-function getPubs(){return getLS('publications',DEFAULT_PUBS);}
+/* ── PUBLICATIONS: always load from Firebase, fall back to localStorage ── */
+function getPubs() {
+    return getLS('publications', DEFAULT_PUBS);
+}
+
+/* Load publications FROM Firebase into localStorage then re-render */
+function loadPubsFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) {
+        if (cb) cb(getPubs()); return;
+    }
+    window._fbGet(window._fbRef(window._fbDb, 'publications')).then(function(snap) {
+        if (snap.exists()) {
+            var data = snap.val();
+            // Convert Firebase objects to arrays (Firebase can return objects keyed by index)
+            function toArr(v) { return Array.isArray(v) ? v : (v ? Object.values(v) : []); }
+            var normalized = {
+                budget:     toArr(data.budget).filter(Boolean),
+                report:     toArr(data.report).filter(Boolean),
+                resolution: toArr(data.resolution).filter(Boolean),
+                plan:       toArr(data.plan).filter(Boolean)
+            };
+            setLS('publications', normalized);
+        }
+        if (cb) cb(getPubs());
+    }).catch(function(e) {
+        console.warn('loadPubsFromFirebase failed:', e.message);
+        if (cb) cb(getPubs());
+    });
+}
+
 function savePubs(data) {
-    setLS('publications', data);
-    if (!window._fbDb || !window._fbRef || !window._fbSet) return;
-    /* NOTE: Images are stored as base64 in Firebase Realtime DB.
-       Keep images small (< 500KB each) to stay within Firebase limits.
-       We no longer strip base64 so project cover images reach the public site. */
-    var clean = JSON.parse(JSON.stringify(data));
-    window._fbSet(window._fbRef(window._fbDb, 'publications'), clean)
-        .then(function() { showToast('✅ Publications live on public website'); logActivity('Publications synced'); })
-        .catch(function(e) { console.error('Publications sync FAILED:', e); showToast('⚠️ Sync failed — images may be too large. Try smaller images.'); });
+    // Strip pdfData base64 blobs BEFORE saving to Firebase — PDFs can be 5-50MB
+    // which silently crashes the Firebase 10MB node limit. Store link/filename only.
+    var fbData = JSON.parse(JSON.stringify(data));
+    ['budget','report','resolution','plan'].forEach(function(cat) {
+        if (!fbData[cat]) return;
+        fbData[cat].forEach(function(item) {
+            if (item) delete item.pdfData; // remove base64, keep item.link (filename)
+        });
+    });
+    setLS('publications', data); // localStorage keeps full data including pdfData
+    if (!window._fbDb || !window._fbRef || !window._fbSet) {
+        showToast('⚠️ Saved locally only — Firebase not ready'); return;
+    }
+    window._fbSet(window._fbRef(window._fbDb, 'publications'), fbData)
+        .then(function() {
+            showToast('✅ Publications live on public website');
+            logActivity('Publications synced to Firebase');
+        })
+        .catch(function(e) {
+            console.error('Publications Firebase sync FAILED:', e);
+            showToast('⚠️ Firebase sync failed: ' + e.message);
+        });
 }
 
 var _projMedia=[], _projTimeline=[];
