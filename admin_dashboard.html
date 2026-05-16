@@ -2299,8 +2299,20 @@ function editPub(cat,idx){
 }
 function savePub(){
     var cat=document.getElementById('pub_cat').value;
+    // SAFETY: when editing, the category shown in pub_cat may have drifted if the user
+    // browsed the manage-list tabs behind the modal.  Always use _editPubCat as the
+    // original category so we don't accidentally delete from the wrong bucket.
+    var isEdit=(_editPubIdx>=0 && _editPubCat);
+    if(isEdit && cat!==_editPubCat){
+        // User intentionally switched category inside the modal — ask to confirm
+        // so we never silently delete from the wrong list.
+        if(!confirm('Move this item from "'+_editPubCat+'" to "'+cat+'"?')){
+            // Restore the tab to the original category and abort
+            switchPubCat(_editPubCat); return;
+        }
+    }
     var pubs=getPubs();if(!pubs[cat])pubs[cat]=[];
-    var existingId=(_editPubIdx>=0&&_editPubCat)?((pubs[_editPubCat][_editPubIdx]||{}).id):('p'+Date.now());
+    var existingId=isEdit?((pubs[_editPubCat][_editPubIdx]||{}).id):('p'+Date.now());
     var item=null;
     if(cat==='budget'){var title=document.getElementById('pub_title').value.trim();if(!title){alert('Enter a title.');return;}
         var pubDate=document.getElementById('pub_year').value;
