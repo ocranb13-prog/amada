@@ -1,49 +1,36 @@
 {
   "rules": {
-    ".read": true,
-    ".write": false,
-
     "sections": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
-
     "photos": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
-
     "dept_photos": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
-
     "home": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
-
     "publications": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
-
     "projects": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
-
     "applications": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      "$trackingId": {
-        ".read": true
-      }
+      ".read": true,
+      ".write": true
     },
-
     "activity_log": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".read": true,
+      ".write": true
     }
   }
 }
