@@ -1,0 +1,49 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+
+    "sections": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "photos": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "dept_photos": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "home": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "publications": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "projects": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "applications": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$trackingId": {
+        ".read": true
+      }
+    },
+
+    "activity_log": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
