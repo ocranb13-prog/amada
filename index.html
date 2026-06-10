@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
         <meta name="description" content="Official website of the Asene Manso Akroso District Assembly. Explore services, publications, leadership and development projects in the Eastern Region of Ghana.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Asene Manso Akroso District Assembly</title>
+    <title>Home — Asene Manso Akroso District Assembly</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="amada_styles.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body>
 
@@ -41,8 +39,8 @@
 <section class="hero">
     <div class="container">
         <div class="hero-content">
-            <h2 id="fb-hero-heading">Welcome to Asene Manso Akroso District Assembly</h2>
-            <p id="fb-hero-subtitle">To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
+            <h2>Welcome to Asene Manso Akroso District Assembly</h2>
+            <p>To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
             <div class="hero-buttons">
                 <a href="publications.html" class="btn btn-secondary"><i class="fas fa-file-alt"></i> View Publications</a>
                 <a href="#events" onclick="document.getElementById('latestEvents').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-outline"><i class="fas fa-calendar-alt"></i> Latest Events</a>
@@ -55,13 +53,13 @@
 <div class="hero-stats-strip">
     <div class="container">
         <div class="hero-stats-grid">
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-pop">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-area">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-comm">55+</span><span class="hero-stat-label">Communities</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">55+</span><span class="hero-stat-label">Communities</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="fb-stat-year">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
         </div>
     </div>
 </div>
@@ -103,38 +101,38 @@
 <div class="section section-alt">
     <div class="container">
         <h2 class="section-title" id="latestEvents">Latest Events</h2>
-        <div class="news-grid" id="news-grid">
+        <div class="news-grid">
             <div class="news-card">
                 <div class="news-image"><img src="img1.jpg" alt="Sod-Cutting Ceremony"></div>
                 <div class="news-content">
-                    <span class="news-category">Announcements</span>
-                    <h3 class="news-title">Sod-Cutting Ceremony for 6 Projects</h3>
-                    <p class="news-date"><i class="fas fa-calendar"></i> 20th &amp; 21st November 2025</p>
+                    <span class="news-category" id="newsCat1">Announcements</span>
+                    <h3 class="news-title" id="newsTitle1">Sod-Cutting Ceremony for 6 Projects</h3>
+                    <p class="news-date" id="newsDate1"><i class="fas fa-calendar"></i> 20th &amp; 21st November 2025</p>
                     <button class="btn" onclick="openNewsModal(1)">Read More</button>
                 </div>
             </div>
             <div class="news-card">
                 <div class="news-image"><img src="img2.jpg" alt="Market Committee Inauguration"></div>
                 <div class="news-content">
-                    <span class="news-category">Announcements</span>
-                    <h3 class="news-title">Inauguration of Akroso Market Management Committee</h3>
-                    <p class="news-date"><i class="fas fa-calendar"></i> 26th November 2025</p>
+                    <span class="news-category" id="newsCat2">Announcements</span>
+                    <h3 class="news-title" id="newsTitle2">Inauguration of Akroso Market Management Committee</h3>
+                    <p class="news-date" id="newsDate2"><i class="fas fa-calendar"></i> 26th November 2025</p>
                     <button class="btn" onclick="openNewsModal(2)">Read More</button>
                 </div>
             </div>
             <div class="news-card">
                 <div class="news-image"><img src="img4.jpg" alt="District Sanitation Day"></div>
                 <div class="news-content">
-                    <span class="news-category">Public Notices</span>
-                    <h3 class="news-title">District Sanitation Day</h3>
-                    <p class="news-date"><i class="fas fa-calendar"></i> 7th February 2026</p>
+                    <span class="news-category" id="newsCat3">Public Notices</span>
+                    <h3 class="news-title" id="newsTitle3">District Sanitation Day</h3>
+                    <p class="news-date" id="newsDate3"><i class="fas fa-calendar"></i> 7th February 2026</p>
                     <button class="btn" onclick="openNewsModal(3)">Read More</button>
                 </div>
             </div>
         </div>
 
         <h2 class="section-title" style="margin-top:56px;" id="upcomingAnnouncements">Upcoming Announcements</h2>
-        <div class="events-container" id="annc-grid">
+        <div class="events-container">
             <div class="event-card">
                 <div class="event-date"><i class="fas fa-calendar-day"></i> 20th &amp; 21st November 2025</div>
                 <h3 class="event-title">Sod-Cutting Ceremony for 6 Projects</h3>
@@ -152,20 +150,6 @@
                 <h3 class="event-title">District Sanitation Day</h3>
                 <p><i class="fas fa-clock"></i> 6:00 AM onwards &nbsp;|&nbsp; <i class="fas fa-map-marker-alt"></i> Asuboa &amp; District-wide</p>
                 <p>District-wide Clean-up Exercise led by the Hon. DCE and all stakeholders.</p>
-            </div>
-            <div class="event-card">
-                <div class="event-date"><i class="fas fa-calendar-day"></i> 1st April 2026</div>
-                <h3 class="event-title">Commission Of Project</h3>
-                <p><i class="fas fa-clock"></i> 1:00 MP  &nbsp;|&nbsp; <i class="fas fa-map-marker-alt"></i> Akyem Appeadem &amp; </p>
-                <p>The commissioning covers newly constructed 4-unit classroom blocks for the JHS with one teacher’s office, a 3-unit kindergarten classroom with a playroom, unit latrines, a hand-washing station, a school kitchen, a borehole with an overhead tank and hybrid power system, as well as the renovation of a 6-unit primary classroom with a teacher’s office..</p>
-                
-            </div>
-            <div class="event-card">
-                <div class="event-date"><i class="fas fa-calendar-day"></i> 1st April 2026</div>
-                <h3 class="event-title">Commission Of Project</h3>
-                <p><i class="fas fa-clock"></i> 9:00 AM  &nbsp;|&nbsp; <i class="fas fa-map-marker-alt"></i> Akyem Mante &amp; </p>
-                <p>The commissioning of projects at Mante includes a newly constructed 3-unit primary school block, a 3-unit kindergarten block with a playroom, a newly constructed and furnished 2-unit teacher’s accommodation, a 6-unit latrine, a hand-washing station, a kitchen, a borehole with an overhead tank and hybrid power system, as well as the renovation of a 3-unit primary block and the JHS block with offices.</p>
-                
             </div>
         </div>
     </div>
@@ -243,24 +227,72 @@
 </div>
 
 <script src="amada_shared.js"></script>
-<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
+<!-- Firebase SDK for news loading -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
+/* ── DEFAULT NEWS (shown instantly; Firebase overwrites when loaded) ── */
 var NEWS = {
-    1: { title:'Sod-Cutting Ceremony for 6 Projects', date:'20th & 21st November 2025', category:'Announcements', images:['img1.jpg','img2.jpg','img4.jpg'],
-         content:'<p>The District Chief Executive, Hon. Eric Ahinakwa, together with the Regional Minister, Hon. Rita Akosea Awatey, led a historic two-day sod-cutting ceremony for six key development projects across the Asene Manso Akroso District.</p><h4 style="color:var(--primary);margin:18px 0 8px;">Day 1 — Thursday 20th November 2025</h4><h5 style="color:#3d4e3d;margin:12px 0 6px;">Aworoso/Kwamena — 9:00 AM</h5><p>Construction of a 2-Unit KG Block with office, washroom, WC toilet, head teacher office, store room and playground.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Nyamebekyere — 12:00 PM</h5><p>Construction of a 6-Unit Primary Classroom Block with head teacher office, store, library and 6-seater WC toilet.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Apinto D/A JHS — 2:00 PM</h5><p>Construction of a 3-Unit Classroom Block with head teacher office, staff common room and 6-seater WC toilet.</p><h4 style="color:var(--primary);margin:18px 0 8px;">Day 2 — Friday 21st November 2025</h4><h5 style="color:#3d4e3d;margin:12px 0 6px;">Asibirim — 9:00 AM</h5><p>Construction of 1 No. CHPS Compound with nurses\' quarters.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Osenho — 12:00 PM</h5><p>Construction of 1 No. CHPS Compound with nurses\' quarters.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Baadu (Districtwide) — 2:00 PM</h5><p>Construction of 10 No. Mechanised Boreholes across the district.</p>' },
-    2: { title:'Inauguration of Akroso Market Management Committee', date:'26th November 2025', category:'Announcements', images:['img2.jpg','img1.jpg'],
-         content:'<p>On Wednesday, 26th November 2025, the Management of the Asene Manso Akroso District Assembly, led by Ms. Gladys Asamoah Addai (DCD), undertook an official visit to Akim Akroso to inaugurate the newly constituted Akroso Market Management Committee.</p><h4 style="color:var(--primary);margin:16px 0 8px;">Purpose</h4><p>The inauguration marks a significant step in improving trade and commerce within the district. The newly constituted committee will be responsible for the day-to-day management, maintenance, and development of the Akroso Market.</p><h4 style="color:var(--primary);margin:16px 0 8px;">In Attendance</h4><p>The ceremony was attended by local traders, community leaders, Assembly members, and representatives from various departments of the District Assembly.</p>' },
-    3: { title:'District Sanitation Day', date:'7th February 2026', category:'Public Notices', images:['img4.jpg','img1.jpg'],
-         content:'<p>The Hon. District Chief Executive, together with the Asene Manso Akroso District Assembly, Nananom and all stakeholders, embarked on a district-wide Clean-Up Exercise, with the main event held at Asuboa.</p><h4 style="color:var(--primary);margin:16px 0 8px;">Time &amp; Venue</h4><p>Activities commenced at 6:00 AM at Asuboa, with simultaneous clean-up activities carried out across multiple communities in the district.</p><h4 style="color:var(--primary);margin:16px 0 8px;">About the Exercise</h4><p>The sanitation exercise is part of the Assembly\'s commitment to maintaining a clean and healthy environment. Residents are encouraged to participate in regular community clean-ups and properly dispose of waste.</p>' }
+    1: { title:'Sod-Cutting Ceremony for 6 Projects', date:'20th & 21st November 2025', category:'Announcements', media:[],
+         content:'<p>The District Chief Executive, Hon. Eric Ahinakwa, together with the Regional Minister, Hon. Rita Akosea Awatey, led a historic two-day sod-cutting ceremony for six key development projects across the Asene Manso Akroso District.</p>' },
+    2: { title:'Inauguration of Akroso Market Management Committee', date:'26th November 2025', category:'Announcements', media:[],
+         content:'<p>Official inauguration of the newly constituted Akroso Market Management Committee.</p>' },
+    3: { title:'District Sanitation Day', date:'7th February 2026', category:'Public Notices', media:[],
+         content:'<p>District-wide Clean-up Exercise led by the Hon. DCE and all stakeholders.</p>' }
 };
+
+/* ── Load live news + media from Firebase ── */
+(function() {
+    var cfg = {
+        apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+        authDomain:"asmda-website.firebaseapp.com",
+        databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
+        projectId:"asmda-website",
+        storageBucket:"asmda-website.firebasestorage.app",
+        messagingSenderId:"699818483381",
+        appId:"1:699818483381:web:09c926a48830d46ae228fc"
+    };
+    var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
+    firebase.database().ref('home/news').get().then(function(snap) {
+        if (!snap.exists()) return;
+        var arr = snap.val();
+        if (!Array.isArray(arr)) return;
+        arr.forEach(function(item, i) {
+            if (!item) return;
+            var slot = i + 1;
+            NEWS[slot] = {
+                title:    item.title       || '',
+                date:     item.dateDisplay || item.date || '',
+                category: item.category    || '',
+                media:    item.media       || [],
+                content:  item.content     || ''
+            };
+        });
+        /* Update visible card text on page */
+        for (var s = 1; s <= 3; s++) {
+            var n = NEWS[s]; if (!n) continue;
+            var tEl = document.getElementById('newsTitle'+s);
+            var dEl = document.getElementById('newsDate'+s);
+            var cEl = document.getElementById('newsCat'+s);
+            if (tEl) tEl.textContent = n.title;
+            if (dEl) dEl.textContent = n.date;
+            if (cEl) cEl.textContent = n.category;
+        }
+    }).catch(function(e){ console.warn('News load failed:', e); });
+})();
 
 function openNewsModal(id) {
     var n = NEWS[id]; if (!n) return;
+    /* Handle both media[] objects {src,type} and legacy images[] strings */
+    var imgSrcs = (n.media || []).map(function(m){
+        return (m && typeof m === 'object') ? m.src : m;
+    }).filter(Boolean);
+
     document.getElementById('newsModalTitle').textContent = n.title;
-    var gallery = buildGallery(n.images, 'news'+id);
+    var gallery = buildGallery(imgSrcs, 'news'+id);
     document.getElementById('newsModalBody').innerHTML =
         '<span style="background:rgba(31,107,58,0.1);color:var(--primary);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;">'+n.category+'</span>'
-      + '<h2 style="font-family:\'Lora\',Georgia,serif;font-size:1.3rem;color:var(--primary-dark);margin:12px 0;line-height:1.3;">'+n.title+'</h2>'
+      + '<h2 style="font-family:'Lora',Georgia,serif;font-size:1.3rem;color:var(--primary-dark);margin:12px 0;line-height:1.3;">'+n.title+'</h2>'
       + '<p style="font-size:0.82rem;color:#7a8e7a;margin-bottom:18px;"><i class="far fa-calendar" style="color:var(--primary);margin-right:6px;"></i>'+n.date+'</p>'
       + gallery
       + '<div style="line-height:1.8;color:#3d4e3d;font-size:0.91rem;">'+n.content+'</div>';
@@ -269,148 +301,5 @@ function openNewsModal(id) {
 </script>
 
 <a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
-
-<script>
-/* Safe image fallback — called from onerror to avoid quote issues in module strings */
-window._imgFail = function(img) { img.onerror = null; img.src = 'img1.jpg'; };
-</script>
-<script type="module">
-/* ══════════════════════════════════════════════════════
-   HOME PAGE — Load ALL dynamic content from Firebase
-   Admin writes:
-     sections/home  → hero heading, subtitle, stats
-     home/news      → latest events cards
-     home/anncs     → announcements
-══════════════════════════════════════════════════════ */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
-
-function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function setText(id, val) {
-    if (!val) return;
-    var el = document.getElementById(id);
-    if (el) el.textContent = val;
-}
-
-var SPINNER = '<div style="text-align:center;padding:32px;color:#7a8e7a;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#1F6B3A;"></i>Loading...</div>';
-
-/* ── Immediately clear hardcoded placeholder grids ── */
-var newsGrid = document.getElementById('news-grid');
-var anncGrid = document.getElementById('annc-grid');
-if (newsGrid) newsGrid.innerHTML = SPINNER;
-if (anncGrid) anncGrid.innerHTML = SPINNER;
-
-var _db;
-try {
-    var _app = initializeApp({
-        apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
-        authDomain: "asmda-website.firebaseapp.com",
-        databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
-        projectId: "asmda-website",
-        storageBucket: "asmda-website.firebasestorage.app",
-        messagingSenderId: "699818483381",
-        appId: "1:699818483381:web:09c926a48830d46ae228fc"
-    }, 'home-rtdb');
-    _db = getDatabase(_app);
-} catch(e) {
-    console.error('Home Firebase init failed:', e.message);
-    if (newsGrid) newsGrid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Events unavailable.</p>';
-    if (anncGrid) anncGrid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Announcements unavailable.</p>';
-}
-
-if (_db) {
-
-    /* ── 1. Hero section + Stats (sections/home) ── */
-    get(ref(_db, 'sections/home')).then(function(snap) {
-        if (!snap.exists()) return;
-        var d = snap.val();
-        setText('fb-hero-heading',  d.hero_heading);
-        setText('fb-hero-subtitle', d.hero_subtitle);
-        setText('fb-stat-pop',      d.stat_pop);
-        setText('fb-stat-area',     d.stat_area);
-        setText('fb-stat-comm',     d.stat_comm);
-        setText('fb-stat-year',     d.stat_year);
-    }).catch(function(e) {
-        console.error('Hero/stats Firebase read FAILED:', e.message);
-    });
-
-    /* ── 2. Latest Events (home/news) ── */
-    get(ref(_db, 'home/news')).then(function(snap) {
-        var grid = document.getElementById('news-grid');
-        if (!grid) return;
-        if (!snap.exists()) {
-            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>';
-            return;
-        }
-        var raw  = snap.val();
-        var news = Array.isArray(raw) ? raw : Object.values(raw);
-        news = news.filter(Boolean);
-        if (!news.length) {
-            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No events posted yet.</p>';
-            return;
-        }
-        window.NEWS = {};
-        grid.innerHTML = news.map(function(n, i) {
-            var id     = i + 1;
-            var imgSrc = (n.media && n.media[0] && n.media[0].src) ? n.media[0].src
-                       : (n.media && n.media[0])                   ? n.media[0]
-                       : 'img1.jpg';
-            var imgs = (n.media||[]).map(function(m){ return m.src||m||''; }).filter(Boolean);
-            window.NEWS[id] = {
-                title: n.title||'', date: n.dateDisplay||n.date||'',
-                category: n.category||'News', images: imgs, content: n.content||''
-            };
-            return '<div class="news-card">'
-                + '<div class="news-image"><img src="' + esc(imgSrc) + '" alt="' + esc(n.title) + '" onerror="window._imgFail(this)"></div>'
-                + '<div class="news-content">'
-                + '<span class="news-category">' + esc(n.category||'News') + '</span>'
-                + '<h3 class="news-title">' + esc(n.title) + '</h3>'
-                + '<p class="news-date"><i class="fas fa-calendar"></i> ' + esc(n.dateDisplay||n.date||'') + '</p>'
-                + '<button class="btn" onclick="openNewsModal(' + id + ')">Read More</button>'
-                + '</div></div>';
-        }).join('');
-    }).catch(function(e) {
-        console.error('News Firebase read FAILED:', e.message);
-        var grid = document.getElementById('news-grid');
-        if (grid) grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Events unavailable at this time.</p>';
-    });
-
-    /* ── 3. Announcements (home/anncs) ── */
-    get(ref(_db, 'home/anncs')).then(function(snap) {
-        var grid = document.getElementById('annc-grid');
-        if (!grid) return;
-        if (!snap.exists()) {
-            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>';
-            return;
-        }
-        var raw   = snap.val();
-        var anncs = Array.isArray(raw) ? raw : Object.values(raw);
-        anncs = anncs.filter(Boolean);
-        if (!anncs.length) {
-            grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">No announcements posted yet.</p>';
-            return;
-        }
-        grid.innerHTML = anncs.map(function(a) {
-            var timeLocation = '';
-            if (a.time)              timeLocation += '<i class="fas fa-clock"></i> ' + esc(a.time);
-            if (a.time && a.location) timeLocation += ' &nbsp;|&nbsp; ';
-            if (a.location)          timeLocation += '<i class="fas fa-map-marker-alt"></i> ' + esc(a.location);
-            return '<div class="event-card">'
-                + '<div class="event-date"><i class="fas fa-calendar-day"></i> ' + esc(a.dateDisplay||a.date||'') + '</div>'
-                + '<h3 class="event-title">' + esc(a.title) + '</h3>'
-                + (timeLocation ? '<p>' + timeLocation + '</p>' : '')
-                + (a.desc ? '<p>' + esc(a.desc) + '</p>' : '')
-                + '</div>';
-        }).join('');
-    }).catch(function(e) {
-        console.error('Anncs Firebase read FAILED:', e.message);
-        var grid = document.getElementById('annc-grid');
-        if (grid) grid.innerHTML = '<p style="text-align:center;color:#7a8e7a;padding:24px;">Announcements unavailable at this time.</p>';
-    });
-
-}
-</script>
 </body>
 </html>
