@@ -132,7 +132,8 @@
         </div>
 
         <h2 class="section-title" style="margin-top:56px;" id="upcomingAnnouncements">Upcoming Announcements</h2>
-        <div class="events-container">
+        <div class="events-container" id="anncsContainer">
+            <!-- Populated from Firebase via JS below -->
             <div class="event-card">
                 <div class="event-date"><i class="fas fa-calendar-day"></i> 20th &amp; 21st November 2025</div>
                 <h3 class="event-title">Sod-Cutting Ceremony for 6 Projects</h3>
@@ -319,6 +320,43 @@ var NEWS = {
             }
         });
     }).catch(function(e) { console.warn('News Firebase load failed:', e); });
+
+    /* ── Load Upcoming Announcements from Firebase ── */
+    firebase.database().ref('home/anncs').get().then(function(snap) {
+        if (!snap.exists()) return;
+        var arr = snap.val();
+        if (!Array.isArray(arr) || arr.length === 0) return;
+
+        var container = document.getElementById('anncsContainer');
+        if (!container) return;
+
+        var html = arr.map(function(a) {
+            if (!a) return '';
+            var title    = a.title       || '';
+            var date     = a.dateDisplay || a.date || '';
+            var time     = a.time        || '';
+            var location = a.location    || '';
+            var desc     = a.desc        || '';
+
+            var timeLoc = '';
+            if (time && location) {
+                timeLoc = '<p><i class="fas fa-clock"></i> ' + time + ' &nbsp;|&nbsp; <i class="fas fa-map-marker-alt"></i> ' + location + '</p>';
+            } else if (time) {
+                timeLoc = '<p><i class="fas fa-clock"></i> ' + time + '</p>';
+            } else if (location) {
+                timeLoc = '<p><i class="fas fa-map-marker-alt"></i> ' + location + '</p>';
+            }
+
+            return '<div class="event-card">'
+                 + '<div class="event-date"><i class="fas fa-calendar-day"></i> ' + date + '</div>'
+                 + '<h3 class="event-title">' + title + '</h3>'
+                 + timeLoc
+                 + (desc ? '<p>' + desc + '</p>' : '')
+                 + '</div>';
+        }).join('');
+
+        if (html.trim()) container.innerHTML = html;
+    }).catch(function(e) { console.warn('Announcements Firebase load failed:', e); });
 })();
 
 /* ── Open news detail modal ── */
