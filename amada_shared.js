@@ -160,15 +160,16 @@ function lbClose() { var lb=document.getElementById('imgLightbox'); if(lb) lb.re
 /* ── News gallery builder ── */
 function buildGallery(imgs, uid) {
     if (!imgs || !imgs.length) return '<div style="width:100%;height:160px;background:linear-gradient(135deg,#1F6B3A,#0f2e1a);border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-newspaper" style="font-size:3rem;color:rgba(255,255,255,0.2);"></i></div>';
-    var items = imgs.slice(0,6);
-    window['_g_'+uid] = items;
+    var allImgs = imgs; // ALL images for lightbox
+    var items   = imgs.slice(0,6); // max 6 shown in grid
+    window['_g_'+uid] = allImgs; // lightbox gets ALL
     function thumb(src, idx, style) {
         return '<div style="'+style+'overflow:hidden;cursor:zoom-in;" onclick="lbOpen(window[\'_g_'+uid+'\'],'+idx+',\'\')"><img src="'+src+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background=\'#1F6B3A\'"></div>';
     }
     if (items.length===1) return '<div style="width:100%;height:260px;border-radius:12px;margin-bottom:20px;">'+thumb(items[0],0,'width:100%;height:100%;border-radius:12px;')+'</div>';
     if (items.length===2) return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;height:240px;border-radius:12px;overflow:hidden;margin-bottom:20px;">'+thumb(items[0],0,'height:100%;')+thumb(items[1],1,'height:100%;')+'</div>';
     var right = items.slice(1,3).map(function(src,i){
-        var overlay = (items.length>3&&i===1) ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-weight:800;">+'+(items.length-3)+'</div>' : '';
+        var overlay = (allImgs.length>3&&i===1) ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-weight:800;">+'+(allImgs.length-3)+'</div>' : '';
         return '<div style="flex:1;min-height:0;overflow:hidden;cursor:zoom-in;position:relative;" onclick="lbOpen(window[\'_g_'+uid+'\'],'+(i+1)+',\'\')"><img src="'+src+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background=\'#1F6B3A\'">'+overlay+'</div>';
     }).join('');
     return '<div style="display:grid;grid-template-columns:1.6fr 1fr;gap:6px;height:260px;border-radius:12px;overflow:hidden;margin-bottom:20px;">'+thumb(items[0],0,'height:100%;')+'<div style="display:flex;flex-direction:column;gap:6px;">'+right+'</div></div>';
