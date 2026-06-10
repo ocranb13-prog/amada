@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK (compat — synchronous globals, no module race condition) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script>
     (function() {
@@ -28,8 +27,7 @@
         var _db = firebase.database();
 
         // Wrap compat API to match the modular API shape the rest of the code expects
-        window._fbDb   = _db;
-        window._fbAuth = firebase.auth();
+        window._fbDb  = _db;
         window._fbRef = function(db, path) { return db.ref(path); };
         window._fbSet = function(refObj, val) { return refObj.set(val); };
         window._fbGet = function(refObj) {
@@ -1486,16 +1484,6 @@ function initAuth() {
     }
     try { _session = JSON.parse(raw); } catch(e) { window.location.replace('admin.html'); return false; }
 
-    /* Verify Firebase still has an active session — redirect if token expired */
-    if (window._fbAuth) {
-        window._fbAuth.onAuthStateChanged(function(user) {
-            if (!user) {
-                sessionStorage.removeItem('amada_admin_user');
-                window.location.replace('admin.html');
-            }
-        });
-    }
-
     var av  = document.getElementById('sbAvatar');
     var nm  = document.getElementById('sbName');
     var rl  = document.getElementById('sbRoleLabel');
@@ -1556,15 +1544,7 @@ function copyOneLiner() {
 function doLogout() {
     if (!confirm('Sign out of AMADA Admin?')) return;
     sessionStorage.removeItem('amada_admin_user');
-    if (window._fbAuth) {
-        window._fbAuth.signOut().then(function() {
-            window.location.replace('admin.html');
-        }).catch(function() {
-            window.location.replace('admin.html');
-        });
-    } else {
-        window.location.replace('admin.html');
-    }
+    window.location.replace('admin.html');
 }
 
 /* ── 2. PANEL NAVIGATION ── */
@@ -1589,9 +1569,12 @@ function showPanel(name) {
     if (name === 'applications' || name === 'reports') loadApplications();
     if (name === 'edit-departments')  renderDeptHeads();
     if (name === 'edit-publications') {
+        // Always reload from Firebase first to avoid showing stale localStorage data
+        loadPubsFromFirebase(function() { renderPublications(); });
+    }
+    if (name === 'edit-publications') {
         // Always sync from Firebase first so admin sees live data, not stale localStorage
-        renderPublications(); // render immediately with cached data
-        loadPubsFromFirebase(function() { renderPublications(); }); // then reload from Firebase
+        loadPubsFromFirebase(function() { renderPublications(); }); // load from Firebase only
     }
     if (name === 'edit-home')         renderNewsEditor();
     if (name === 'edit-services')     renderFormsEditor();
