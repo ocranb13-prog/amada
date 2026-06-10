@@ -103,7 +103,7 @@
         <h2 class="section-title" id="latestEvents">Latest Events</h2>
         <div class="news-grid">
             <div class="news-card">
-                <div class="news-image"><img src="img1.jpg" alt="Sod-Cutting Ceremony"></div>
+                <div class="news-image" id="newsImg1"><img id="newsImgTag1" src="img1.jpg" alt="Sod-Cutting Ceremony"></div>
                 <div class="news-content">
                     <span class="news-category" id="newsCat1">Announcements</span>
                     <h3 class="news-title" id="newsTitle1">Sod-Cutting Ceremony for 6 Projects</h3>
@@ -112,7 +112,7 @@
                 </div>
             </div>
             <div class="news-card">
-                <div class="news-image"><img src="img2.jpg" alt="Market Committee Inauguration"></div>
+                <div class="news-image" id="newsImg2"><img id="newsImgTag2" src="img2.jpg" alt="Market Committee Inauguration"></div>
                 <div class="news-content">
                     <span class="news-category" id="newsCat2">Announcements</span>
                     <h3 class="news-title" id="newsTitle2">Inauguration of Akroso Market Management Committee</h3>
@@ -121,7 +121,7 @@
                 </div>
             </div>
             <div class="news-card">
-                <div class="news-image"><img src="img4.jpg" alt="District Sanitation Day"></div>
+                <div class="news-image" id="newsImg3"><img id="newsImgTag3" src="img4.jpg" alt="District Sanitation Day"></div>
                 <div class="news-content">
                     <span class="news-category" id="newsCat3">Public Notices</span>
                     <h3 class="news-title" id="newsTitle3">District Sanitation Day</h3>
@@ -227,21 +227,21 @@
 </div>
 
 <script src="amada_shared.js"></script>
-<!-- Firebase SDK for news loading -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-/* ── DEFAULT NEWS (shown instantly; Firebase overwrites when loaded) ── */
+/* ── DEFAULT NEWS — shown instantly while Firebase loads ── */
 var NEWS = {
     1: { title:'Sod-Cutting Ceremony for 6 Projects', date:'20th & 21st November 2025', category:'Announcements', media:[],
-         content:'<p>The District Chief Executive, Hon. Eric Ahinakwa, together with the Regional Minister, Hon. Rita Akosea Awatey, led a historic two-day sod-cutting ceremony for six key development projects across the Asene Manso Akroso District.</p>' },
+         content:'<p>The District Chief Executive, Hon. Eric Ahinakwa, together with the Regional Minister, Hon. Rita Akosea Awatey, led a historic two-day sod-cutting ceremony for six key development projects across the Asene Manso Akroso District.</p><h4 style="color:var(--primary);margin:18px 0 8px;">Day 1 — Thursday 20th November 2025</h4><h5 style="color:#3d4e3d;margin:12px 0 6px;">Aworoso/Kwamena — 9:00 AM</h5><p>Construction of a 2-Unit KG Block with office, washroom, WC toilet, head teacher office, store room and playground.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Nyamebekyere — 12:00 PM</h5><p>Construction of a 6-Unit Primary Classroom Block with head teacher office, store, library and 6-seater WC toilet.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Apinto D/A JHS — 2:00 PM</h5><p>Construction of a 3-Unit Classroom Block with head teacher office, staff common room and 6-seater WC toilet.</p><h4 style="color:var(--primary);margin:18px 0 8px;">Day 2 — Friday 21st November 2025</h4><h5 style="color:#3d4e3d;margin:12px 0 6px;">Asibirim — 9:00 AM</h5><p>Construction of 1 No. CHPS Compound with nurses\' quarters.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Osenho — 12:00 PM</h5><p>Construction of 1 No. CHPS Compound with nurses\' quarters.</p><h5 style="color:#3d4e3d;margin:12px 0 6px;">Baadu (Districtwide) — 2:00 PM</h5><p>Construction of 10 No. Mechanised Boreholes across the district.</p>' },
     2: { title:'Inauguration of Akroso Market Management Committee', date:'26th November 2025', category:'Announcements', media:[],
-         content:'<p>Official inauguration of the newly constituted Akroso Market Management Committee.</p>' },
+         content:'<p>On Wednesday, 26th November 2025, the Management of the Asene Manso Akroso District Assembly, led by Ms. Gladys Asamoah Addai (DCD), undertook an official visit to Akim Akroso to inaugurate the newly constituted Akroso Market Management Committee.</p><h4 style="color:var(--primary);margin:16px 0 8px;">Purpose</h4><p>The inauguration marks a significant step in improving trade and commerce within the district.</p><h4 style="color:var(--primary);margin:16px 0 8px;">In Attendance</h4><p>The ceremony was attended by local traders, community leaders, Assembly members, and representatives from various departments of the District Assembly.</p>' },
     3: { title:'District Sanitation Day', date:'7th February 2026', category:'Public Notices', media:[],
-         content:'<p>District-wide Clean-up Exercise led by the Hon. DCE and all stakeholders.</p>' }
+         content:'<p>The Hon. District Chief Executive, together with the Asene Manso Akroso District Assembly, Nananom and all stakeholders, embarked on a district-wide Clean-Up Exercise, with the main event held at Asuboa.</p><h4 style="color:var(--primary);margin:16px 0 8px;">Time &amp; Venue</h4><p>Activities commenced at 6:00 AM at Asuboa.</p><h4 style="color:var(--primary);margin:16px 0 8px;">About the Exercise</h4><p>The sanitation exercise is part of the Assembly's commitment to maintaining a clean and healthy environment.</p>' }
 };
 
-/* ── Load live news + media from Firebase ── */
+/* ── Load live news from Firebase and update the page ── */
 (function() {
     var cfg = {
         apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
@@ -253,49 +253,59 @@ var NEWS = {
         appId:"1:699818483381:web:09c926a48830d46ae228fc"
     };
     var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
+
     firebase.database().ref('home/news').get().then(function(snap) {
         if (!snap.exists()) return;
         var arr = snap.val();
         if (!Array.isArray(arr)) return;
+
         arr.forEach(function(item, i) {
             if (!item) return;
             var slot = i + 1;
+            /* Update in-memory NEWS object for modal */
             NEWS[slot] = {
-                title:    item.title       || '',
-                date:     item.dateDisplay || item.date || '',
-                category: item.category    || '',
+                title:    item.title       || (NEWS[slot] && NEWS[slot].title)    || '',
+                date:     item.dateDisplay || item.date || (NEWS[slot] && NEWS[slot].date) || '',
+                category: item.category    || (NEWS[slot] && NEWS[slot].category) || '',
                 media:    item.media       || [],
-                content:  item.content     || ''
+                content:  item.content     || (NEWS[slot] && NEWS[slot].content)  || ''
             };
+            /* Update card title */
+            var tEl = document.getElementById('newsTitle' + slot);
+            if (tEl) tEl.textContent = NEWS[slot].title;
+            /* Update card date */
+            var dEl = document.getElementById('newsDate' + slot);
+            if (dEl) dEl.innerHTML = '<i class="fas fa-calendar"></i> ' + NEWS[slot].date;
+            /* Update card category badge */
+            var cEl = document.getElementById('newsCat' + slot);
+            if (cEl) cEl.textContent = NEWS[slot].category;
+            /* Update card thumbnail — use first media image if available */
+            var imgEl = document.getElementById('newsImgTag' + slot);
+            if (imgEl && item.media && item.media.length > 0) {
+                var first = item.media[0];
+                var src = (first && typeof first === 'object') ? first.src : first;
+                if (src) imgEl.src = src;
+            }
         });
-        /* Update visible card text on page */
-        for (var s = 1; s <= 3; s++) {
-            var n = NEWS[s]; if (!n) continue;
-            var tEl = document.getElementById('newsTitle'+s);
-            var dEl = document.getElementById('newsDate'+s);
-            var cEl = document.getElementById('newsCat'+s);
-            if (tEl) tEl.textContent = n.title;
-            if (dEl) dEl.textContent = n.date;
-            if (cEl) cEl.textContent = n.category;
-        }
-    }).catch(function(e){ console.warn('News load failed:', e); });
+    }).catch(function(e) { console.warn('News Firebase load failed:', e); });
 })();
 
+/* ── Open news detail modal ── */
 function openNewsModal(id) {
     var n = NEWS[id]; if (!n) return;
-    /* Handle both media[] objects {src,type} and legacy images[] strings */
-    var imgSrcs = (n.media || []).map(function(m){
+    /* Support both media[] objects {src,type} and legacy images[] strings */
+    var imgSrcs = (n.media || []).map(function(m) {
         return (m && typeof m === 'object') ? m.src : m;
     }).filter(Boolean);
 
     document.getElementById('newsModalTitle').textContent = n.title;
-    var gallery = buildGallery(imgSrcs, 'news'+id);
+    var gallery = buildGallery(imgSrcs, 'news' + id);
     document.getElementById('newsModalBody').innerHTML =
-        '<span style="background:rgba(31,107,58,0.1);color:var(--primary);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;">'+n.category+'</span>'
-      + '<h2 style="font-family:\'Lora\',Georgia,serif;font-size:1.3rem;color:var(--primary-dark);margin:12px 0;line-height:1.3;">'+n.title+'</h2>'
-      + '<p style="font-size:0.82rem;color:#7a8e7a;margin-bottom:18px;"><i class="far fa-calendar" style="color:var(--primary);margin-right:6px;"></i>'+n.date+'</p>'
+        '<span style="background:rgba(31,107,58,0.1);color:var(--primary);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;">' + n.category + '</span>'
+      + '<h2 style="font-family:\'Lora\',Georgia,serif;font-size:1.3rem;color:var(--primary-dark);margin:12px 0;line-height:1.3;">' + n.title + '</h2>'
+      + '<p style="font-size:0.82rem;color:#7a8e7a;margin-bottom:18px;"><i class="far fa-calendar" style="color:var(--primary);margin-right:6px;"></i>' + n.date + '</p>'
       + gallery
-      + '<div style="line-height:1.8;color:#3d4e3d;font-size:0.91rem;">'+n.content+'</div>';
+      + '<div style="line-height:1.8;color:#3d4e3d;font-size:0.91rem;">' + n.content + '</div>';
     openModal('newsModal');
 }
 </script>
