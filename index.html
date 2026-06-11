@@ -286,8 +286,18 @@ var NEWS = {
     };
     var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
 
+    /* Hide card thumbnails until Firebase loads — prevents stale image flash */
+    [1,2,3].forEach(function(s) {
+        var img = document.getElementById('newsImgTag'+s);
+        if (img) img.style.opacity = '0';
+    });
+
     firebase.database().ref('home/news').get().then(function(snap) {
-        if (!snap.exists()) return;
+        if (!snap.exists()) {
+            /* No Firebase data — show default thumbnails */
+            [1,2,3].forEach(function(s){ var img=document.getElementById('newsImgTag'+s); if(img) img.style.opacity='1'; });
+            return;
+        }
         var arr = snap.val();
         if (!Array.isArray(arr)) return;
 
@@ -313,13 +323,26 @@ var NEWS = {
             if (cEl) cEl.textContent = NEWS[slot].category;
             /* Update card thumbnail — use first media image if available */
             var imgEl = document.getElementById('newsImgTag' + slot);
-            if (imgEl && item.media && item.media.length > 0) {
-                var first = item.media[0];
-                var src = (first && typeof first === 'object') ? first.src : first;
-                if (src) imgEl.src = src;
+            if (imgEl) {
+                if (item.media && item.media.length > 0) {
+                    var first = item.media[0];
+                    var src = (first && typeof first === 'object') ? first.src : first;
+                    if (src) {
+                        imgEl.src = src;
+                        imgEl.onload = function() { this.style.opacity='1'; this.style.transition='opacity 0.4s'; };
+                        imgEl.onerror = function() { this.style.opacity='1'; };
+                        /* If already cached */
+                        if (imgEl.complete) { imgEl.style.opacity='1'; }
+                    } else { imgEl.style.opacity='1'; }
+                } else {
+                    imgEl.style.opacity='1'; /* no media — show default thumbnail */
+                }
             }
         });
-    }).catch(function(e) { console.warn('News Firebase load failed:', e); });
+    }).catch(function(e) {
+        console.warn('News Firebase load failed:', e);
+        [1,2,3].forEach(function(s){ var img=document.getElementById('newsImgTag'+s); if(img) img.style.opacity='1'; });
+    });
 
     /* ── Load Upcoming Announcements from Firebase ── */
     firebase.database().ref('home/anncs').get().then(function(snap) {
