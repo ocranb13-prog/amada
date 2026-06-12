@@ -101,11 +101,12 @@
 <div class="section section-alt">
     <div class="container">
         <h2 class="section-title" id="latestEvents">Latest Events</h2>
-        <div class="news-grid">
+        <div class="news-grid" id="newsCardsGrid">
+            <!-- Cards rendered dynamically from Firebase below -->
             <div class="news-card">
                 <div class="news-image" id="newsImg1"><img id="newsImgTag1" src="img1.jpg" alt="Sod-Cutting Ceremony"></div>
-                <div class="news-content">
-                    <span class="news-category" id="newsCat1">Announcements</span>
+                <div class="news-body">
+                    <span class="news-category" id="newsCat1">PUBLIC NOTICE</span>
                     <h3 class="news-title" id="newsTitle1">Sod-Cutting Ceremony for 6 Projects</h3>
                     <p class="news-date" id="newsDate1"><i class="fas fa-calendar"></i> 20th &amp; 21st November 2025</p>
                     <button class="btn" onclick="openNewsModal(1)">Read More</button>
@@ -113,8 +114,8 @@
             </div>
             <div class="news-card">
                 <div class="news-image" id="newsImg2"><img id="newsImgTag2" src="img2.jpg" alt="Market Committee Inauguration"></div>
-                <div class="news-content">
-                    <span class="news-category" id="newsCat2">Announcements</span>
+                <div class="news-body">
+                    <span class="news-category" id="newsCat2">PUBLIC NOTICE</span>
                     <h3 class="news-title" id="newsTitle2">Inauguration of Akroso Market Management Committee</h3>
                     <p class="news-date" id="newsDate2"><i class="fas fa-calendar"></i> 26th November 2025</p>
                     <button class="btn" onclick="openNewsModal(2)">Read More</button>
@@ -122,8 +123,8 @@
             </div>
             <div class="news-card">
                 <div class="news-image" id="newsImg3"><img id="newsImgTag3" src="img4.jpg" alt="District Sanitation Day"></div>
-                <div class="news-content">
-                    <span class="news-category" id="newsCat3">Public Notices</span>
+                <div class="news-body">
+                    <span class="news-category" id="newsCat3">PUBLIC NOTICE</span>
                     <h3 class="news-title" id="newsTitle3">District Sanitation Day</h3>
                     <p class="news-date" id="newsDate3"><i class="fas fa-calendar"></i> 7th February 2026</p>
                     <button class="btn" onclick="openNewsModal(3)">Read More</button>
@@ -286,7 +287,7 @@ var NEWS = {
     };
     var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
 
-    /* Hide card thumbnails until Firebase loads — prevents stale image flash */
+    /* Hide card thumbnails until Firebase loads */
     [1,2,3].forEach(function(s) {
         var img = document.getElementById('newsImgTag'+s);
         if (img) img.style.opacity = '0';
@@ -294,51 +295,69 @@ var NEWS = {
 
     firebase.database().ref('home/news').get().then(function(snap) {
         if (!snap.exists()) {
-            /* No Firebase data — show default thumbnails */
             [1,2,3].forEach(function(s){ var img=document.getElementById('newsImgTag'+s); if(img) img.style.opacity='1'; });
             return;
         }
         var arr = snap.val();
-        if (!Array.isArray(arr)) return;
+        if (!Array.isArray(arr) || arr.length === 0) return;
 
+        /* Update NEWS object for modals */
         arr.forEach(function(item, i) {
             if (!item) return;
-            var slot = i + 1;
-            /* Update in-memory NEWS object for modal */
-            NEWS[slot] = {
-                title:    item.title       || (NEWS[slot] && NEWS[slot].title)    || '',
-                date:     item.dateDisplay || item.date || (NEWS[slot] && NEWS[slot].date) || '',
-                category: item.category    || (NEWS[slot] && NEWS[slot].category) || '',
+            NEWS[i + 1] = {
+                title:    item.title       || '',
+                date:     item.dateDisplay || item.date || '',
+                category: item.category    || '',
                 media:    item.media       || [],
-                content:  item.content     || (NEWS[slot] && NEWS[slot].content)  || ''
+                content:  item.content     || ''
             };
-            /* Update card title */
-            var tEl = document.getElementById('newsTitle' + slot);
-            if (tEl) tEl.textContent = NEWS[slot].title;
-            /* Update card date */
-            var dEl = document.getElementById('newsDate' + slot);
-            if (dEl) dEl.innerHTML = '<i class="fas fa-calendar"></i> ' + NEWS[slot].date;
-            /* Update card category badge */
-            var cEl = document.getElementById('newsCat' + slot);
-            if (cEl) cEl.textContent = NEWS[slot].category;
-            /* Update card thumbnail — use first media image if available */
-            var imgEl = document.getElementById('newsImgTag' + slot);
-            if (imgEl) {
-                if (item.media && item.media.length > 0) {
-                    var first = item.media[0];
-                    var src = (first && typeof first === 'object') ? first.src : first;
+        });
+
+        /* If more than 3 cards, rebuild the entire grid dynamically */
+        var grid = document.getElementById('newsCardsGrid');
+        if (grid && arr.length !== 3) {
+            grid.innerHTML = arr.map(function(item, i) {
+                if (!item) return '';
+                var slot = i + 1;
+                var imgSrc = (item.media && item.media.length > 0)
+                    ? ((item.media[0] && typeof item.media[0] === 'object') ? item.media[0].src : item.media[0])
+                    : 'img1.jpg';
+                return '<div class="news-card">'
+                    + '<div class="news-image"><img src="' + imgSrc + '" alt="' + (item.title||'') + '" style="transition:opacity 0.4s;"></div>'
+                    + '<div class="news-body">'
+                    + '<span class="news-category">' + (item.category||'') + '</span>'
+                    + '<h3 class="news-title">' + (item.title||'') + '</h3>'
+                    + '<p class="news-date"><i class="fas fa-calendar"></i> ' + (item.dateDisplay||item.date||'') + '</p>'
+                    + '<button class="btn" onclick="openNewsModal(' + slot + ')">Read More</button>'
+                    + '</div></div>';
+            }).join('');
+        } else if (grid) {
+            /* Exactly 3 — update the existing elements */
+            arr.forEach(function(item, i) {
+                if (!item) return;
+                var slot = i + 1;
+                var tEl = document.getElementById('newsTitle'+slot);
+                var dEl = document.getElementById('newsDate'+slot);
+                var cEl = document.getElementById('newsCat'+slot);
+                var imgEl = document.getElementById('newsImgTag'+slot);
+                if (tEl) tEl.textContent = item.title || '';
+                if (dEl) dEl.innerHTML = '<i class="fas fa-calendar"></i> ' + (item.dateDisplay||item.date||'');
+                if (cEl) cEl.textContent = item.category || '';
+                if (imgEl) {
+                    var src = (item.media && item.media.length > 0)
+                        ? ((item.media[0] && typeof item.media[0] === 'object') ? item.media[0].src : item.media[0])
+                        : null;
                     if (src) {
-                        imgEl.src = src;
                         imgEl.onload = function() { this.style.opacity='1'; this.style.transition='opacity 0.4s'; };
                         imgEl.onerror = function() { this.style.opacity='1'; };
-                        /* If already cached */
-                        if (imgEl.complete) { imgEl.style.opacity='1'; }
-                    } else { imgEl.style.opacity='1'; }
-                } else {
-                    imgEl.style.opacity='1'; /* no media — show default thumbnail */
+                        imgEl.src = src;
+                        if (imgEl.complete) imgEl.style.opacity = '1';
+                    } else {
+                        imgEl.style.opacity = '1';
+                    }
                 }
-            }
-        });
+            });
+        }
     }).catch(function(e) {
         console.warn('News Firebase load failed:', e);
         [1,2,3].forEach(function(s){ var img=document.getElementById('newsImgTag'+s); if(img) img.style.opacity='1'; });
