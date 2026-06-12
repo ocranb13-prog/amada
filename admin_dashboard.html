@@ -28,8 +28,8 @@
         var _db = firebase.database();
 
         // Wrap compat API to match the modular API shape the rest of the code expects
-        window._fbDb   = _db;
-        window._fbAuth = firebase.auth();
+        window._fbDb      = _db;
+        window._fbAuth    = firebase.auth();
         window._fbRef = function(db, path) { return db.ref(path); };
         window._fbSet = function(refObj, val) { return refObj.set(val); };
         window._fbGet = function(refObj) {
@@ -1947,82 +1947,162 @@ function saveNewsItems(parentData) {
     setLS('home_anncs', anncs);
     if (parentData) setLS('section_home', parentData);
     if (window._fbDb && window._fbRef && window._fbSet) {
-        /* Compress news media before Firebase save.
-           Each base64 image can be 1-5MB; Firebase RTDB rejects writes over ~10MB total.
-           We compress each image to max 200KB before saving so all media syncs reliably. */
-        var newsClean = JSON.parse(JSON.stringify(news));
-
-        function compressNewsImg(src, cb) {
-            if (!src || src.startsWith('data:video')) { cb(src); return; }
-            var img = new Image();
-            img.onload = function() {
-                var MAX = 800; // max dimension px
-                var w = img.width, h = img.height;
-                if (w > MAX || h > MAX) {
-                    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-                    else        { w = Math.round(w * MAX / h); h = MAX; }
-                }
-                var c = document.createElement('canvas');
-                c.width = w; c.height = h;
-                c.getContext('2d').drawImage(img, 0, 0, w, h);
-                cb(c.toDataURL('image/jpeg', 0.65));
-            };
-            img.onerror = function() { cb(src); };
-            img.src = src;
-        }
-
-        /* Compress all media items then save */
-        var allMedia = [];
-        newsClean.forEach(function(item, ni) {
-            if (item && item.media) {
-                item.media.forEach(function(m, mi) {
-                    allMedia.push({ ni: ni, mi: mi, src: m.src });
-                });
-            }
-        });
-
-        if (allMedia.length === 0) {
-            /* No media — save immediately */
-            window._fbSet(window._fbRef(window._fbDb, 'home/news'), newsClean)
-                .then(function(){ showToast('✅ News & Announcements live on public website'); })
-                .catch(function(e){ console.error('News sync FAILED:', e); showToast('⚠️ News sync failed: ' + (e.message||e.code||e)); });
-        } else {
-            var done = 0;
-            allMedia.forEach(function(entry) {
-                compressNewsImg(entry.src, function(compressed) {
-                    newsClean[entry.ni].media[entry.mi].src = compressed;
-                    done++;
-                    if (done === allMedia.length) {
-                        window._fbSet(window._fbRef(window._fbDb, 'home/news'), newsClean)
-                            .then(function(){ showToast('✅ News & Announcements live on public website'); })
-                            .catch(function(e){ console.error('News sync FAILED:', e); showToast('⚠️ News sync failed: ' + (e.message||e.code||e)); });
-                    }
-                });
-            });
-        }
+        /* Media items stored via Firebase Storage are already URLs (m.stored === 'firebase').
+           Fallback items are compressed base64 — both are small enough to save safely.
+           No need to compress here anymore — just save directly. */
+        var newsClean  = JSON.parse(JSON.stringify(news));
         var anncsClean = JSON.parse(JSON.stringify(anncs));
+
+        window._fbSet(window._fbRef(window._fbDb, 'home/news'), newsClean)
+            .then(function() {
+                showToast('✅ News & Announcements live on public website');
+            })
+            .catch(function(e) {
+                console.error('News sync FAILED:', e);
+                showToast('⚠️ News sync failed: ' + (e.message || e.code || e));
+            });
+
         window._fbSet(window._fbRef(window._fbDb, 'home/anncs'), anncsClean)
-            .then(function(){ console.log('Anncs synced to Firebase'); })
-            .catch(function(e){ console.error('Anncs sync FAILED:', e); showToast('⚠️ Announcements sync failed — check Firebase'); });
+            .then(function() { console.log('Anncs synced'); })
+            .catch(function(e) {
+                console.error('Anncs sync FAILED:', e);
+                showToast('⚠️ Announcements sync failed');
+            });
     }
 }
+/* ── Cloudinary config ── */
+var _CLOUDINARY = {
+    cloudName:    'dk1ishou6',
+    uploadPreset: 'amada_unsigned',
+    uploadUrl:    'https://api.cloudinary.com/v1_1/dk1ishou6/upload'
+};
+
 function addNewsMedia(idx, input) {
     var files = Array.from(input.files);
     var news  = getLS('home_news', DEFAULT_NEWS);
     if (!news[idx]) return;
-    if (!news[idx].media) news[idx].media=[];
-    var rem = 10-news[idx].media.length; if(rem<=0){showToast('Max 10 media');return;}
-    files = files.slice(0,rem); var loaded=0;
-    files.forEach(function(file){
-        if(file.size>20*1024*1024){showToast('Too large: '+file.name);loaded++;return;}
-        var r=new FileReader();
-        r.onload=function(e){
-            news[idx].media.push({src:e.target.result,type:file.type.startsWith('video')?'video':'image',name:file.name});
-            loaded++;if(loaded===files.length){setLS('home_news',news);renderNewsEditor();showToast(loaded+' file(s) added');}
-        };r.readAsDataURL(file);
-    });input.value='';
+    if (!news[idx].media) news[idx].media = [];
+    var rem = 10 - news[idx].media.length;
+    if (rem <= 0) { showToast('Max 10 media per card'); return; }
+    files = files.slice(0, rem);
+    input.value = '';
+
+    var total = files.length, done = 0;
+
+    function onAllDone() {
+        setLS('home_news', news);
+        renderNewsEditor();
+        showToast('✅ ' + total + ' file(s) uploaded successfully');
+    }
+
+    files.forEach(function(file) {
+        /* 50MB limit */
+        if (file.size > 50 * 1024 * 1024) {
+            showToast('⚠️ Too large (max 50MB): ' + file.name);
+            done++; if (done === total) onAllDone();
+            return;
+        }
+
+        var isVideo = file.type.startsWith('video');
+        showToast('⏫ Uploading ' + file.name + '…');
+
+        /* ── Cloudinary unsigned upload via FormData ── */
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', _CLOUDINARY.uploadPreset);
+        formData.append('folder', 'amada_news');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', _CLOUDINARY.uploadUrl, true);
+
+        /* Progress */
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                var pct = Math.round((e.loaded / e.total) * 100);
+                showToast('⏫ ' + file.name + ' — ' + pct + '%');
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var res = JSON.parse(xhr.responseText);
+                /* Use secure_url — permanent CDN URL, full quality */
+                news[idx].media.push({
+                    src:    res.secure_url,
+                    type:   isVideo ? 'video' : 'image',
+                    name:   file.name,
+                    stored: 'cloudinary',
+                    public_id: res.public_id   /* kept for future deletion */
+                });
+                done++; if (done === total) onAllDone();
+            } else {
+                console.error('Cloudinary upload failed:', xhr.responseText);
+                showToast('⚠️ Upload failed for ' + file.name + ' — using compressed fallback');
+                _compressAndStoreFallback(file, idx, news, isVideo, function() {
+                    done++; if (done === total) onAllDone();
+                });
+            }
+        };
+
+        xhr.onerror = function() {
+            console.error('Network error during upload');
+            showToast('⚠️ Network error — using compressed fallback for ' + file.name);
+            _compressAndStoreFallback(file, idx, news, isVideo, function() {
+                done++; if (done === total) onAllDone();
+            });
+        };
+
+        xhr.send(formData);
+    });
 }
-function removeNewsMedia(ni,mi){var news=getLS('home_news',DEFAULT_NEWS);if(news[ni]&&news[ni].media){news[ni].media.splice(mi,1);setLS('home_news',news);renderNewsEditor();}}
+
+/* ── Compressed base64 fallback (used when Cloudinary upload fails) ── */
+function _compressAndStoreFallback(file, idx, news, isVideo, cb) {
+    if (isVideo) {
+        var r = new FileReader();
+        r.onload = function(e) {
+            news[idx].media.push({ src: e.target.result, type: 'video', name: file.name });
+            cb();
+        };
+        r.readAsDataURL(file);
+        return;
+    }
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+        var MAX = 800, w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else        { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        news[idx].media.push({ src: c.toDataURL('image/jpeg', 0.70), type: 'image', name: file.name });
+        cb();
+    };
+    img.onerror = function() {
+        URL.revokeObjectURL(url);
+        var r = new FileReader();
+        r.onload = function(e) {
+            news[idx].media.push({ src: e.target.result, type: 'image', name: file.name });
+            cb();
+        };
+        r.readAsDataURL(file);
+    };
+    img.src = url;
+}
+function removeNewsMedia(ni, mi) {
+    var news = getLS('home_news', DEFAULT_NEWS);
+    if (news[ni] && news[ni].media) {
+        /* Note: Cloudinary files remain in your media library even after removal here.
+           You can delete them manually from console.cloudinary.com if needed. */
+        news[ni].media.splice(mi, 1);
+        setLS('home_news', news);
+        renderNewsEditor();
+    }
+}
 function moveNews(idx,dir){var news=getLS('home_news',DEFAULT_NEWS),ni=idx+dir;if(ni<0||ni>=news.length)return;var tmp=news[idx];news[idx]=news[ni];news[ni]=tmp;setLS('home_news',news);renderNewsEditor();}
 function addNewsItem(){var news=getLS('home_news',DEFAULT_NEWS);if(news.length>=10){showToast('Max 10');return;}news.push({title:'New Event',category:'Announcements',date:'',dateDisplay:'',content:'',media:[]});setLS('home_news',news);renderNewsEditor();}
 function deleteNewsItem(i){if(!confirm('Remove?'))return;var news=getLS('home_news',DEFAULT_NEWS);news.splice(i,1);setLS('home_news',news);renderNewsEditor();}
