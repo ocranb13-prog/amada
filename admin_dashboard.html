@@ -1974,7 +1974,7 @@ function saveNewsItems(parentData) {
 var _CLOUDINARY = {
     cloudName:    'dk1ishou6',
     uploadPreset: 'amada_unsigned',
-    uploadUrl:    'https://api.cloudinary.com/v1_1/dk1ishou6/upload'
+    uploadUrl:    'https://api.cloudinary.com/v1_1/dk1ishou6/auto/upload'
 };
 
 function addNewsMedia(idx, input) {
@@ -2025,19 +2025,27 @@ function addNewsMedia(idx, input) {
 
         xhr.onload = function() {
             if (xhr.status === 200) {
-                var res = JSON.parse(xhr.responseText);
-                /* Use secure_url — permanent CDN URL, full quality */
-                news[idx].media.push({
-                    src:    res.secure_url,
-                    type:   isVideo ? 'video' : 'image',
-                    name:   file.name,
-                    stored: 'cloudinary',
-                    public_id: res.public_id   /* kept for future deletion */
-                });
-                done++; if (done === total) onAllDone();
+                try {
+                    var res = JSON.parse(xhr.responseText);
+                    news[idx].media.push({
+                        src:       res.secure_url,
+                        type:      isVideo ? 'video' : 'image',
+                        name:      file.name,
+                        stored:    'cloudinary',
+                        public_id: res.public_id
+                    });
+                    done++; if (done === total) onAllDone();
+                } catch(parseErr) {
+                    console.error('Cloudinary response parse error:', parseErr, xhr.responseText);
+                    _compressAndStoreFallback(file, idx, news, isVideo, function() {
+                        done++; if (done === total) onAllDone();
+                    });
+                }
             } else {
-                console.error('Cloudinary upload failed:', xhr.responseText);
-                showToast('⚠️ Upload failed for ' + file.name + ' — using compressed fallback');
+                var errMsg = '';
+                try { errMsg = JSON.parse(xhr.responseText).error.message; } catch(e) { errMsg = xhr.responseText; }
+                console.error('Cloudinary upload failed [' + xhr.status + ']:', errMsg);
+                showToast('⚠️ Upload failed (' + xhr.status + '): ' + errMsg.substring(0,60));
                 _compressAndStoreFallback(file, idx, news, isVideo, function() {
                     done++; if (done === total) onAllDone();
                 });
