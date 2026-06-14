@@ -25,120 +25,13 @@
 <div class="page-banner"><div class="container"><h2>Departments &amp; Units</h2><p>Learn about the departments and units that make up the Asene Manso Akroso District Assembly.</p></div></div>
 
 <div class="section"><div class="container">
-<div class="departments-grid">
-
-<!-- Central Administration -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-landmark"></i><h3>Central Administration</h3></div>
-    <div class="department-body">
-        <div class="department-description">Coordinates overall Assembly administration, planning, budgeting &amp; legislative oversight.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list" id="dc-units-central">><li><i class="fas fa-circle"></i> General Administration</li><li><i class="fas fa-circle"></i> Planning &amp; Budgeting</li><li><i class="fas fa-circle"></i> Legislative Oversight</li><li><i class="fas fa-circle"></i> Procurement Unit</li></ul></div>
+<div class="departments-grid" id="deptsGrid">
+    <!-- Departments loaded from Firebase dynamically -->
+    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:#1F6B3A;margin-bottom:16px;display:block;"></i>
+        Loading departments...
     </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-central"><img id="dh-photo-central" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-central" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-central">To Be Announced</div><div class="dept-head-title" id="dh-title-central">Head of Department</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-central')"><i class="fas fa-info-circle"></i> View Details</button></div>
 </div>
-
-<!-- Physical Planning -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-map-marked-alt"></i><h3>Physical Planning</h3></div>
-    <div class="department-body">
-        <div class="department-description">Planning and sustainable development of land and human settlements.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list" id="dc-units-planning">><li><i class="fas fa-circle"></i> Human Settlement Planning</li><li><i class="fas fa-circle"></i> Land Use Regulation</li><li><i class="fas fa-circle"></i> Environmental Horticulture</li><li><i class="fas fa-circle"></i> Development Advisory</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-planning"><img id="dh-photo-planning" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-planning" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-planning">To Be Announced</div><div class="dept-head-title" id="dh-title-planning">District Physical Planner</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-planning')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Finance -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-money-check-alt"></i><h3>Finance</h3></div>
-    <div class="department-body">
-        <div class="department-description">Manages Assembly finances, budgeting, accounting and revenue collection.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list" id="dc-units-finance">><li><i class="fas fa-circle"></i> District Finance Office</li><li><i class="fas fa-circle"></i> Revenue Unit</li><li><i class="fas fa-circle"></i> Budget Unit</li><li><i class="fas fa-circle"></i> Accounts Unit</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-finance"><img id="dh-photo-finance" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-finance" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-finance">To Be Announced</div><div class="dept-head-title" id="dh-title-finance">District Finance Officer</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-finance')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Human Resources -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-users-cog"></i><h3>Human Resources</h3></div>
-    <div class="department-body">
-        <div class="department-description">Manages recruitment, development, and welfare of Assembly staff.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list" id="dc-units-hr">><li><i class="fas fa-circle"></i> Recruitment &amp; Hiring</li><li><i class="fas fa-circle"></i> Staff Development &amp; Training</li><li><i class="fas fa-circle"></i> Compensation Management</li><li><i class="fas fa-circle"></i> Employee Relations</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-hr"><img id="dh-photo-hr" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-hr" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-hr">To Be Announced</div><div class="dept-head-title" id="dh-title-hr">Head, Human Resources</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-hr')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Health -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-heartbeat"></i><h3>Health</h3></div>
-    <div class="department-body">
-        <div class="department-description">Ensures healthcare services, disease prevention and health promotion across communities.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list" id="dc-units-health">><li><i class="fas fa-circle"></i> Environmental Health &amp; Sanitation</li><li><i class="fas fa-circle"></i> Disease Control</li><li><i class="fas fa-circle"></i> Health Education</li><li><i class="fas fa-circle"></i> Sanitation Management</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-health"><img id="dh-photo-health" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-health" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-health">To Be Announced</div><div class="dept-head-title" id="dh-title-health">District Health Officer</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-health')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Agriculture -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-tractor"></i><h3>Agriculture</h3></div>
-    <div class="department-body">
-        <div class="department-description">Promotes sustainable agriculture and thriving agribusinesses for improved livelihood.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list" id="dc-units-agric">><li><i class="fas fa-circle"></i> Crops Unit</li><li><i class="fas fa-circle"></i> Extension Unit</li><li><i class="fas fa-circle"></i> Animals &amp; Veterinary Unit</li><li><i class="fas fa-circle"></i> Engineering Unit</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-agric"><img id="dh-photo-agric" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-agric" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-agric">To Be Announced</div><div class="dept-head-title" id="dh-title-agric">Director of Agriculture</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-agric')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Works -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-hard-hat"></i><h3>Works Department</h3></div>
-    <div class="department-body">
-        <div class="department-description">Facilitates sustainable and resilient infrastructure development and management.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list" id="dc-units-works">><li><i class="fas fa-circle"></i> Contract Management</li><li><i class="fas fa-circle"></i> Project Execution &amp; Supervision</li><li><i class="fas fa-circle"></i> Road Infrastructure</li><li><i class="fas fa-circle"></i> Water &amp; Sanitation Works</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-works"><img id="dh-photo-works" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-works" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-works">To Be Announced</div><div class="dept-head-title" id="dh-title-works">District Works Engineer</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-works')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Social Welfare -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-hands-helping"></i><h3>Social Welfare &amp; Community Dev.</h3></div>
-    <div class="department-body">
-        <div class="department-description">Delivers social protection, community development, and welfare services.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Services</h4><ul class="units-list" id="dc-units-welfare">><li><i class="fas fa-circle"></i> Safety Net Programmes</li><li><i class="fas fa-circle"></i> Community Development</li><li><i class="fas fa-circle"></i> Child Protection</li><li><i class="fas fa-circle"></i> Disability Support</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-welfare"><img id="dh-photo-welfare" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-welfare" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-welfare">To Be Announced</div><div class="dept-head-title" id="dh-title-welfare">District Social Welfare Officer</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-welfare')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Births & Deaths -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-baby"></i><h3>Births &amp; Deaths</h3></div>
-    <div class="department-body">
-        <div class="department-description">Registration of births and deaths in the district.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Functions</h4><ul class="units-list" id="dc-units-births">><li><i class="fas fa-circle"></i> Birth Registration</li><li><i class="fas fa-circle"></i> Death Registration</li><li><i class="fas fa-circle"></i> Certificate Issuance</li><li><i class="fas fa-circle"></i> Public Education</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-births"><img id="dh-photo-births" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-births" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-births">To Be Announced</div><div class="dept-head-title" id="dh-title-births">District Registrar</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-births')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-<!-- Statistics -->
-<div class="department-card">
-    <div class="department-header"><i class="fas fa-chart-pie"></i><h3>Statistics</h3></div>
-    <div class="department-body">
-        <div class="department-description">Data collection, compilation, analysis and dissemination for planning and development.</div>
-        <div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Areas</h4><ul class="units-list" id="dc-units-stats">><li><i class="fas fa-circle"></i> Demographic Data</li><li><i class="fas fa-circle"></i> Health Statistics</li><li><i class="fas fa-circle"></i> Economic Indicators</li><li><i class="fas fa-circle"></i> Departmental Data</li></ul></div>
-    </div>
-    <div class="dept-head-section"><div class="dept-head-photo-wrap" id="dh-photo-wrap-stats"><img id="dh-photo-stats" src="" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;display:none;"><div id="dh-icon-stats" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div></div><div class="dept-head-info"><div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div><div class="dept-head-name" id="dh-name-stats">To Be Announced</div><div class="dept-head-title" id="dh-title-stats">District Statistician</div></div></div>
-    <div class="department-footer"><button class="btn-view" onclick="openDeptModal('m-stats')"><i class="fas fa-info-circle"></i> View Details</button></div>
-</div>
-
-</div>
-</div></div>
 
 <!-- FOOTER -->
 <footer><div class="footer-top"><div class="container"><div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div><div class="footer-divider"></div><div class="footer-grid"><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div></div></div></div><div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit</p></div></div></footer>
@@ -161,12 +54,11 @@
 
 <a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
-var _db2;
-try {
-    _db2 = getDatabase(initializeApp({
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+(function() {
+    var cfg = {
         apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
         authDomain:"asmda-website.firebaseapp.com",
         databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
@@ -174,59 +66,68 @@ try {
         storageBucket:"asmda-website.firebasestorage.app",
         messagingSenderId:"699818483381",
         appId:"1:699818483381:web:09c926a48830d46ae228fc"
-    }, 'dept-view'));
-} catch(e) { console.warn('dept-view init failed:', e.message); }
+    };
+    var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
+    var db  = firebase.database();
 
-if (_db2) {
-    var KEYS=['central','planning','finance','hr','health','agric','works','welfare','births','stats'];
-    Promise.all([get(ref(_db2,'sections/departments')), get(ref(_db2,'dept_photos'))])
-    .then(function(r){
-        if (r[0].exists()) {
-            var d=r[0].val();
-            KEYS.forEach(function(k){
-                var dept=d[k]; if(!dept)return;
-                /* Card: name and title */
-                var nm=document.getElementById('dh-name-'+k);
-                var ti=document.getElementById('dh-title-'+k);
-                if(nm&&(dept.head||dept.name)) nm.textContent=dept.head||dept.name;
-                if(ti&&dept.title)             ti.textContent=dept.title;
-                /* Modal: description */
-                var descEl=document.getElementById('dm-desc-'+k);
-                if(descEl&&dept.desc)    descEl.textContent=dept.desc;
-                /* Modal: staff/funding combined */
-                var staffEl=document.getElementById('dm-staff-'+k);
-                if(staffEl){
-                    var sf='';
-                    if(dept.staff)   sf+='Staff Strength: '+dept.staff;
-                    if(dept.staff&&dept.funding) sf+=' | ';
-                    if(dept.funding) sf+='Funding: '+dept.funding;
-                    if(sf) staffEl.textContent=sf;
-                }
-                /* Modal + Card: key units list */
-                if(dept.units&&dept.units.length){
-                    var unitHtml=dept.units.filter(Boolean).map(function(u){
-                        return '<li><i class="fas fa-circle"></i> '+u+'</li>';
-                    }).join('');
-                    /* Update modal units */
-                    var unitsEl=document.getElementById('dm-units-'+k);
-                    if(unitsEl) unitsEl.innerHTML=unitHtml;
-                    /* Update card units (previously hardcoded, now dynamic) */
-                    var cardUnitsEl=document.getElementById('dc-units-'+k);
-                    if(cardUnitsEl) cardUnitsEl.innerHTML=unitHtml;
-                }
-            });
+    Promise.all([
+        db.ref('sections/departments').get(),
+        db.ref('dept_photos').get()
+    ]).then(function(results) {
+        var deptsSnap  = results[0];
+        var photosSnap = results[1];
+        var depts  = deptsSnap.exists()  ? deptsSnap.val()  : {};
+        var photos = photosSnap.exists() ? photosSnap.val() : {};
+
+        var grid = document.getElementById('deptsGrid');
+        if (!grid) return;
+
+        /* Build cards from Firebase data */
+        var keys = Object.keys(depts);
+        if (keys.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#666;">No departments found.</div>';
+            return;
         }
-        if (r[1].exists()) {
-            var ph=r[1].val();
-            KEYS.forEach(function(k){
-                if(!ph[k])return;
-                var img=document.getElementById('dh-photo-'+k);
-                var ico=document.getElementById('dh-icon-'+k);
-                if(img){img.src=ph[k];img.style.display='block';}
-                if(ico)ico.style.display='none';
-            });
-        }
-    }).catch(function(e){ console.warn('Departments Firebase read failed:',e.message); });
-}
+
+        grid.innerHTML = keys.map(function(k) {
+            var d    = depts[k] || {};
+            var photo = photos[k] || '';
+            var name  = d.name  || d.head  || 'Department';
+            var title = d.title || '';
+            var desc  = d.desc  || '';
+            var units = (d.units || []).filter(Boolean);
+            var staff = d.staff   || '';
+            var funding = d.funding || '';
+
+            var photoHtml = photo
+                ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">'
+                  + '<div class="dept-icon" style="display:none;"><i class="fas fa-landmark"></i></div>'
+                : '<div class="dept-icon"><i class="fas fa-landmark"></i></div>';
+
+            var unitsHtml = units.map(function(u) {
+                return '<li><i class="fas fa-circle"></i> ' + u + '</li>';
+            }).join('');
+
+            return '<div class="department-card" onclick="openDeptModal('' + k + '')">'
+                + '<div class="dept-photo-wrap">' + photoHtml + '</div>'
+                + '<div class="dept-card-body">'
+                + '<h3 class="dept-name" id="dh-name-' + k + '">' + name + '</h3>'
+                + '<p class="dept-title" id="dh-title-' + k + '">' + title + '</p>'
+                + '<ul class="units-list" id="dc-units-' + k + '">' + unitsHtml + '</ul>'
+                + '</div></div>'
+                /* Modal */
+                + '<div class="dept-modal-data" id="dmodal-' + k + '" style="display:none;">'
+                + '<p id="dm-desc-' + k + '">' + desc + '</p>'
+                + '<p id="dm-staff-' + k + '">' + (staff ? 'Staff Strength: ' + staff : '') + (staff && funding ? ' | ' : '') + (funding ? 'Funding: ' + funding : '') + '</p>'
+                + '<ul id="dm-units-' + k + '">' + unitsHtml + '</ul>'
+                + '</div>';
+        }).join('');
+
+    }).catch(function(e) {
+        console.warn('Departments load failed:', e);
+        var grid = document.getElementById('deptsGrid');
+        if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#c00;">Failed to load departments. Please refresh.</div>';
+    });
+})();
 </script>
 </body></html>
