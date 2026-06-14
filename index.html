@@ -36,13 +36,13 @@
 </header>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="heroContent" style="opacity:0;transition:opacity 0.5s;">
     <div class="container">
         <div class="hero-content">
-            <h2>Welcome to Asene Manso Akroso District Assembly</h2>
-            <p>To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
+            <h2 id="heroHeading">Welcome to Asene Manso Akroso District Assembly</h2>
+            <p id="heroSubtitle">To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
             <div class="hero-buttons">
-                <a href="publications.html" class="btn btn-secondary"><i class="fas fa-file-alt"></i> View Publications</a>
+                <a href="publications.html" class="btn btn-secondary" id="heroBtn1"><i class="fas fa-file-alt"></i> View Publications</a>
                 <a href="#events" onclick="document.getElementById('latestEvents').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-outline"><i class="fas fa-calendar-alt"></i> Latest Events</a>
             </div>
         </div>
@@ -53,13 +53,13 @@
 <div class="hero-stats-strip">
     <div class="container">
         <div class="hero-stats-grid">
-            <div class="hero-stat"><span class="hero-stat-number">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="statPop">77,498</span><span class="hero-stat-label" id="statPopLabel">Population (2021)</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="statArea">471.82 km²</span><span class="hero-stat-label" id="statAreaLabel">Land Area</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">55+</span><span class="hero-stat-label">Communities</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="statComm">55+</span><span class="hero-stat-label" id="statCommLabel">Communities</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
+            <div class="hero-stat"><span class="hero-stat-number" id="statYear">Est. 2018</span><span class="hero-stat-label" id="statYearLabel">District Assembly</span></div>
         </div>
     </div>
 </div>
@@ -101,12 +101,11 @@
 <div class="section section-alt">
     <div class="container">
         <h2 class="section-title" id="latestEvents">Latest Events</h2>
-        <div class="news-grid" id="newsCardsGrid">
-            <!-- Cards rendered dynamically from Firebase below -->
+        <div class="news-grid">
             <div class="news-card">
                 <div class="news-image" id="newsImg1"><img id="newsImgTag1" src="img1.jpg" alt="Sod-Cutting Ceremony"></div>
-                <div class="news-body">
-                    <span class="news-category" id="newsCat1">PUBLIC NOTICE</span>
+                <div class="news-content">
+                    <span class="news-category" id="newsCat1">Announcements</span>
                     <h3 class="news-title" id="newsTitle1">Sod-Cutting Ceremony for 6 Projects</h3>
                     <p class="news-date" id="newsDate1"><i class="fas fa-calendar"></i> 20th &amp; 21st November 2025</p>
                     <button class="btn" onclick="openNewsModal(1)">Read More</button>
@@ -114,8 +113,8 @@
             </div>
             <div class="news-card">
                 <div class="news-image" id="newsImg2"><img id="newsImgTag2" src="img2.jpg" alt="Market Committee Inauguration"></div>
-                <div class="news-body">
-                    <span class="news-category" id="newsCat2">PUBLIC NOTICE</span>
+                <div class="news-content">
+                    <span class="news-category" id="newsCat2">Announcements</span>
                     <h3 class="news-title" id="newsTitle2">Inauguration of Akroso Market Management Committee</h3>
                     <p class="news-date" id="newsDate2"><i class="fas fa-calendar"></i> 26th November 2025</p>
                     <button class="btn" onclick="openNewsModal(2)">Read More</button>
@@ -123,8 +122,8 @@
             </div>
             <div class="news-card">
                 <div class="news-image" id="newsImg3"><img id="newsImgTag3" src="img4.jpg" alt="District Sanitation Day"></div>
-                <div class="news-body">
-                    <span class="news-category" id="newsCat3">PUBLIC NOTICE</span>
+                <div class="news-content">
+                    <span class="news-category" id="newsCat3">Public Notices</span>
                     <h3 class="news-title" id="newsTitle3">District Sanitation Day</h3>
                     <p class="news-date" id="newsDate3"><i class="fas fa-calendar"></i> 7th February 2026</p>
                     <button class="btn" onclick="openNewsModal(3)">Read More</button>
@@ -287,7 +286,7 @@ var NEWS = {
     };
     var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
 
-    /* Hide card thumbnails until Firebase loads */
+    /* Hide card thumbnails until Firebase loads — prevents stale image flash */
     [1,2,3].forEach(function(s) {
         var img = document.getElementById('newsImgTag'+s);
         if (img) img.style.opacity = '0';
@@ -295,69 +294,51 @@ var NEWS = {
 
     firebase.database().ref('home/news').get().then(function(snap) {
         if (!snap.exists()) {
+            /* No Firebase data — show default thumbnails */
             [1,2,3].forEach(function(s){ var img=document.getElementById('newsImgTag'+s); if(img) img.style.opacity='1'; });
             return;
         }
         var arr = snap.val();
-        if (!Array.isArray(arr) || arr.length === 0) return;
+        if (!Array.isArray(arr)) return;
 
-        /* Update NEWS object for modals */
         arr.forEach(function(item, i) {
             if (!item) return;
-            NEWS[i + 1] = {
-                title:    item.title       || '',
-                date:     item.dateDisplay || item.date || '',
-                category: item.category    || '',
+            var slot = i + 1;
+            /* Update in-memory NEWS object for modal */
+            NEWS[slot] = {
+                title:    item.title       || (NEWS[slot] && NEWS[slot].title)    || '',
+                date:     item.dateDisplay || item.date || (NEWS[slot] && NEWS[slot].date) || '',
+                category: item.category    || (NEWS[slot] && NEWS[slot].category) || '',
                 media:    item.media       || [],
-                content:  item.content     || ''
+                content:  item.content     || (NEWS[slot] && NEWS[slot].content)  || ''
             };
-        });
-
-        /* If more than 3 cards, rebuild the entire grid dynamically */
-        var grid = document.getElementById('newsCardsGrid');
-        if (grid && arr.length !== 3) {
-            grid.innerHTML = arr.map(function(item, i) {
-                if (!item) return '';
-                var slot = i + 1;
-                var imgSrc = (item.media && item.media.length > 0)
-                    ? ((item.media[0] && typeof item.media[0] === 'object') ? item.media[0].src : item.media[0])
-                    : 'img1.jpg';
-                return '<div class="news-card">'
-                    + '<div class="news-image"><img src="' + imgSrc + '" alt="' + (item.title||'') + '" style="transition:opacity 0.4s;"></div>'
-                    + '<div class="news-body">'
-                    + '<span class="news-category">' + (item.category||'') + '</span>'
-                    + '<h3 class="news-title">' + (item.title||'') + '</h3>'
-                    + '<p class="news-date"><i class="fas fa-calendar"></i> ' + (item.dateDisplay||item.date||'') + '</p>'
-                    + '<button class="btn" onclick="openNewsModal(' + slot + ')">Read More</button>'
-                    + '</div></div>';
-            }).join('');
-        } else if (grid) {
-            /* Exactly 3 — update the existing elements */
-            arr.forEach(function(item, i) {
-                if (!item) return;
-                var slot = i + 1;
-                var tEl = document.getElementById('newsTitle'+slot);
-                var dEl = document.getElementById('newsDate'+slot);
-                var cEl = document.getElementById('newsCat'+slot);
-                var imgEl = document.getElementById('newsImgTag'+slot);
-                if (tEl) tEl.textContent = item.title || '';
-                if (dEl) dEl.innerHTML = '<i class="fas fa-calendar"></i> ' + (item.dateDisplay||item.date||'');
-                if (cEl) cEl.textContent = item.category || '';
-                if (imgEl) {
-                    var src = (item.media && item.media.length > 0)
-                        ? ((item.media[0] && typeof item.media[0] === 'object') ? item.media[0].src : item.media[0])
-                        : null;
+            /* Update card title */
+            var tEl = document.getElementById('newsTitle' + slot);
+            if (tEl) tEl.textContent = NEWS[slot].title;
+            /* Update card date */
+            var dEl = document.getElementById('newsDate' + slot);
+            if (dEl) dEl.innerHTML = '<i class="fas fa-calendar"></i> ' + NEWS[slot].date;
+            /* Update card category badge */
+            var cEl = document.getElementById('newsCat' + slot);
+            if (cEl) cEl.textContent = NEWS[slot].category;
+            /* Update card thumbnail — use first media image if available */
+            var imgEl = document.getElementById('newsImgTag' + slot);
+            if (imgEl) {
+                if (item.media && item.media.length > 0) {
+                    var first = item.media[0];
+                    var src = (first && typeof first === 'object') ? first.src : first;
                     if (src) {
+                        imgEl.src = src;
                         imgEl.onload = function() { this.style.opacity='1'; this.style.transition='opacity 0.4s'; };
                         imgEl.onerror = function() { this.style.opacity='1'; };
-                        imgEl.src = src;
-                        if (imgEl.complete) imgEl.style.opacity = '1';
-                    } else {
-                        imgEl.style.opacity = '1';
-                    }
+                        /* If already cached */
+                        if (imgEl.complete) { imgEl.style.opacity='1'; }
+                    } else { imgEl.style.opacity='1'; }
+                } else {
+                    imgEl.style.opacity='1'; /* no media — show default thumbnail */
                 }
-            });
-        }
+            }
+        });
     }).catch(function(e) {
         console.warn('News Firebase load failed:', e);
         [1,2,3].forEach(function(s){ var img=document.getElementById('newsImgTag'+s); if(img) img.style.opacity='1'; });
@@ -399,6 +380,28 @@ var NEWS = {
 
         if (html.trim()) container.innerHTML = html;
     }).catch(function(e) { console.warn('Announcements Firebase load failed:', e); });
+
+    /* ── Load Hero & Stats from Firebase (sections/home) ── */
+    firebase.database().ref('sections/home').get().then(function(snap) {
+        if (!snap.exists()) return;
+        var d = snap.val(); if (!d) return;
+        var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.textContent = val; };
+        set('heroHeading', d.hero_heading);
+        set('heroSubtitle', d.hero_subtitle);
+        set('statPop',  d.stat_pop);
+        set('statArea', d.stat_area);
+        set('statComm', d.stat_comm);
+        set('statYear', d.stat_year);
+        var hB1 = document.getElementById('heroBtn1');
+        if (hB1 && d.hero_btn1) hB1.innerHTML = '<i class="fas fa-file-alt"></i> ' + d.hero_btn1;
+        /* Show hero content after Firebase loads */
+        var heroContent = document.getElementById('heroContent');
+        if (heroContent) heroContent.style.opacity = '1';
+    }).catch(function(e) {
+        console.warn('Hero/Stats load failed:', e);
+        var heroContent = document.getElementById('heroContent');
+        if (heroContent) heroContent.style.opacity = '1';
+    });
 })();
 
 /* ── Open news detail modal ── */
