@@ -2122,6 +2122,8 @@ var DEPT_FULL_LIST=[
     {key:'welfare', name:'Social Welfare & Community Dev.',icon:'fas fa-hands-helping',title:'District Social Welfare Officer',units:['Safety Net Programmes','Community Development','Child Protection','Disability Support']},
     {key:'births',  name:'Births & Deaths',            icon:'fas fa-baby',             title:'District Registrar',             units:['Birth Registration','Death Registration','Certificate Issuance','Public Education']},
     {key:'stats',   name:'Statistics',                 icon:'fas fa-chart-pie',        title:'District Statistician',          units:['Demographic Data','Health Statistics','Economic Indicators','Departmental Data']}
+];
+
 /* ── Add New Department ── */
 function addNewDepartment() {
     var name = prompt('Enter department name (e.g. "ICT Department"):');
@@ -2153,35 +2155,30 @@ function addNewDepartment() {
     }, 200);
 }
 
-];
 function renderDeptHeads() {
-    /* Load from localStorage — merge DEPT_FULL_LIST defaults with any custom depts */
-    var saved = getLS('dept_data', {});
-
-    /* Build merged list: start with saved keys (preserves custom depts), fill defaults from DEPT_FULL_LIST */
+    var saved      = getLS('dept_data', {});
     var defaultMap = {};
     DEPT_FULL_LIST.forEach(function(d) { defaultMap[d.key] = d; });
 
-    /* All keys = defaults + any custom ones saved */
     var allKeys = Object.keys(defaultMap);
     Object.keys(saved).forEach(function(k) {
         if (allKeys.indexOf(k) === -1) allKeys.push(k);
     });
 
-    var el = document.getElementById('deptHeadsEditor'); if (!el) return;
+    var el = document.getElementById('deptHeadsEditor');
+    if (!el) return;
+
     el.innerHTML = allKeys.map(function(key) {
         var def  = defaultMap[key] || {};
-        var s    = saved[key] || {};
-        var dname = s.name || def.name || key;
+        var s    = saved[key]      || {};
+        var dname = s.name  || def.name  || key;
         var icon  = def.icon || 'fas fa-building';
-        var defaultUnits = def.units || ['', '', ''];
-        var savedUnits   = s.units  || defaultUnits;
-        /* Ensure at least 3 unit slots */
+        var savedUnits = (s.units && s.units.length) ? s.units : (def.units || ['','','']);
         while (savedUnits.length < 3) savedUnits.push('');
 
         return '<div class="dept-admin-card" id="dac-' + key + '">'
             + '<div class="dac-header"><i class="' + icon + '"></i><span>' + dname + '</span>'
-            + '<button onclick="deleteDepartment(\'' + key + '\')" style="margin-left:auto;background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#dc3545;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;"><i class="fas fa-trash"></i> Remove</button>'
+            + '<button onclick="deleteDepartment(\''+key+'\')" style="margin-left:auto;background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#dc3545;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;"><i class="fas fa-trash"></i> Remove</button>'
             + '</div>'
             + '<div class="dac-body"><div style="display:grid;grid-template-columns:150px 1fr 1fr 1fr;gap:14px;align-items:start;">'
             + '<div class="field-group" style="margin:0;"><label>Photo</label>'
@@ -2189,8 +2186,8 @@ function renderDeptHeads() {
             + '<img class="preview" id="dept_pp_' + key + '" src="' + (s.photo || '') + '" style="' + (s.photo ? 'display:block;' : 'display:none;') + '" alt="">'
             + '<div class="upload-text"><i class="fas fa-camera" style="font-size:1.3rem;color:var(--green);"></i><strong style="font-size:0.74rem;">Upload</strong></div>'
             + '<div class="img-upload-overlay"><i class="fas fa-camera"></i> Change</div>'
-            + '<button class="img-upload-clear" onclick="clearDeptPhoto(\'' + key + '\',event)">&times;</button>'
-            + '</div><input type="file" id="dpt_' + key + '" accept="image/*" style="display:none;" onchange="previewDeptPhoto(\'' + key + '\',this)"></div>'
+            + '<button class="img-upload-clear" onclick="clearDeptPhoto(\''+key+'\',event)">&times;</button>'
+            + '</div><input type="file" id="dpt_' + key + '" accept="image/*" style="display:none;" onchange="previewDeptPhoto(\''+key+'\',this)"></div>'
             + '<div>'
             + '<div class="field-group"><label>Department Name</label><input type="text" class="field-input" data-dept="' + key + '" data-dfield="name" value="' + escHtml(dname) + '"></div>'
             + '<div class="field-group"><label>Head Name</label><input type="text" class="field-input" data-dept="' + key + '" data-dfield="head" placeholder="To Be Announced" value="' + escHtml(s.head || '') + '"></div>'
@@ -2199,39 +2196,18 @@ function renderDeptHeads() {
             + '</div><div>'
             + '<div class="field-group"><label>Description</label><textarea class="field-textarea" data-dept="' + key + '" data-dfield="desc" rows="4" placeholder="Department mandate...">' + escHtml(s.desc || '') + '</textarea></div>'
             + '<div class="field-group"><label>Funding Sources</label><input type="text" class="field-input" data-dept="' + key + '" data-dfield="funding" placeholder="GoG, DACF, IGF" value="' + escHtml(s.funding || '') + '"></div>'
-            + '</div><div><label style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);display:block;margin-bottom:6px;">Key Units</label>'
+            + '</div>'
+            + '<div><label style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);display:block;margin-bottom:6px;">Key Units</label>'
             + savedUnits.map(function(u, ui) {
-                return '<div class="field-group" style="margin-bottom:8px;display:flex;gap:6px;align-items:center;">'
-                    + '<input type="text" class="field-input" style="font-size:0.82rem;padding:7px 10px;flex:1;" data-dept="' + key + '" data-unit="' + ui + '" value="' + escHtml(u) + '">'
+                return '<div class="field-group" style="margin-bottom:8px;">'
+                    + '<input type="text" class="field-input" style="font-size:0.82rem;padding:7px 10px;" data-dept="' + key + '" data-unit="' + ui + '" value="' + escHtml(u) + '">'
                     + '</div>';
               }).join('')
-            + '<button onclick="addUnitField(\'' + key + '\')" style="font-size:0.78rem;color:var(--green);background:none;border:1px dashed var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;width:100%;margin-top:4px;"><i class="fas fa-plus"></i> Add Unit</button>'
+            + '<button onclick="addUnitField(\''+key+'\')" style="font-size:0.78rem;color:var(--green);background:none;border:1px dashed var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;width:100%;margin-top:4px;"><i class="fas fa-plus"></i> Add Unit</button>'
             + '</div></div></div></div>';
     }).join('');
 }
-        return '<div class="dept-admin-card">'
-            +'<div class="dac-header"><i class="'+d.icon+'"></i><span>'+d.name+'</span></div>'
-            +'<div class="dac-body"><div style="display:grid;grid-template-columns:150px 1fr 1fr 1fr;gap:14px;align-items:start;">'
-            +'<div class="field-group" style="margin:0;"><label>Photo</label>'
-            +'<div class="img-upload-zone" style="height:130px;" id="dept_pz_'+d.key+'" onclick="document.getElementById(\'dpt_'+d.key+'\').click()">'
-            +'<img class="preview" id="dept_pp_'+d.key+'" src="'+(s.photo||'')+'" style="'+(s.photo?'display:block;':'display:none;')+'" alt="">'
-            +'<div class="upload-text"><i class="fas fa-camera" style="font-size:1.3rem;color:var(--green);"></i><strong style="font-size:0.74rem;">Upload</strong></div>'
-            +'<div class="img-upload-overlay"><i class="fas fa-camera"></i> Change</div>'
-            +'<button class="img-upload-clear" onclick="clearDeptPhoto(\''+d.key+'\',event)">&times;</button>'
-            +'</div><input type="file" id="dpt_'+d.key+'" accept="image/*" style="display:none;" onchange="previewDeptPhoto(\''+d.key+'\',this)"></div>'
-            +'<div>'
-            +'<div class="field-group"><label>Head Name</label><input type="text" class="field-input" data-dept="'+d.key+'" data-dfield="head" placeholder="To Be Announced" value="'+escHtml(s.head||'')+'"></div>'
-            +'<div class="field-group"><label>Position Title</label><input type="text" class="field-input" data-dept="'+d.key+'" data-dfield="title" placeholder="'+d.title+'" value="'+escHtml(s.title||'')+'"></div>'
-            +'<div class="field-group"><label>Staff Strength</label><input type="text" class="field-input" data-dept="'+d.key+'" data-dfield="staff" placeholder="e.g. 5 officers" value="'+escHtml(s.staff||'')+'"></div>'
-            +'</div><div>'
-            +'<div class="field-group"><label>Description</label><textarea class="field-textarea" data-dept="'+d.key+'" data-dfield="desc" rows="4" placeholder="Department mandate...">'+escHtml(s.desc||'')+'</textarea></div>'
-            +'<div class="field-group"><label>Funding Sources</label><input type="text" class="field-input" data-dept="'+d.key+'" data-dfield="funding" placeholder="GoG, DACF, IGF" value="'+escHtml(s.funding||'')+'"></div>'
-            +'</div><div><label style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);display:block;margin-bottom:6px;">Key Units</label>'
-            +d.units.map(function(u,ui){var uv=(s.units&&s.units[ui]!==undefined)?s.units[ui]:u;return '<div class="field-group" style="margin-bottom:8px;"><input type="text" class="field-input" style="font-size:0.82rem;padding:7px 10px;" data-dept="'+d.key+'" data-unit="'+ui+'" value="'+escHtml(uv)+'"></div>';}).join('')
-            +'</div></div></div></div>';
-    }).join('');
-    DEPT_FULL_LIST.forEach(function(d){var s2=(getLS('dept_data',{})[d.key]||{});if(s2.photo){var pp=document.getElementById('dept_pp_'+d.key);var pz=document.getElementById('dept_pz_'+d.key);if(pp){pp.src=s2.photo;pp.style.display='block';}if(pz)pz.classList.add('has-image');}});
-}
+
 function previewDeptPhoto(key,input){var file=input.files[0];if(!file)return;if(file.size>5*1024*1024){alert('Max 5MB');return;}var r=new FileReader();r.onload=function(e){var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);if(pp){pp.src=e.target.result;pp.style.display='block';}if(pz)pz.classList.add('has-image');var dd=getLS('dept_data',{});if(!dd[key])dd[key]={};dd[key].photo=e.target.result;setLS('dept_data',dd);showToast('Photo uploaded');};r.readAsDataURL(file);}
 function clearDeptPhoto(key,e){if(e&&e.stopPropagation)e.stopPropagation();var pp=document.getElementById('dept_pp_'+key);var pz=document.getElementById('dept_pz_'+key);var inp=document.getElementById('dpt_'+key);if(pp){pp.src='';pp.style.display='none';}if(pz)pz.classList.remove('has-image');if(inp)inp.value='';var dd=getLS('dept_data',{});if(dd[key]){delete dd[key].photo;setLS('dept_data',dd);}showToast('Photo removed');}
 
