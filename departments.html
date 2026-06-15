@@ -100,7 +100,7 @@
             var funding = d.funding || '';
 
             var photoHtml = photo
-                ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">'
+                ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=&quot;none&quot;;this.nextElementSibling.style.display=&quot;flex&quot;;">'
                   + '<div class="dept-icon" style="display:none;"><i class="fas fa-landmark"></i></div>'
                 : '<div class="dept-icon"><i class="fas fa-landmark"></i></div>';
 
@@ -108,7 +108,7 @@
                 return '<li><i class="fas fa-circle"></i> ' + u + '</li>';
             }).join('');
 
-            return '<div class="department-card" onclick="openDeptModal('' + k + '')">'
+            return '<div class="department-card" onclick="openDeptModal(\'' + k + '\')">'
                 + '<div class="dept-photo-wrap">' + photoHtml + '</div>'
                 + '<div class="dept-card-body">'
                 + '<h3 class="dept-name" id="dh-name-' + k + '">' + name + '</h3>'
