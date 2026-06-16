@@ -26,12 +26,15 @@
 
 <div class="section"><div class="container">
 <div class="departments-grid" id="deptsGrid">
-    <!-- Departments loaded from Firebase dynamically -->
     <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">
         <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:#1F6B3A;margin-bottom:16px;display:block;"></i>
         Loading departments...
     </div>
 </div>
+
+<div id="deptModals"></div>
+
+</div></div>
 
 <!-- FOOTER -->
 <footer><div class="footer-top"><div class="container"><div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div><div class="footer-divider"></div><div class="footer-grid"><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div></div></div></div><div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit</p></div></div></footer>
@@ -57,6 +60,19 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
+var DEPT_DEFAULTS = {
+    "central":  {"name":"Central Administration",             "icon":"fas fa-landmark",        "title":"Head of Department",           "desc":"Coordinates overall Assembly administration, planning, budgeting & legislative oversight."},
+    "planning": {"name":"Physical Planning",                   "icon":"fas fa-drafting-compass", "title":"District Physical Planner",     "desc":"Planning and sustainable development of land and human settlements."},
+    "finance":  {"name":"Finance Department",                  "icon":"fas fa-coins",            "title":"District Finance Officer",      "desc":"Manages Assembly finances, budgeting, accounting and revenue collection."},
+    "hr":       {"name":"Human Resource",                      "icon":"fas fa-users-cog",        "title":"Head, Human Resources",         "desc":"Manages recruitment, development, and welfare of Assembly staff."},
+    "health":   {"name":"Health Department",                   "icon":"fas fa-heartbeat",        "title":"District Health Officer",       "desc":"Ensures healthcare services, disease prevention and health promotion across communities."},
+    "agric":    {"name":"Agriculture Department",              "icon":"fas fa-seedling",         "title":"Director of Agriculture",       "desc":"Promotes sustainable agriculture and thriving agribusinesses for improved livelihood."},
+    "works":    {"name":"Works Department",                    "icon":"fas fa-hard-hat",         "title":"District Works Engineer",       "desc":"Facilitates sustainable and resilient infrastructure development and management."},
+    "welfare":  {"name":"Social Welfare & Community Dev.",     "icon":"fas fa-hands-helping",    "title":"District Social Welfare Officer","desc":"Delivers social protection, community development, and welfare services."},
+    "births":   {"name":"Births & Deaths",                     "icon":"fas fa-baby",             "title":"District Registrar",            "desc":"Registration of births and deaths in the district."},
+    "stats":    {"name":"Statistics",                          "icon":"fas fa-chart-pie",        "title":"District Statistician",         "desc":"Data collection, compilation, analysis and dissemination for planning and development."}
+};
+
 (function() {
     var cfg = {
         apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
@@ -74,60 +90,87 @@
         db.ref('sections/departments').get(),
         db.ref('dept_photos').get()
     ]).then(function(results) {
-        var deptsSnap  = results[0];
-        var photosSnap = results[1];
-        var depts  = deptsSnap.exists()  ? deptsSnap.val()  : {};
-        var photos = photosSnap.exists() ? photosSnap.val() : {};
+        var depts  = results[0].exists() ? results[0].val() : {};
+        var photos = results[1].exists() ? results[1].val() : {};
 
-        var grid = document.getElementById('deptsGrid');
+        var defaultKeys = ['central','planning','finance','hr','health','agric','works','welfare','births','stats'];
+        var allKeys = defaultKeys.slice();
+        Object.keys(depts).forEach(function(k) {
+            if (allKeys.indexOf(k) === -1) allKeys.push(k);
+        });
+
+        var grid   = document.getElementById('deptsGrid');
+        var modals = document.getElementById('deptModals');
         if (!grid) return;
 
-        /* Build cards from Firebase data */
-        var keys = Object.keys(depts);
-        if (keys.length === 0) {
-            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#666;">No departments found.</div>';
-            return;
-        }
+        var cardsHtml  = '';
+        var modalsHtml = '';
 
-        grid.innerHTML = keys.map(function(k) {
-            var d    = depts[k] || {};
-            var photo = photos[k] || '';
-            var name  = d.name  || d.head  || 'Department';
-            var title = d.title || '';
-            var desc  = d.desc  || '';
-            var units = (d.units || []).filter(Boolean);
-            var staff = d.staff   || '';
+        allKeys.forEach(function(k) {
+            var d    = depts[k]         || {};
+            var def  = DEPT_DEFAULTS[k] || {};
+            var photo = photos[k]       || '';
+
+            var name  = d.name   || def.name  || 'Department';
+            var icon  = def.icon || 'fas fa-landmark';
+            var title = d.title  || def.title  || 'Head of Department';
+            var head  = d.head   || '';
+            var desc  = d.desc   || def.desc   || '';
+            var units = Array.isArray(d.units) ? d.units.filter(Boolean) : [];
             var funding = d.funding || '';
+            var modalId = 'm-' + k;
 
-            var photoHtml = photo
-                ? '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=&quot;none&quot;;this.nextElementSibling.style.display=&quot;flex&quot;;">'
-                  + '<div class="dept-icon" style="display:none;"><i class="fas fa-landmark"></i></div>'
-                : '<div class="dept-icon"><i class="fas fa-landmark"></i></div>';
-
+            /* Build units HTML */
             var unitsHtml = units.map(function(u) {
                 return '<li><i class="fas fa-circle"></i> ' + u + '</li>';
             }).join('');
 
-            return '<div class="department-card" onclick="openDeptModal(\'' + k + '\')">'
-                + '<div class="dept-photo-wrap">' + photoHtml + '</div>'
-                + '<div class="dept-card-body">'
-                + '<h3 class="dept-name" id="dh-name-' + k + '">' + name + '</h3>'
-                + '<p class="dept-title" id="dh-title-' + k + '">' + title + '</p>'
-                + '<ul class="units-list" id="dc-units-' + k + '">' + unitsHtml + '</ul>'
+            /* Head photo section */
+            var photoHtml = photo
+                ? '<img id="dh-photo-' + k + '" src="' + photo + '" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #1F6B3A;">'
+                  + '<div id="dh-icon-' + k + '" class="dept-head-photo-placeholder" style="display:none;"><i class="fas fa-user-tie"></i></div>'
+                : '<img id="dh-photo-' + k + '" src="" alt="" style="display:none;">'
+                  + '<div id="dh-icon-' + k + '" class="dept-head-photo-placeholder"><i class="fas fa-user-tie"></i></div>';
+
+            /* Card — use data-modal attribute to avoid inner-quote issues */
+            cardsHtml += '<div class="department-card">'
+                + '<div class="department-header"><i class="' + icon + '"></i><h3>' + name + '</h3></div>'
+                + '<div class="department-body">'
+                + '<div class="department-description">' + desc + '</div>'
+                + (units.length ? '<div class="department-units"><h4><i class="fas fa-sitemap"></i> Key Units</h4><ul class="units-list" id="dc-units-' + k + '">' + unitsHtml + '</ul></div>' : '')
+                + '</div>'
+                + '<div class="dept-head-section">'
+                + '<div class="dept-head-photo-wrap" id="dh-photo-wrap-' + k + '">' + photoHtml + '</div>'
+                + '<div class="dept-head-info">'
+                + '<div class="dept-head-label"><i class="fas fa-id-badge"></i> Dept. / Unit Head</div>'
+                + '<div class="dept-head-name" id="dh-name-' + k + '">' + (head || 'To Be Announced') + '</div>'
+                + '<div class="dept-head-title" id="dh-title-' + k + '">' + title + '</div>'
                 + '</div></div>'
-                /* Modal */
-                + '<div class="dept-modal-data" id="dmodal-' + k + '" style="display:none;">'
-                + '<p id="dm-desc-' + k + '">' + desc + '</p>'
-                + '<p id="dm-staff-' + k + '">' + (staff ? 'Staff Strength: ' + staff : '') + (staff && funding ? ' | ' : '') + (funding ? 'Funding: ' + funding : '') + '</p>'
-                + '<ul id="dm-units-' + k + '">' + unitsHtml + '</ul>'
+                + '<div class="department-footer"><button class="btn-view" data-modal="' + modalId + '" onclick="openDeptModal(this.dataset.modal)"><i class="fas fa-info-circle"></i> View Details</button></div>'
                 + '</div>';
-        }).join('');
+
+            /* Modal */
+            modalsHtml += '<div class="dept-modal-overlay" id="' + modalId + '">'
+                + '<div class="dept-modal">'
+                + '<div class="dept-modal-header"><h3>' + name + '</h3>'
+                + '<button class="close-dept-modal" data-modal="' + modalId + '" onclick="closeDeptModal(this.dataset.modal)">&times;</button></div>'
+                + '<div class="dept-modal-body">'
+                + '<div class="dept-info-section"><h4>Description</h4><p id="dm-desc-' + k + '">' + desc + '</p></div>'
+                + (units.length ? '<div class="dept-info-section"><h4>Key Functions</h4><ul class="units-list" id="dm-units-' + k + '">' + unitsHtml + '</ul></div>' : '')
+                + (funding ? '<div class="dept-info-section"><h4>Funding Sources</h4><p>' + funding + '</p></div>' : '')
+                + '</div></div>'
+                + '</div>';
+        });
+
+        grid.innerHTML = cardsHtml || '<p style="grid-column:1/-1;text-align:center;color:#666;">No departments found.</p>';
+        if (modals) modals.innerHTML = modalsHtml;
 
     }).catch(function(e) {
         console.warn('Departments load failed:', e);
         var grid = document.getElementById('deptsGrid');
-        if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#c00;">Failed to load departments. Please refresh.</div>';
+        if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#c00;"><i class="fas fa-exclamation-circle"></i> Failed to load. Please refresh.</div>';
     });
 })();
 </script>
+
 </body></html>
