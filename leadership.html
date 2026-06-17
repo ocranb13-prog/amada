@@ -82,19 +82,22 @@
                   + '<div class="leader-photo-placeholder" style="display:none;"><i class="fas fa-user-tie"></i></div>'
                 : '<div class="leader-photo-placeholder"><i class="fas fa-user-tie"></i></div>';
 
-            var contactHtml = '';
-            if (l.phone) contactHtml += '<div class="leader-contact"><i class="fas fa-phone"></i> ' + l.phone + '</div>';
-            if (l.email) contactHtml += '<div class="leader-contact"><i class="fas fa-envelope"></i> ' + l.email + '</div>';
-            if (l.office) contactHtml += '<div class="leader-contact"><i class="fas fa-map-marker-alt"></i> ' + l.office + '</div>';
+            var contactParts = [];
+            if (l.phone)  contactParts.push('<span><i class="fas fa-phone-alt"></i> ' + l.phone + '</span>');
+            if (l.email)  contactParts.push('<span><i class="fas fa-envelope"></i> ' + l.email + '</span>');
+            if (l.office) contactParts.push('<span><i class="fas fa-building"></i> ' + l.office + '</span>');
+            var contactHtml = contactParts.length ? '<div class="leader-contact">' + contactParts.join('') + '</div>' : '';
 
             return '<div class="leader-card">'
-                + (l.badge ? '<div class="leader-badge"><i class="fas fa-star"></i></div>' : '')
-                + '<div class="leader-photo-wrap">' + photoHtml + '</div>'
+                + '<div class="leader-photo-wrap">'
+                + photoHtml
+                + (l.badge ? '<span class="leader-badge"><i class="fas fa-star"></i></span>' : '')
+                + '</div>'
                 + '<div class="leader-info">'
+                + '<span class="leader-role">' + (l.role || '') + '</span>'
                 + '<h3 class="leader-name">' + (l.name || 'To Be Announced') + '</h3>'
-                + '<p class="leader-role">' + (l.role || '') + '</p>'
                 + (l.bio ? '<p class="leader-bio">' + l.bio + '</p>' : '')
-                + (contactHtml ? '<div class="leader-contacts">' + contactHtml + '</div>' : '')
+                + (contactHtml ? '<div class="leader-divider"></div>' + contactHtml : '')
                 + '</div></div>';
         }).join('');
 
