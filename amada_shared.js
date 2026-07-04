@@ -284,4 +284,75 @@ document.addEventListener('DOMContentLoaded', function() {
     startClock();
     initModalOverlayClose();
     initEscClose();
+    loadSocialLinks();
 });
+
+/* ── Load social links from Firebase and update every page footer ── */
+function loadSocialLinks() {
+    /* Use Firebase if already initialised on the page (index.html etc.)
+       Otherwise initialise a lightweight read-only instance */
+    function doLoad(db) {
+        db.ref('sections/contact').get().then(function(snap) {
+            if (!snap.exists()) return;
+            var d = snap.val();
+
+            var fbUrl = d.social_fb || '';
+            var twUrl = d.social_tw || '';
+            var igUrl = d.social_ig || '';
+
+            /* Update every .social-btn.fb on the page */
+            document.querySelectorAll('a.social-btn.fb').forEach(function(el) {
+                if (fbUrl) {
+                    el.href   = fbUrl;
+                    el.target = '_blank';
+                    el.rel    = 'noopener noreferrer';
+                }
+            });
+            document.querySelectorAll('a.social-btn.tw').forEach(function(el) {
+                if (twUrl) {
+                    el.href   = twUrl;
+                    el.target = '_blank';
+                    el.rel    = 'noopener noreferrer';
+                }
+            });
+            document.querySelectorAll('a.social-btn.ig').forEach(function(el) {
+                if (igUrl) {
+                    el.href   = igUrl;
+                    el.target = '_blank';
+                    el.rel    = 'noopener noreferrer';
+                }
+            });
+        }).catch(function(e) {
+            console.warn('Social links load failed:', e);
+        });
+    }
+
+    /* Wait a tick to let each page's own Firebase init run first */
+    setTimeout(function() {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+            doLoad(firebase.database());
+        } else if (typeof window._fbDb !== 'undefined' && window._fbDb) {
+            /* Modular-style wrapper used by some pages */
+            doLoad(window._fbDb);
+        } else {
+            /* Initialise Firebase just for this read */
+            var script1 = document.createElement('script');
+            script1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+            script1.onload = function() {
+                var script2 = document.createElement('script');
+                script2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
+                script2.onload = function() {
+                    var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp({
+                        apiKey:      "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+                        authDomain:  "asmda-website.firebaseapp.com",
+                        databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
+                        projectId:   "asmda-website"
+                    });
+                    doLoad(firebase.database());
+                };
+                document.head.appendChild(script2);
+            };
+            document.head.appendChild(script1);
+        }
+    }, 300);
+}
