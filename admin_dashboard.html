@@ -787,6 +787,18 @@
                         <div class="field-group"><label>Secondary Button Text</label><input type="text" class="field-input" id="hero_btn2" placeholder="Latest Events"></div>
                     </div>
                 </div></div>
+
+                <!-- Hero Slideshow Images -->
+                <div class="card" style="margin-top:16px;">
+                    <div class="card-header"><h3><i class="fas fa-images" style="color:var(--green);margin-right:8px;"></i>Hero Background Images <span style="font-size:0.78rem;color:var(--text3);font-weight:400;">(These rotate automatically on the homepage)</span></h3></div>
+                    <div class="card-body">
+                        <p style="font-size:0.85rem;color:var(--text2);margin-bottom:14px;">Upload images that will appear as a rotating slideshow in the hero section. Recommended: landscape photos, minimum 1200×600px. First image shows by default.</p>
+                        <div id="heroImagesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px;"></div>
+                        <button class="btn btn-secondary" onclick="document.getElementById('heroImgUpload').click()"><i class="fas fa-plus"></i> Add Hero Image</button>
+                        <input type="file" id="heroImgUpload" accept="image/*" multiple style="display:none;" onchange="addHeroImages(this)">
+                        <p style="font-size:0.78rem;color:var(--text3);margin-top:8px;"><i class="fas fa-info-circle"></i> After adding images, click <strong>Save Changes</strong> above to sync to the live website.</p>
+                    </div>
+                </div>
             </div>
             <div class="edit-tabpanel" id="home-stats">
                 <div class="card"><div class="card-body">
@@ -827,15 +839,70 @@
         <!-- ══ EDIT: LEADERSHIP ══ -->
         <div class="panel" id="panel-edit-leadership">
             <div class="page-hdr">
-                <div class="page-hdr-left"><h1><i class="fas fa-users" style="color:var(--green);margin-right:8px;"></i>Edit Leadership Page</h1><p>Add, edit or remove leadership profiles</p></div>
+                <div class="page-hdr-left"><h1><i class="fas fa-users" style="color:var(--green);margin-right:8px;"></i>Edit Leadership Page</h1><p>Update leadership profiles and organogram</p></div>
                 <div class="page-hdr-right">
-                    <button class="btn btn-secondary" onclick="addLeaderCard()"><i class="fas fa-plus"></i> Add Leader</button>
-                    <button class="btn btn-primary" onclick="saveAllLeaders()"><i class="fas fa-save"></i> Save & Sync</button>
+                    <button class="btn btn-primary" onclick="saveSection('leadership')"><i class="fas fa-save"></i> Save Changes</button>
                     <a href="leadership.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i> Preview</a>
                 </div>
             </div>
-            <div id="leaderCardsEditor" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                <!-- DCE -->
+                <div class="card"><div class="card-header"><h3><i class="fas fa-star"></i> District Chief Executive</h3></div><div class="card-body">
+                    <div class="field-group"><label>Profile Photo</label>
+                        <div class="img-upload-zone" id="dce_photo_zone" onclick="document.getElementById('dce_photo_file').click()">
+                            <img class="preview" id="dce_photo_preview" src="" style="display:none;" alt="">
+                            <div class="upload-text"><i class="fas fa-camera" style="font-size:1.8rem;color:var(--green);margin-bottom:6px;"></i><strong>Click to Upload Photo</strong>JPG, PNG — Max 5MB</div>
+                            <div class="img-upload-overlay"><i class="fas fa-camera"></i> Change Photo</div>
+                            <button class="img-upload-clear" onclick="clearLeaderPhoto('dce',event)">&times;</button>
+                        </div>
+                        <input type="file" id="dce_photo_file" accept="image/*" style="display:none;" onchange="previewLeaderPhoto('dce',this)">
+                    </div>
+                    <div class="field-group"><label>Full Name</label><input type="text" class="field-input" id="dce_name" placeholder="Hon. Eric Ahinakwa"></div>
+                    <div class="field-group"><label>Role Title</label><input type="text" class="field-input" id="dce_role" placeholder="District Chief Executive"></div>
+                    <div class="field-group"><label>Bio</label><textarea class="field-textarea" id="dce_bio" rows="3"></textarea></div>
+                    <div class="field-group"><label>Contact Number</label><input type="text" class="field-input" id="dce_phone" placeholder="+233 552 455 666"></div>
+                    <div class="field-group"><label>Email Address</label><input type="email" class="field-input" id="dce_email" placeholder="dce@amada.gov.gh"></div>
+                    <div class="field-group"><label>Office Location</label><input type="text" class="field-input" id="dce_office" placeholder="Office of the DCE, Akim Manso"></div>
+                </div></div>
+                <!-- DCD -->
+                <div class="card"><div class="card-header"><h3><i class="fas fa-user-tie"></i> District Coordinating Director</h3></div><div class="card-body">
+                    <div class="field-group"><label>Profile Photo</label>
+                        <div class="img-upload-zone" id="dcd_photo_zone" onclick="document.getElementById('dcd_photo_file').click()">
+                            <img class="preview" id="dcd_photo_preview" src="" style="display:none;" alt="">
+                            <div class="upload-text"><i class="fas fa-camera" style="font-size:1.8rem;color:var(--green);margin-bottom:6px;"></i><strong>Click to Upload Photo</strong>JPG, PNG — Max 5MB</div>
+                            <div class="img-upload-overlay"><i class="fas fa-camera"></i> Change Photo</div>
+                            <button class="img-upload-clear" onclick="clearLeaderPhoto('dcd',event)">&times;</button>
+                        </div>
+                        <input type="file" id="dcd_photo_file" accept="image/*" style="display:none;" onchange="previewLeaderPhoto('dcd',this)">
+                    </div>
+                    <div class="field-group"><label>Full Name</label><input type="text" class="field-input" id="dcd_name" placeholder="Ms. Gladys Asamoah Addai"></div>
+                    <div class="field-group"><label>Role Title</label><input type="text" class="field-input" id="dcd_role" placeholder="District Coordinating Director"></div>
+                    <div class="field-group"><label>Bio</label><textarea class="field-textarea" id="dcd_bio" rows="3"></textarea></div>
+                    <div class="field-group"><label>Contact Number</label><input type="text" class="field-input" id="dcd_phone" placeholder="+233 552 455 666"></div>
+                    <div class="field-group"><label>Email Address</label><input type="email" class="field-input" id="dcd_email" placeholder="dcd@amada.gov.gh"></div>
+                    <div class="field-group"><label>Office Location</label><input type="text" class="field-input" id="dcd_office" placeholder="Office of the DCD, Akim Manso"></div>
+                </div></div>
+                <!-- Presiding Member -->
+                <div class="card"><div class="card-header"><h3><i class="fas fa-gavel"></i> Presiding Member</h3></div><div class="card-body">
+                    <div class="field-group"><label>Profile Photo</label>
+                        <div class="img-upload-zone" id="pm_photo_zone" onclick="document.getElementById('pm_photo_file').click()">
+                            <img class="preview" id="pm_photo_preview" src="" style="display:none;" alt="">
+                            <div class="upload-text"><i class="fas fa-camera" style="font-size:1.8rem;color:var(--green);margin-bottom:6px;"></i><strong>Click to Upload Photo</strong>JPG, PNG — Max 5MB</div>
+                            <div class="img-upload-overlay"><i class="fas fa-camera"></i> Change Photo</div>
+                            <button class="img-upload-clear" onclick="clearLeaderPhoto('pm',event)">&times;</button>
+                        </div>
+                        <input type="file" id="pm_photo_file" accept="image/*" style="display:none;" onchange="previewLeaderPhoto('pm',this)">
+                    </div>
+                    <div class="field-group"><label>Full Name</label><input type="text" class="field-input" id="pm_name" placeholder="Hon. Enoch Ofori Aiden"></div>
+                    <div class="field-group"><label>Role Title</label><input type="text" class="field-input" id="pm_role" placeholder="Presiding Member"></div>
+                    <div class="field-group"><label>Bio</label><textarea class="field-textarea" id="pm_bio" rows="3"></textarea></div>
+                    <div class="field-group"><label>Contact Number</label><input type="text" class="field-input" id="pm_phone" placeholder="+233 552 455 666"></div>
+                    <div class="field-group"><label>Email Address</label><input type="email" class="field-input" id="pm_email" placeholder="pm@amada.gov.gh"></div>
+                    <div class="field-group"><label>Office Location</label><input type="text" class="field-input" id="pm_office" placeholder="Assembly Chamber"></div>
+                </div></div>
+            </div>
         </div>
+
 
         <!-- ══ EDIT: DEPARTMENTS ══ -->
         <div class="panel" id="panel-edit-departments">
@@ -1534,17 +1601,16 @@ function showPanel(name) {
     if (name === 'applications' || name === 'reports') loadApplications();
     if (name === 'edit-departments')  renderDeptHeads();
     if (name === 'edit-publications') {
-        // Always reload from Firebase first to avoid showing stale localStorage data
+        // Always sync from Firebase first so admin sees live data, not stale localStorage
         loadPubsFromFirebase(function() { renderPublications(); });
     }
-    if (name === 'edit-publications') {
-        // Always sync from Firebase first so admin sees live data, not stale localStorage
-        loadPubsFromFirebase(function() { renderPublications(); }); // load from Firebase only
+    if (name === 'edit-home') {
+        renderNewsEditor();
+        setTimeout(loadHeroImagesIntoGrid, 100);
     }
-    if (name === 'edit-home')         renderNewsEditor();
     if (name === 'edit-services')     renderFormsEditor();
     if (name === 'dashboard')         updateDashboardStats();
-    if (name === 'edit-leadership')   setTimeout(renderLeaderEditor, 60);
+    if (name === 'edit-leadership')   setTimeout(loadLeaderPhotos, 60);
     if (name === 'edit-about')        setTimeout(loadMapImage, 60);
     loadSectionData(name);
     window.scrollTo(0, 0);
@@ -1626,7 +1692,9 @@ function renderActivityLog() {
 /* ── 8. SECTION DATA ── */
 var SECTION_FIELDS = {
     home:       ['hero_heading','hero_subtitle','hero_btn1','hero_btn2','stat_pop','stat_area','stat_comm','stat_year'],
-    leadership: [], /* handled dynamically by saveAllLeaders() */
+    leadership: ['dce_name','dce_role','dce_bio','dce_phone','dce_email','dce_office',
+                 'dcd_name','dcd_role','dcd_bio','dcd_phone','dcd_email','dcd_office',
+                 'pm_name','pm_role','pm_bio','pm_phone','pm_email','pm_office'],
     about:      ['about_establishment','about_mission','about_vision','about_goal','about_values',
                  'about_geo','about_size','about_pop','about_stat_pop','about_stat_area',
                  'about_stat_comm','about_stat_year','about_map_caption'],
@@ -1686,7 +1754,6 @@ function loadSectionData(section) {
 function saveSection(section) {
     var key    = section.replace('edit-','');
     if (key === 'departments') { saveDeptHeads(); return; }
-    if (key === 'leadership')  { saveAllLeaders(); return; }
     if (key === 'services')    { saveFormsStatus(); return; }
     var fields = SECTION_FIELDS[key] || [];
     var data   = getLS('section_' + key, {});
@@ -1711,161 +1778,154 @@ function saveSection(section) {
     }
 }
 
-/* ── 9. DYNAMIC LEADER MANAGEMENT ── */
-
-var DEFAULT_LEADERS = [
-    { key:'dce', badge:true,  icon:'fas fa-star',     role:'District Chief Executive',       name:'Hon. Eric Ahinakwa',      bio:'The political head of the Asene Manso Akroso District Assembly, responsible for day-to-day administration and implementation of Assembly decisions.', phone:'+233 552 455 666', email:'dce@amada.gov.gh',  office:'Office of the DCE, Akim Manso', photo:'' },
-    { key:'dcd', badge:false, icon:'fas fa-user-tie', role:'District Coordinating Director', name:'Ms. Gladys Asamoah Addai', bio:'The administrative head who coordinates all departments and ensures efficient service delivery across the district.',                                     phone:'+233 552 455 666', email:'dcd@amada.gov.gh',  office:'Office of the DCD, Akim Manso', photo:'' },
-    { key:'pm',  badge:false, icon:'fas fa-gavel',    role:'Presiding Member',               name:'Hon. Enoch Ofori Aiden',   bio:'Chairs Assembly meetings and ensures proper conduct of business in accordance with standing orders.',                                                phone:'',                 email:'',                   office:'Assembly Chamber',              photo:'' }
-];
-
-function getLeaders() {
-    var saved = getLS('leaders_data', null);
-    if (!saved || !Array.isArray(saved) || saved.length === 0) return DEFAULT_LEADERS.map(function(l){ return Object.assign({}, l); });
-    return saved;
+/* ── HERO IMAGE SLIDESHOW MANAGEMENT ── */
+function getHeroImages() {
+    return getLS('hero_images', []);
 }
 
-function renderLeaderEditor() {
-    /* Try to load latest from Firebase first */
-    if (window._fbDb && window._fbRef) {
-        window._fbDb.ref('sections/leadership').get().then(function(snap) {
-            if (snap.exists() && Array.isArray(snap.val()) && snap.val().length > 0) {
-                setLS('leaders_data', snap.val());
+function renderHeroImagesGrid() {
+    var imgs = getHeroImages();
+    var el = document.getElementById('heroImagesGrid');
+    if (!el) return;
+    if (!imgs.length) {
+        el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text3);border:2px dashed var(--gray3);border-radius:8px;"><i class="fas fa-image" style="font-size:2rem;margin-bottom:8px;display:block;"></i>No images yet — click "Add Hero Image" below. The default office photo will show until you add one.</div>';
+        return;
+    }
+    el.innerHTML = imgs.map(function(img, i) {
+        return '<div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid var(--gray3);">'
+            + '<img src="' + img.src + '" style="width:100%;height:120px;object-fit:cover;display:block;" alt="Hero image ' + (i+1) + '">'
+            + '<div style="position:absolute;top:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:4px 8px;display:flex;align-items:center;justify-content:space-between;">'
+            + '<span style="color:#fff;font-size:0.75rem;font-weight:700;">#' + (i+1) + (i===0 ? ' — Default' : '') + '</span>'
+            + '<div style="display:flex;gap:4px;">'
+            + (i > 0 ? '<button onclick="moveHeroImg('+i+',-1)" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:3px;padding:2px 6px;cursor:pointer;font-size:11px;"><i class="fas fa-arrow-left"></i></button>' : '')
+            + (i < imgs.length-1 ? '<button onclick="moveHeroImg('+i+',1)" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:3px;padding:2px 6px;cursor:pointer;font-size:11px;"><i class="fas fa-arrow-right"></i></button>' : '')
+            + '<button onclick="removeHeroImg('+i+')" style="background:rgba(220,53,69,0.7);border:none;color:#fff;border-radius:3px;padding:2px 6px;cursor:pointer;font-size:11px;"><i class="fas fa-trash"></i></button>'
+            + '</div></div></div>';
+    }).join('');
+}
+
+function addHeroImages(input) {
+    var files = Array.from(input.files);
+    var imgs  = getHeroImages();
+    var done  = 0;
+    if (!files.length) return;
+    files.forEach(function(file) {
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('\u26a0\ufe0f ' + file.name + ' too large (max 10MB)');
+            done++; return;
+        }
+        var url = URL.createObjectURL(file);
+        var image = new Image();
+        image.onload = function() {
+            var MAX = 1200, w = image.width, h = image.height;
+            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+            var c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(image, 0, 0, w, h);
+            URL.revokeObjectURL(url);
+            imgs.push({ src: c.toDataURL('image/jpeg', 0.80), name: file.name });
+            done++;
+            if (done === files.length) {
+                setLS('hero_images', imgs);
+                renderHeroImagesGrid();
+                showToast('\u2705 ' + files.length + ' image(s) added \u2014 click Save Changes to go live');
             }
-            _renderLeaderCards();
-        }).catch(function() { _renderLeaderCards(); });
+        };
+        image.onerror = function() { URL.revokeObjectURL(url); done++; };
+        image.src = url;
+    });
+    input.value = '';
+}
+
+function removeHeroImg(i) {
+    if (!confirm('Remove this hero image?')) return;
+    var imgs = getHeroImages();
+    imgs.splice(i, 1);
+    setLS('hero_images', imgs);
+    renderHeroImagesGrid();
+    showToast('Image removed \u2014 click Save Changes to update live site');
+}
+
+function moveHeroImg(i, dir) {
+    var imgs = getHeroImages(), ni = i + dir;
+    if (ni < 0 || ni >= imgs.length) return;
+    var tmp = imgs[i]; imgs[i] = imgs[ni]; imgs[ni] = tmp;
+    setLS('hero_images', imgs);
+    renderHeroImagesGrid();
+}
+
+/* Load hero images into grid when panel opens */
+function loadHeroImagesIntoGrid() {
+    /* Try Firebase first */
+    if (window._fbDb && window._fbRef && window._fbGet) {
+        window._fbGet(window._fbRef(window._fbDb, 'sections/home')).then(function(snap) {
+            if (snap.exists()) {
+                var d = snap.val();
+                if (d.hero_images && Array.isArray(d.hero_images) && d.hero_images.length) {
+                    setLS('hero_images', d.hero_images);
+                }
+            }
+            renderHeroImagesGrid();
+        }).catch(function() { renderHeroImagesGrid(); });
     } else {
-        _renderLeaderCards();
+        renderHeroImagesGrid();
     }
 }
 
-function _renderLeaderCards() {
-    var leaders = getLeaders();
-    var el = document.getElementById('leaderCardsEditor');
-    if (!el) return;
-    el.innerHTML = leaders.map(function(l, i) {
-        var photoStyle = l.photo ? 'display:block;' : 'display:none;';
-        return '<div class="card" id="lcard-' + i + '">'
-            + '<div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">'
-            + '<h3><i class="fas fa-user-circle"></i> Leader #' + (i+1) + '</h3>'
-            + '<button onclick="removeLeaderCard(' + i + ')" style="background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#dc3545;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;"><i class="fas fa-trash"></i></button>'
-            + '</div>'
-            + '<div class="card-body">'
-            + '<div class="field-group"><label>Profile Photo</label>'
-            + '<div class="img-upload-zone" id="l_zone_' + i + '" onclick="document.getElementById(\'l_file_' + i + '\').click()">'
-            + '<img class="preview" id="l_prev_' + i + '" src="' + (l.photo || '') + '" style="' + photoStyle + '" alt="">'
-            + '<div class="upload-text"><i class="fas fa-camera" style="font-size:1.8rem;color:var(--green);margin-bottom:6px;"></i><strong>Click to Upload</strong>JPG, PNG — Max 5MB</div>'
-            + '<div class="img-upload-overlay"><i class="fas fa-camera"></i> Change Photo</div>'
-            + '<button class="img-upload-clear" onclick="clearLeaderPhoto(' + i + ',event)">&times;</button>'
-            + '</div>'
-            + '<input type="file" id="l_file_' + i + '" accept="image/*" style="display:none;" onchange="previewLeaderPhoto(' + i + ',this)">'
-            + '</div>'
-            + '<div class="field-group"><label>Full Name</label><input type="text" class="field-input" id="l_name_' + i + '" value="' + escHtml(l.name || '') + '" placeholder="Hon. Full Name"></div>'
-            + '<div class="field-group"><label>Role / Title</label><input type="text" class="field-input" id="l_role_' + i + '" value="' + escHtml(l.role || '') + '" placeholder="e.g. District Chief Executive"></div>'
-            + '<div class="field-group"><label>Bio</label><textarea class="field-textarea" id="l_bio_' + i + '" rows="3" placeholder="Brief biography...">' + escHtml(l.bio || '') + '</textarea></div>'
-            + '<div class="field-group"><label>Phone</label><input type="text" class="field-input" id="l_phone_' + i + '" value="' + escHtml(l.phone || '') + '" placeholder="+233 XXX XXX XXX"></div>'
-            + '<div class="field-group"><label>Email</label><input type="email" class="field-input" id="l_email_' + i + '" value="' + escHtml(l.email || '') + '" placeholder="name@amada.gov.gh"></div>'
-            + '<div class="field-group"><label>Office Location</label><input type="text" class="field-input" id="l_office_' + i + '" value="' + escHtml(l.office || '') + '" placeholder="Office location"></div>'
-            + '<div class="field-group"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="l_badge_' + i + '" ' + (l.badge ? 'checked' : '') + '> Show star badge (for DCE/main leader)</label></div>'
-            + '</div></div>';
-    }).join('');
-
-    /* Restore has-image class */
-    leaders.forEach(function(l, i) {
-        if (l.photo) {
-            var zone = document.getElementById('l_zone_' + i);
-            if (zone) zone.classList.add('has-image');
-        }
-    });
-}
-
-function addLeaderCard() {
-    var leaders = getLeaders();
-    leaders.push({ key: 'leader_' + Date.now(), badge: false, role: '', name: '', bio: '', phone: '', email: '', office: '', photo: '' });
-    setLS('leaders_data', leaders);
-    _renderLeaderCards();
-    setTimeout(function() {
-        var el = document.getElementById('lcard-' + (leaders.length - 1));
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-    showToast('New leader card added');
-}
-
-function removeLeaderCard(i) {
-    if (!confirm('Remove this leader profile?')) return;
-    var leaders = getLeaders();
-    leaders.splice(i, 1);
-    setLS('leaders_data', leaders);
-    _renderLeaderCards();
-    showToast('Leader removed — click Save & Sync to update public site');
-}
-
-function previewLeaderPhoto(i, input) {
+/* ── 9. LEADER PHOTOS ── */
+function previewLeaderPhoto(role, input) {
     var file = input.files[0]; if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return; }
+    if (file.size > 5*1024*1024) { alert('Max 5MB'); return; }
     var reader = new FileReader();
     reader.onload = function(e) {
-        var prev = document.getElementById('l_prev_' + i);
-        var zone = document.getElementById('l_zone_' + i);
-        if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
+        var prev = document.getElementById(role+'_photo_preview');
+        var zone = document.getElementById(role+'_photo_zone');
+        if (prev) { prev.src = e.target.result; prev.style.display='block'; }
         if (zone) zone.classList.add('has-image');
-        /* Store photo in leaders_data */
-        var leaders = getLeaders();
-        if (leaders[i]) leaders[i].photo = e.target.result;
-        setLS('leaders_data', leaders);
-        showToast('Photo uploaded — click Save & Sync to go live');
+        // Save to localStorage
+        setLS('photo_'+role, e.target.result);
+        // Save to Firebase
+        if (window._fbDb && window._fbRef && window._fbSet) {
+            window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), e.target.result)
+                .then(function() {
+                    showToast('✅ Photo uploaded & synced to public website');
+                    logActivity('Photo synced to Firebase for ' + role.toUpperCase());
+                })
+                .catch(function(err) {
+                    console.error('Firebase photo save failed:', err);
+                    showToast('⚠️ Photo saved locally — Firebase sync failed');
+                });
+        } else {
+            showToast('Photo uploaded');
+            logActivity('Photo uploaded for '+role.toUpperCase());
+        }
     };
     reader.readAsDataURL(file);
 }
-
-function clearLeaderPhoto(i, e) {
+function clearLeaderPhoto(role, e) {
     if (e && e.stopPropagation) e.stopPropagation();
-    var prev = document.getElementById('l_prev_' + i);
-    var zone = document.getElementById('l_zone_' + i);
-    var inp  = document.getElementById('l_file_' + i);
-    if (prev) { prev.src = ''; prev.style.display = 'none'; }
+    var prev=document.getElementById(role+'_photo_preview');
+    var zone=document.getElementById(role+'_photo_zone');
+    var inp =document.getElementById(role+'_photo_file');
+    if (prev) { prev.src=''; prev.style.display='none'; }
     if (zone) zone.classList.remove('has-image');
-    if (inp)  inp.value = '';
-    var leaders = getLeaders();
-    if (leaders[i]) leaders[i].photo = '';
-    setLS('leaders_data', leaders);
+    if (inp)  inp.value='';
+    setLS('photo_'+role,'');
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), '');
+    }
     showToast('Photo removed');
 }
-
-function saveAllLeaders() {
-    /* Collect all field values from the editor */
-    var leaders = getLeaders();
-    leaders.forEach(function(l, i) {
-        var n  = document.getElementById('l_name_'  + i);
-        var r  = document.getElementById('l_role_'  + i);
-        var b  = document.getElementById('l_bio_'   + i);
-        var ph = document.getElementById('l_phone_' + i);
-        var em = document.getElementById('l_email_' + i);
-        var of = document.getElementById('l_office_'+ i);
-        var bk = document.getElementById('l_badge_' + i);
-        if (n)  l.name   = n.value;
-        if (r)  l.role   = r.value;
-        if (b)  l.bio    = b.value;
-        if (ph) l.phone  = ph.value;
-        if (em) l.email  = em.value;
-        if (of) l.office = of.value;
-        if (bk) l.badge  = bk.checked;
+function loadLeaderPhotos() {
+    ['dce','dcd','pm'].forEach(function(role) {
+        var src  = getLS('photo_'+role,'');
+        var prev = document.getElementById(role+'_photo_preview');
+        var zone = document.getElementById(role+'_photo_zone');
+        if (src) {
+            if (prev) { prev.src=src; prev.style.display='block'; }
+            if (zone) zone.classList.add('has-image');
+        } else if (prev) { prev.style.display='block'; }
     });
-    setLS('leaders_data', leaders);
-
-    if (window._fbDb && window._fbRef && window._fbSet) {
-        window._fbSet(window._fbRef(window._fbDb, 'sections/leadership'), leaders)
-            .then(function() {
-                showToast('✅ Leadership live on public website');
-                logActivity('Leadership saved & synced by ' + (_session ? _session.name : 'Admin'));
-            })
-            .catch(function(e) {
-                console.error('Leadership Firebase save failed:', e);
-                showToast('⚠️ Saved locally only — Firebase sync failed: ' + (e.message || e.code));
-            });
-    } else {
-        showToast('Leadership saved locally');
-    }
 }
 
 /* ── 10. ABOUT MAP ── */
@@ -1978,13 +2038,18 @@ function renderNewsEditor() {
     }).join('');
 }
 function saveNewsItems(parentData) {
-    var news  = getLS('home_news', DEFAULT_NEWS);
+    /* Use localStorage as source of truth (editor writes fields there).
+       Guard: if home_news is missing/empty fall back to DEFAULT_NEWS but
+       never silently replace live Firebase data with defaults. */
+    var news = getLS('home_news', null);
+    if (!news || !Array.isArray(news)) news = JSON.parse(JSON.stringify(DEFAULT_NEWS));
     document.querySelectorAll('[data-ni]').forEach(function(el){
         var i=parseInt(el.dataset.ni),f=el.dataset.field;
         if(!news[i])news[i]={};news[i][f]=el.value;
     });
     setLS('home_news', news);
-    var anncs = getLS('home_anncs', DEFAULT_ANNCS);
+    var anncs = getLS('home_anncs', null);
+    if (!anncs || !Array.isArray(anncs)) anncs = getLS('home_anncs', DEFAULT_ANNCS);
     document.querySelectorAll('[data-ai]').forEach(function(el){
         var i=parseInt(el.dataset.ai),f=el.dataset.field;
         if(!anncs[i])anncs[i]={};anncs[i][f]=el.value;
@@ -2013,6 +2078,17 @@ function saveNewsItems(parentData) {
                 console.error('Anncs sync FAILED:', e);
                 showToast('⚠️ Announcements sync failed');
             });
+
+        /* Save hero images to sections/home/hero_images */
+        var heroImgs = getLS('hero_images', []);
+        if (heroImgs.length > 0 && parentData) {
+            parentData.hero_images = heroImgs;
+        }
+        if (parentData && window._fbSet && window._fbRef) {
+            window._fbSet(window._fbRef(window._fbDb, 'sections/home'), parentData)
+                .then(function() { showToast('✅ Home page synced to live website'); })
+                .catch(function(e) { console.warn('sections/home save failed:', e); });
+        }
     }
 }
 /* ── Cloudinary config ── */
@@ -2362,7 +2438,15 @@ function loadPubsFromFirebase(cb) {
         if (snap.exists()) {
             var data = snap.val();
             // Convert Firebase objects to arrays (Firebase can return objects keyed by index)
-            function toArr(v) { return Array.isArray(v) ? v : (v ? Object.values(v) : []); }
+            /* Firebase stores arrays as {0:{...},1:{...},...} objects — sort by numeric key
+               to preserve original order, then filter nulls */
+            function toArr(v) {
+                if (Array.isArray(v)) return v;
+                if (!v) return [];
+                return Object.keys(v)
+                    .sort(function(a,b){ return parseInt(a)-parseInt(b); })
+                    .map(function(k){ return v[k]; });
+            }
             var normalized = {
                 budget:     toArr(data.budget).filter(Boolean),
                 report:     toArr(data.report).filter(Boolean),
