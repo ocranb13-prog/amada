@@ -36,14 +36,15 @@
 </header>
 
 <!-- HERO -->
-<section class="hero" id="heroContent" style="opacity:0;transition:opacity 0.5s;">
-    <div class="container">
+<section class="hero" id="heroSection" style="position:relative;overflow:hidden;">
+    <div id="heroSlideshow" style="position:absolute;inset:0;z-index:0;"></div>
+    <div class="container" style="position:relative;z-index:1;">
         <div class="hero-content">
             <h2 id="heroHeading">Welcome to Asene Manso Akroso District Assembly</h2>
             <p id="heroSubtitle">To promote inclusive development, empower our residents and protect our natural environment. We aim to achieve this by fostering collaboration and supporting local businesses.</p>
             <div class="hero-buttons">
                 <a href="publications.html" class="btn btn-secondary" id="heroBtn1"><i class="fas fa-file-alt"></i> View Publications</a>
-                <a href="#events" onclick="document.getElementById('latestEvents').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-outline"><i class="fas fa-calendar-alt"></i> Latest Events</a>
+                <a href="#events" onclick="document.getElementById('latestEvents').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-outline" id="heroBtn2"><i class="fas fa-calendar-alt"></i> Latest Events</a>
             </div>
         </div>
     </div>
@@ -53,13 +54,13 @@
 <div class="hero-stats-strip">
     <div class="container">
         <div class="hero-stats-grid">
-            <div class="hero-stat"><span class="hero-stat-number" id="statPop">77,498</span><span class="hero-stat-label" id="statPopLabel">Population (2021)</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">77,498</span><span class="hero-stat-label">Population (2021)</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="statArea">471.82 km²</span><span class="hero-stat-label" id="statAreaLabel">Land Area</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">471.82 km²</span><span class="hero-stat-label">Land Area</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="statComm">55+</span><span class="hero-stat-label" id="statCommLabel">Communities</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">55+</span><span class="hero-stat-label">Communities</span></div>
             <div class="hero-stat-divider"></div>
-            <div class="hero-stat"><span class="hero-stat-number" id="statYear">Est. 2018</span><span class="hero-stat-label" id="statYearLabel">District Assembly</span></div>
+            <div class="hero-stat"><span class="hero-stat-number">Est. 2018</span><span class="hero-stat-label">District Assembly</span></div>
         </div>
     </div>
 </div>
@@ -381,12 +382,14 @@ var NEWS = {
         if (html.trim()) container.innerHTML = html;
     }).catch(function(e) { console.warn('Announcements Firebase load failed:', e); });
 
-    /* ── Load Hero & Stats from Firebase (sections/home) ── */
+    /* ── Load Hero text, Stats & Slideshow from Firebase ── */
     firebase.database().ref('sections/home').get().then(function(snap) {
         if (!snap.exists()) return;
         var d = snap.val(); if (!d) return;
+
+        /* Text fields */
         var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.textContent = val; };
-        set('heroHeading', d.hero_heading);
+        set('heroHeading',  d.hero_heading);
         set('heroSubtitle', d.hero_subtitle);
         set('statPop',  d.stat_pop);
         set('statArea', d.stat_area);
@@ -394,14 +397,30 @@ var NEWS = {
         set('statYear', d.stat_year);
         var hB1 = document.getElementById('heroBtn1');
         if (hB1 && d.hero_btn1) hB1.innerHTML = '<i class="fas fa-file-alt"></i> ' + d.hero_btn1;
-        /* Show hero content after Firebase loads */
-        var heroContent = document.getElementById('heroContent');
-        if (heroContent) heroContent.style.opacity = '1';
-    }).catch(function(e) {
-        console.warn('Hero/Stats load failed:', e);
-        var heroContent = document.getElementById('heroContent');
-        if (heroContent) heroContent.style.opacity = '1';
-    });
+
+        /* Hero slideshow */
+        var slideDiv = document.getElementById('heroSlideshow');
+        var heroSec  = document.getElementById('heroSection');
+        var imgs = (d.hero_images && Array.isArray(d.hero_images) && d.hero_images.length) ? d.hero_images : null;
+
+        if (imgs && slideDiv) {
+            slideDiv.innerHTML = imgs.map(function(img, i) {
+                return '<div class="hero-slide" style="position:absolute;inset:0;'
+                    + 'background:linear-gradient(rgba(31,107,58,0.52),rgba(31,107,58,0.62)),url(' + JSON.stringify(img.src) + ') center/cover no-repeat;'
+                    + 'opacity:' + (i === 0 ? '1' : '0') + ';transition:opacity 1.2s ease-in-out;"></div>';
+            }).join('');
+            if (heroSec) heroSec.style.background = 'none';
+            if (imgs.length > 1) {
+                var slides = slideDiv.querySelectorAll('.hero-slide');
+                var cur = 0;
+                setInterval(function() {
+                    slides[cur].style.opacity = '0';
+                    cur = (cur + 1) % slides.length;
+                    slides[cur].style.opacity = '1';
+                }, 5000);
+            }
+        }
+    }).catch(function(e) { console.warn('Hero/Stats load failed:', e); });
 })();
 
 /* ── Open news detail modal ── */
