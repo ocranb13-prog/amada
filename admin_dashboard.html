@@ -796,7 +796,7 @@
                         <div id="heroImagesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px;"></div>
                         <button class="btn btn-secondary" onclick="document.getElementById('heroImgUpload').click()"><i class="fas fa-plus"></i> Add Hero Image</button>
                         <input type="file" id="heroImgUpload" accept="image/*" multiple style="display:none;" onchange="addHeroImages(this)">
-                        <p style="font-size:0.78rem;color:var(--text3);margin-top:8px;"><i class="fas fa-info-circle"></i> After adding images, click <strong>Save Changes</strong> above to sync to the live website.</p>
+                        <p style="font-size:0.78rem;color:var(--text3);margin-top:8px;"><i class="fas fa-info-circle"></i> Images go live automatically as soon as they finish uploading — no need to click Save Changes for these.</p>
                     </div>
                 </div>
             </div>
@@ -1856,6 +1856,19 @@ function getHeroImages() {
     return getLS('hero_images', []);
 }
 
+/* Writes hero_images straight to its own Firebase leaf (sections/home/hero_images)
+   the moment it changes — add/remove/reorder all go live immediately, so there's
+   no separate "Save Changes" step to remember or forget. */
+function syncHeroImagesToFirebase(imgs) {
+    if (!(window._fbDb && window._fbRef && window._fbSet)) return;
+    window._fbSet(window._fbRef(window._fbDb, 'sections/home/hero_images'), imgs)
+        .then(function() { showToast('✅ Hero image(s) live on public website'); })
+        .catch(function(e) {
+            console.error('Hero images Firebase sync failed:', e);
+            showToast('⚠️ Saved locally — Firebase sync failed');
+        });
+}
+
 function renderHeroImagesGrid() {
     var imgs = getHeroImages();
     var el = document.getElementById('heroImagesGrid');
@@ -1888,7 +1901,7 @@ function addHeroImages(input) {
         if (done === files.length) {
             setLS('hero_images', imgs);
             renderHeroImagesGrid();
-            showToast('\u2705 Hero image(s) processed \u2014 click Save Changes to go live');
+            syncHeroImagesToFirebase(imgs);
         }
     }
 
@@ -1935,7 +1948,7 @@ function removeHeroImg(i) {
     imgs.splice(i, 1);
     setLS('hero_images', imgs);
     renderHeroImagesGrid();
-    showToast('Image removed \u2014 click Save Changes to update live site');
+    syncHeroImagesToFirebase(imgs);
 }
 
 function moveHeroImg(i, dir) {
@@ -1944,6 +1957,7 @@ function moveHeroImg(i, dir) {
     var tmp = imgs[i]; imgs[i] = imgs[ni]; imgs[ni] = tmp;
     setLS('hero_images', imgs);
     renderHeroImagesGrid();
+    syncHeroImagesToFirebase(imgs);
 }
 
 /* Load hero images into grid when panel opens */
