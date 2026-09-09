@@ -1758,7 +1758,19 @@ function saveSection(section) {
     var fields = SECTION_FIELDS[key] || [];
     var data   = getLS('section_' + key, {});
     fields.forEach(function(id) { var el=document.getElementById(id); if (el) data[id]=el.value; });
-    if (key === 'home') saveNewsItems(data);
+
+    /* For 'home': saveNewsItems handles ALL Firebase writes (news, anncs, sections/home)
+       including hero_images. We must NOT call the generic Firebase write below for 'home'
+       or it will overwrite sections/home without hero_images. */
+    if (key === 'home') {
+        /* Always include hero_images in the data before saving */
+        var heroImgs = getLS('hero_images', []);
+        if (heroImgs.length > 0) data.hero_images = heroImgs;
+        saveNewsItems(data);
+        setLS('section_home', data);
+        return; /* saveNewsItems handles Firebase write — stop here */
+    }
+
     // Save to localStorage (local backup)
     setLS('section_' + key, data);
     // Save to Firebase (shared, visible to all visitors)
@@ -2400,33 +2412,26 @@ function resetAllPdfZones() {
 
 /* ── 14. PUBLICATIONS ── */
 var DEFAULT_PUBS = {
-    budget:[
-        {id:'b1',title:'2026 Approved Composite Budget',desc:'Composite Budget for 2026-2029',year:'2026',dept:'Finance Department',link:'2026 BUDGET HEARING - AMADA.pdf',status:'available'},
-        {id:'b2',title:'2025 Approved Composite Budget',desc:'Composite Budget for 2025-2028',year:'2025',dept:'Finance Department',link:'2025 BUDGET HEARING - AMADA.pdf',status:'available'},
-        {id:'b3',title:'2025 Annual Action Plan',        desc:"The Assembly's approved action plan for 2025",year:'2025',dept:'Planning Unit',link:'',status:'soon'}
-    ],
-    report:[
-        {id:'r1',title:'Report on Inauguration of Akroso Market Management Committee',desc:'Official report on the inauguration, November 2025',year:'Nov 2025',dept:'Central Administration',link:'',status:'soon'},
-        {id:'r2',title:'Annual Progress Report 2024',      desc:'Progress on development projects and Assembly programmes',year:'2024',dept:'Central Administration',link:'',status:'soon'},
-        {id:'r3',title:'District Performance Report Q3 2025',desc:'Quarterly performance summary Jul-Sep 2025',year:'Q3 2025',dept:'Planning Unit',link:'',status:'soon'},
-        {id:'r4',title:'Revenue Mobilisation Report 2025', desc:'IGF and revenue collection activities',year:'2025',dept:'Finance Dept.',link:'',status:'soon'},
-        {id:'r5',title:'Environmental Health & Sanitation Report 2025',desc:'Sanitation and WASH activities',year:'2025',dept:'Health Dept.',link:'',status:'soon'},
-        {id:'r6',title:'Agricultural Sector Report 2025',  desc:'Agricultural programmes and food security',year:'2025',dept:'Agriculture Dept.',link:'',status:'soon'},
-        {id:'r7',title:'Social Welfare & Community Dev. Report 2025',desc:'Social protection programmes',year:'2025',dept:'Social Welfare',link:'',status:'soon'}
-    ],
-    resolution:[
-        {id:'res1',title:'District Assembly Bye-Laws',        desc:'Official Bye-Laws governing the district',year:'2024',link:'BYE-LAWS.pdf',status:'available'},
-        {id:'res2',title:'Assembly Resolutions Q4 2025',      desc:'Resolutions from Q4 General Assembly',year:'Q4 2025',link:'',status:'soon'},
-        {id:'res3',title:'Assembly Resolutions Q3 2025',      desc:'Resolutions from Q3 General Assembly',year:'Q3 2025',link:'',status:'soon'}
-    ],
-    plan:[
-        {id:'p1',title:'Support To Persons With Disability',desc:'PWD support across the district.',year:'2025',cat:'Health & Social',community:'Districtwide',status:'Completed',pct:100,budget:250000,spent:248000,funding:'DACF',contractor:'Social Welfare Dept.',start:'March 2024',end:'January 2025',lat:5.8978,lng:-0.8823,media:[],timeline:[{l:'Project Initiated',d:'March 2024',c:'#0d5ba7'},{l:'Completed',d:'January 2025',c:'#28a745'}]},
-        {id:'p2',title:'2-Unit KG Block At Akroso Presby',desc:'2-Unit KG Block with ancillary facilities at Akroso Presby.',year:'2025',cat:'Education',community:'Akroso',status:'Completed',pct:100,budget:450000,spent:445000,funding:'DACF',contractor:'Contracted Works Firm',start:'January 2024',end:'March 2025',lat:5.8978,lng:-0.8823,media:[],timeline:[{l:'Sod Cutting',d:'Nov 2023',c:'#1F6B3A'},{l:'Foundation',d:'Jan 2024',c:'#0d5ba7'},{l:'Commissioned',d:'March 2025',c:'#28a745'}]}
-    ]
+    budget:     [],
+    report:     [],
+    resolution: [],
+    plan:       []
 };
-/* ── PUBLICATIONS: always load from Firebase, fall back to localStorage ── */
+
+var _pubsLoaded = false; /* true once Firebase has loaded at least once */
+
 function getPubs() {
-    return getLS('publications', DEFAULT_PUBS);
+    var saved = getLS('publications', null);
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+        /* Ensure all 4 categories exist */
+        if (!saved.budget)     saved.budget     = [];
+        if (!saved.report)     saved.report     = [];
+        if (!saved.resolution) saved.resolution = [];
+        if (!saved.plan)       saved.plan       = [];
+        return saved;
+    }
+    /* First visit before Firebase has loaded — use defaults */
+    return JSON.parse(JSON.stringify(DEFAULT_PUBS));
 }
 
 /* Load publications FROM Firebase into localStorage then re-render */
@@ -2437,23 +2442,32 @@ function loadPubsFromFirebase(cb) {
     window._fbGet(window._fbRef(window._fbDb, 'publications')).then(function(snap) {
         if (snap.exists()) {
             var data = snap.val();
-            // Convert Firebase objects to arrays (Firebase can return objects keyed by index)
-            /* Firebase stores arrays as {0:{...},1:{...},...} objects — sort by numeric key
-               to preserve original order, then filter nulls */
+            /* Properly reconstruct arrays from Firebase objects (numeric key sort) */
             function toArr(v) {
                 if (Array.isArray(v)) return v;
                 if (!v) return [];
                 return Object.keys(v)
                     .sort(function(a,b){ return parseInt(a)-parseInt(b); })
-                    .map(function(k){ return v[k]; });
+                    .map(function(k){ return v[k]; })
+                    .filter(Boolean);
             }
+            /* Build normalized object — use Firebase data as the ONLY source of truth.
+               Do NOT merge with DEFAULT_PUBS so hardcoded items never cap the array. */
             var normalized = {
-                budget:     toArr(data.budget).filter(Boolean),
-                report:     toArr(data.report).filter(Boolean),
-                resolution: toArr(data.resolution).filter(Boolean),
-                plan:       toArr(data.plan).filter(Boolean)
+                budget:     toArr(data.budget),
+                report:     toArr(data.report),
+                resolution: toArr(data.resolution),
+                plan:       toArr(data.plan)
             };
+            /* If a category is empty in Firebase, keep DEFAULT_PUBS entries for that
+               category only (so first-time users see example content). */
+            ['budget','report','resolution','plan'].forEach(function(cat) {
+                if (!normalized[cat] || normalized[cat].length === 0) {
+                    normalized[cat] = JSON.parse(JSON.stringify(DEFAULT_PUBS[cat] || []));
+                }
+            });
             setLS('publications', normalized);
+            _pubsLoaded = true;
         }
         if (cb) cb(getPubs());
     }).catch(function(e) {
@@ -2467,12 +2481,14 @@ function savePubs(data) {
     // which silently crashes the Firebase 10MB node limit. Store link/filename only.
     var fbData = JSON.parse(JSON.stringify(data));
     ['budget','report','resolution','plan'].forEach(function(cat) {
-        if (!fbData[cat]) return;
+        if (!fbData[cat]) fbData[cat] = [];
         fbData[cat].forEach(function(item) {
             if (item) delete item.pdfData; // remove base64, keep item.link (filename)
         });
     });
-    setLS('publications', data); // localStorage keeps full data including pdfData
+    /* Always save the full data object — never merge with DEFAULT_PUBS.
+       localStorage keeps full data including pdfData for download. */
+    setLS('publications', data);
     if (!window._fbDb || !window._fbRef || !window._fbSet) {
         showToast('⚠️ Saved locally only — Firebase not ready'); return;
     }
