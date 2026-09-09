@@ -1790,6 +1790,67 @@ function saveSection(section) {
     }
 }
 
+/* ── Shared Cloudinary upload helper (images, videos, PDFs) ──
+   Uploads a File/Blob to Cloudinary and resolves {url, public_id}.
+   Rejects on failure so callers can fall back gracefully.
+   NOTE: relies on _CLOUDINARY (declared further below) — safe because
+   this function only reads it when actually CALLED, by which point
+   the whole script (including the _CLOUDINARY declaration) has run. */
+function uploadToCloudinaryFile(fileOrBlob, folder) {
+    return new Promise(function(resolve, reject) {
+        var formData = new FormData();
+        formData.append('file', fileOrBlob);
+        formData.append('upload_preset', _CLOUDINARY.uploadPreset);
+        if (folder) formData.append('folder', folder);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', _CLOUDINARY.uploadUrl, true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var res = JSON.parse(xhr.responseText);
+                    resolve({ url: res.secure_url, public_id: res.public_id, format: res.format });
+                } catch (e) { reject(e); }
+            } else {
+                reject(new Error(xhr.responseText || ('HTTP ' + xhr.status)));
+            }
+        };
+        xhr.onerror = function() { reject(new Error('Network error')); };
+        xhr.send(formData);
+    });
+}
+
+/* Generic compressed-base64 fallback used ONLY when a Cloudinary upload
+   fails — keeps items small so they never bloat Firebase like before. */
+function _compressMediaFallback(file, isVideo, cb) {
+    if (isVideo) {
+        var r = new FileReader();
+        r.onload = function(e) { cb({ src: e.target.result, type: 'video', name: file.name }); };
+        r.readAsDataURL(file);
+        return;
+    }
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+        var MAX = 800, w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else       { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        cb({ src: c.toDataURL('image/jpeg', 0.70), type: 'image', name: file.name });
+    };
+    img.onerror = function() {
+        URL.revokeObjectURL(url);
+        var r = new FileReader();
+        r.onload = function(e) { cb({ src: e.target.result, type: 'image', name: file.name }); };
+        r.readAsDataURL(file);
+    };
+    img.src = url;
+}
+
 /* ── HERO IMAGE SLIDESHOW MANAGEMENT ── */
 function getHeroImages() {
     return getLS('hero_images', []);
@@ -1821,29 +1882,48 @@ function addHeroImages(input) {
     var imgs  = getHeroImages();
     var done  = 0;
     if (!files.length) return;
+
+    function finishOne() {
+        done++;
+        if (done === files.length) {
+            setLS('hero_images', imgs);
+            renderHeroImagesGrid();
+            showToast('\u2705 Hero image(s) processed \u2014 click Save Changes to go live');
+        }
+    }
+
     files.forEach(function(file) {
         if (file.size > 10 * 1024 * 1024) {
             showToast('\u26a0\ufe0f ' + file.name + ' too large (max 10MB)');
-            done++; return;
+            finishOne(); return;
         }
         var url = URL.createObjectURL(file);
         var image = new Image();
         image.onload = function() {
-            var MAX = 1200, w = image.width, h = image.height;
+            var MAX = 1600, w = image.width, h = image.height;
             if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
             var c = document.createElement('canvas');
             c.width = w; c.height = h;
             c.getContext('2d').drawImage(image, 0, 0, w, h);
             URL.revokeObjectURL(url);
-            imgs.push({ src: c.toDataURL('image/jpeg', 0.80), name: file.name });
-            done++;
-            if (done === files.length) {
-                setLS('hero_images', imgs);
-                renderHeroImagesGrid();
-                showToast('\u2705 ' + files.length + ' image(s) added \u2014 click Save Changes to go live');
-            }
+            /* Upload the resized image to Cloudinary — the live site then
+               stores a small CDN URL instead of a multi-MB base64 blob,
+               which is what was causing hero images to silently fail to
+               save/refresh on the public homepage. */
+            c.toBlob(function(blob) {
+                showToast('\u23eb Uploading ' + file.name + '\u2026');
+                uploadToCloudinaryFile(blob, 'amada_hero').then(function(res) {
+                    imgs.push({ src: res.url, name: file.name, stored: 'cloudinary', public_id: res.public_id });
+                    finishOne();
+                }).catch(function(e) {
+                    console.error('Hero image Cloudinary upload failed:', e);
+                    showToast('\u26a0\ufe0f Cloud upload failed \u2014 using local fallback for ' + file.name);
+                    imgs.push({ src: c.toDataURL('image/jpeg', 0.80), name: file.name });
+                    finishOne();
+                });
+            }, 'image/jpeg', 0.80);
         };
-        image.onerror = function() { URL.revokeObjectURL(url); done++; };
+        image.onerror = function() { URL.revokeObjectURL(url); finishOne(); };
         image.src = url;
     });
     input.value = '';
@@ -1888,17 +1968,19 @@ function loadHeroImagesIntoGrid() {
 function previewLeaderPhoto(role, input) {
     var file = input.files[0]; if (!file) return;
     if (file.size > 5*1024*1024) { alert('Max 5MB'); return; }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var prev = document.getElementById(role+'_photo_preview');
-        var zone = document.getElementById(role+'_photo_zone');
-        if (prev) { prev.src = e.target.result; prev.style.display='block'; }
-        if (zone) zone.classList.add('has-image');
-        // Save to localStorage
-        setLS('photo_'+role, e.target.result);
-        // Save to Firebase
+    var prev = document.getElementById(role+'_photo_preview');
+    var zone = document.getElementById(role+'_photo_zone');
+    var blobUrl = URL.createObjectURL(file);
+    if (prev) { prev.src = blobUrl; prev.style.display='block'; }
+    if (zone) zone.classList.add('has-image');
+
+    function commit(src) {
+        setLS('photo_'+role, src);
         if (window._fbDb && window._fbRef && window._fbSet) {
-            window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), e.target.result)
+            /* Written directly to its own photos/<role> leaf — replacing it
+               is exactly how you swap the photo later, any time you want;
+               it never touches the other leaders' photos or text fields. */
+            window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), src)
                 .then(function() {
                     showToast('✅ Photo uploaded & synced to public website');
                     logActivity('Photo synced to Firebase for ' + role.toUpperCase());
@@ -1911,8 +1993,20 @@ function previewLeaderPhoto(role, input) {
             showToast('Photo uploaded');
             logActivity('Photo uploaded for '+role.toUpperCase());
         }
-    };
-    reader.readAsDataURL(file);
+    }
+
+    showToast('\u23eb Uploading photo\u2026');
+    uploadToCloudinaryFile(file, 'amada_leadership').then(function(res) {
+        if (prev) prev.src = res.url;
+        commit(res.url);
+    }).catch(function(e) {
+        console.error('Leader photo Cloudinary upload failed:', e);
+        showToast('\u26a0\ufe0f Cloud upload failed \u2014 using compressed local copy');
+        _compressMediaFallback(file, false, function(item) {
+            if (prev) prev.src = item.src;
+            commit(item.src);
+        });
+    });
 }
 function clearLeaderPhoto(role, e) {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -1944,18 +2038,43 @@ function loadLeaderPhotos() {
 function previewMapImage(input) {
     var file=input.files[0]; if(!file) return;
     if(file.size>10*1024*1024){alert('Max 10MB');return;}
-    var reader=new FileReader();
-    reader.onload=function(e){
-        var prev=document.getElementById('about_map_preview');
-        var zone=document.getElementById('about_map_zone');
-        var text=document.getElementById('about_map_text');
-        if(prev){prev.src=e.target.result;prev.style.display='block';}
-        if(zone)zone.classList.add('has-image');
-        if(text)text.style.display='none';
-        setLS('about_map_image',e.target.result);
-        showToast('Map image uploaded');
-    };
-    reader.readAsDataURL(file);
+    var prev=document.getElementById('about_map_preview');
+    var zone=document.getElementById('about_map_zone');
+    var text=document.getElementById('about_map_text');
+    var blobUrl=URL.createObjectURL(file);
+    if(prev){prev.src=blobUrl;prev.style.display='block';}
+    if(zone)zone.classList.add('has-image');
+    if(text)text.style.display='none';
+
+    function commit(src) {
+        setLS('about_map_image', src);
+        /* Previously this never made it to Firebase at all — the map image
+           lived only in this browser's localStorage and never appeared on
+           the live site. Now it's written straight to its own
+           sections/about/about_map_image leaf, so it goes live immediately
+           and you can swap it again any time the same way. */
+        if (window._fbDb && window._fbRef && window._fbSet) {
+            window._fbSet(window._fbRef(window._fbDb, 'sections/about/about_map_image'), src)
+                .then(function() { showToast('✅ Map image live on public website'); })
+                .catch(function(err) {
+                    console.error('Map image Firebase save failed:', err);
+                    showToast('⚠️ Map image saved locally — Firebase sync failed');
+                });
+        }
+    }
+
+    showToast('\u23eb Uploading map image\u2026');
+    uploadToCloudinaryFile(file, 'amada_about').then(function(res) {
+        if (prev) prev.src = res.url;
+        commit(res.url);
+    }).catch(function(e) {
+        console.error('Map image Cloudinary upload failed:', e);
+        showToast('\u26a0\ufe0f Cloud upload failed \u2014 using compressed local copy');
+        _compressMediaFallback(file, false, function(item) {
+            if (prev) prev.src = item.src;
+            commit(item.src);
+        });
+    });
 }
 function clearMapImage(e) {
     if(e&&e.stopPropagation)e.stopPropagation();
@@ -1968,6 +2087,9 @@ function clearMapImage(e) {
     if(text)text.style.display='flex';
     if(inp) inp.value='';
     setLS('about_map_image','');
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'sections/about/about_map_image'), '');
+    }
     showToast('Map image cleared');
 }
 function loadMapImage() {
@@ -2349,23 +2471,36 @@ function handlePdfUpload(prefix, input) {
     var manEl   = document.getElementById(prefix+'_link_manual');
 
     var sizeMB = (file.size / (1024*1024)).toFixed(2) + ' MB';
-    if (nameEl)  nameEl.textContent = file.name;
+    if (nameEl)  nameEl.textContent = file.name + ' (uploading\u2026)';
     if (sizeEl)  sizeEl.textContent = sizeMB;
     if (inner)   inner.style.display  = 'none';
     if (chosen)  chosen.style.display = 'flex';
     if (zone)    zone.classList.add('has-file');
-    if (linkEl)  linkEl.value = file.name;
-    if (manEl)   manEl.value  = file.name;
-    _pdfStore[prefix] = file.name;
+    /* IMPORTANT: the link field is left empty until the upload actually
+       succeeds. Previously this stored just file.name (e.g. "report.pdf"),
+       which was never an uploaded file anywhere — clicking "View" on the
+       public site tried to open https://yoursite.vercel.app/report.pdf,
+       which 404'd because that file was never hosted. Only PDFs physically
+       committed to the GitHub repo worked. Now we upload to Cloudinary and
+       store the real, permanent hosted URL. */
+    if (linkEl) linkEl.value = '';
+    if (manEl)  manEl.value  = '';
+    _pdfStore[prefix] = '';
+    _pdfStore[prefix + '_data'] = '';
 
-    /* Read as base64 for storage (store filename reference + base64 for download) */
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        _pdfStore[prefix + '_data'] = e.target.result;
-        showToast('PDF uploaded: ' + file.name);
+    showToast('\u23eb Uploading ' + file.name + '\u2026');
+    uploadToCloudinaryFile(file, 'amada_documents').then(function(res) {
+        _pdfStore[prefix] = res.url;
+        if (linkEl) linkEl.value = res.url;
+        if (manEl)  manEl.value  = res.url;
+        if (nameEl) nameEl.textContent = file.name;
+        showToast('\u2705 PDF uploaded: ' + file.name);
         logActivity('PDF uploaded for ' + prefix + ': ' + file.name);
-    };
-    reader.readAsDataURL(file);
+    }).catch(function(e) {
+        console.error('PDF Cloudinary upload failed:', e);
+        showToast('\u26a0\ufe0f Upload failed \u2014 this PDF will NOT open on the live site. Try again, or paste a direct link below.');
+        if (nameEl) nameEl.textContent = file.name + ' \u2014 upload FAILED';
+    });
     input.value = '';
 }
 
@@ -2513,11 +2648,53 @@ function switchPubCat(cat){
     var pc=document.getElementById('pub_cat');if(pc)pc.value=cat;
     if(cat==='plan'){renderProjMediaStrip();renderTimelineRows();}
 }
-function previewProjCover(input){var file=input.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){var prev=document.getElementById('proj_cover_preview');var zone=document.getElementById('proj_cover_zone');if(prev){prev.src=e.target.result;prev.style.display='block';}if(zone)zone.classList.add('has-image');};r.readAsDataURL(file);}
-function clearProjCover(e){if(e&&e.stopPropagation)e.stopPropagation();var prev=document.getElementById('proj_cover_preview');var zone=document.getElementById('proj_cover_zone');var inp=document.getElementById('proj_cover_file');if(prev){prev.src='';prev.style.display='none';}if(zone)zone.classList.remove('has-image');if(inp)inp.value='';}
+var _projCoverURL=''; /* Cloudinary URL (or compressed fallback) for the current cover image */
+function previewProjCover(input){
+    var file=input.files[0];if(!file)return;
+    var prev=document.getElementById('proj_cover_preview');
+    var zone=document.getElementById('proj_cover_zone');
+    var blobUrl=URL.createObjectURL(file);
+    if(prev){prev.src=blobUrl;prev.style.display='block';}
+    if(zone)zone.classList.add('has-image');
+    _projCoverURL='';
+    showToast('\u23eb Uploading cover image\u2026');
+    uploadToCloudinaryFile(file,'amada_projects').then(function(res){
+        _projCoverURL=res.url;
+        showToast('\u2705 Cover image uploaded');
+    }).catch(function(e){
+        console.error('Cover image Cloudinary upload failed:',e);
+        showToast('\u26a0\ufe0f Cloud upload failed \u2014 using compressed local copy');
+        _compressMediaFallback(file,false,function(item){ _projCoverURL=item.src; });
+    });
+}
+function clearProjCover(e){if(e&&e.stopPropagation)e.stopPropagation();var prev=document.getElementById('proj_cover_preview');var zone=document.getElementById('proj_cover_zone');var inp=document.getElementById('proj_cover_file');if(prev){prev.src='';prev.style.display='none';}if(zone)zone.classList.remove('has-image');if(inp)inp.value='';_projCoverURL='';}
 function updateProjProgressBar(){var pct=parseInt((document.getElementById('proj_pct')||{}).value)||0;pct=Math.max(0,Math.min(100,pct));var bar=document.getElementById('proj_progress_bar');if(bar){bar.style.width=pct+'%';bar.style.background=pct>=80?'#28a745':pct>=40?'#ffc107':'#dc3545';}}
 function updateProjProgressColor(){var sel=document.getElementById('proj_status');if(!sel)return;if(sel.value==='Completed'){var pp=document.getElementById('proj_pct');if(pp)pp.value=100;}else if(sel.value==='Planned'){var pp2=document.getElementById('proj_pct');if(pp2)pp2.value=0;}updateProjProgressBar();}
-function addProjMedia(input){var files=Array.from(input.files),rem=10-_projMedia.length;if(rem<=0){showToast('Max 10 files');return;}files=files.slice(0,rem);var loaded=0;files.forEach(function(file){if(file.size>20*1024*1024){showToast('Too large: '+file.name);loaded++;return;}var r=new FileReader();r.onload=function(e){_projMedia.push({src:e.target.result,type:file.type.startsWith('video')?'video':'image',name:file.name});loaded++;if(loaded===files.length){renderProjMediaStrip();showToast(loaded+' file(s) added');}};r.readAsDataURL(file);});input.value='';}
+function addProjMedia(input){
+    var files=Array.from(input.files),rem=10-_projMedia.length;
+    if(rem<=0){showToast('Max 10 files');return;}
+    files=files.slice(0,rem);
+    var total=files.length, done=0;
+    function finishOne(){ done++; if(done===total){renderProjMediaStrip();showToast(done+' file(s) added');} }
+    files.forEach(function(file){
+        if(file.size>20*1024*1024){showToast('Too large: '+file.name);finishOne();return;}
+        var isVideo=file.type.startsWith('video');
+        showToast('\u23eb Uploading '+file.name+'\u2026');
+        /* Upload to Cloudinary instead of embedding raw base64 (up to 20MB
+           per file) straight into Firebase — that was the cause of dev
+           projects silently failing to save / overwriting each other once
+           the publications node got too large. */
+        uploadToCloudinaryFile(file,'amada_projects').then(function(res){
+            _projMedia.push({src:res.url,type:isVideo?'video':'image',name:file.name,stored:'cloudinary',public_id:res.public_id});
+            finishOne();
+        }).catch(function(e){
+            console.error('Project media Cloudinary upload failed:',e);
+            showToast('\u26a0\ufe0f Cloud upload failed for '+file.name+' \u2014 using compressed fallback');
+            _compressMediaFallback(file,isVideo,function(item){ _projMedia.push(item); finishOne(); });
+        });
+    });
+    input.value='';
+}
 function removeProjMedia(idx){_projMedia.splice(idx,1);renderProjMediaStrip();}
 function renderProjMediaStrip(){var strip=document.getElementById('proj_media_strip');if(!strip)return;var countEl=document.getElementById('proj_media_count');if(countEl)countEl.textContent=_projMedia.length;var thumbs=_projMedia.map(function(m,i){return '<div class="proj-media-thumb">'+(m.type==='video'?'<video src="'+m.src+'" style="width:100%;height:100%;object-fit:cover;"></video>':'<img src="'+m.src+'" style="width:100%;height:100%;object-fit:cover;" alt="">')+'<button class="pmr" onclick="removeProjMedia('+i+')">&times;</button><span class="pm-type">'+(m.type==='video'?'VID':'IMG')+'</span></div>';}).join('');var addBtn=_projMedia.length<10?'<label class="proj-media-add"><i class="fas fa-plus" style="font-size:1.1rem;"></i><span>Add</span><input type="file" accept="image/*,video/*" multiple onchange="addProjMedia(this)"></label>':'';strip.innerHTML=thumbs+addBtn;}
 function addTimelineRow(label,date,color){_projTimeline.push({l:label||'',d:date||'',c:color||'#1F6B3A'});renderTimelineRows();}
@@ -2565,8 +2742,17 @@ function _resetPubForm(){
     renderProjMediaStrip();renderTimelineRows();
     resetAllPdfZones();
 }
-function openAddPubModal(){_editPubCat=null;_editPubIdx=-1;document.getElementById('pubModalTitle').textContent='Add Publication';_resetPubForm();switchPubCat('budget');openModal('pubModal');}
+function openAddPubModal(){
+    /* Refresh from Firebase first so we never push a new item on top of a
+       stale local snapshot (this was the cause of newly-added publications
+       occasionally overwriting/replacing another item that had been added
+       from another tab/session in the meantime). */
+    loadPubsFromFirebase(function(){
+        _editPubCat=null;_editPubIdx=-1;document.getElementById('pubModalTitle').textContent='Add Publication';_resetPubForm();switchPubCat('budget');openModal('pubModal');
+    });
+}
 function editPub(cat,idx){
+  loadPubsFromFirebase(function(){
     var pubs=getPubs(),p=pubs[cat]?pubs[cat][idx]:null;if(!p)return;
     _editPubCat=cat;_editPubIdx=idx;
     _projMedia=p.media?JSON.parse(JSON.stringify(p.media)):[];
@@ -2584,10 +2770,11 @@ function editPub(cat,idx){
         var pcs=document.getElementById('proj_cat');if(pcs)pcs.value=p.cat||'Education';
         var pss=document.getElementById('proj_status');if(pss)pss.value=p.status||'Completed';
         updateProjProgressBar();
-        if(p.media&&p.media[0]&&p.media[0].type==='image'){var prev2=document.getElementById('proj_cover_preview');var zone2=document.getElementById('proj_cover_zone');if(prev2){prev2.src=p.media[0].src;prev2.style.display='block';}if(zone2)zone2.classList.add('has-image');}
+        if(p.media&&p.media[0]&&p.media[0].type==='image'){var prev2=document.getElementById('proj_cover_preview');var zone2=document.getElementById('proj_cover_zone');if(prev2){prev2.src=p.media[0].src;prev2.style.display='block';}if(zone2)zone2.classList.add('has-image');_projCoverURL=p.media[0].src;}
         renderProjMediaStrip();renderTimelineRows();
     }
     openModal('pubModal');
+  });
 }
 function savePub(){
     var cat=document.getElementById('pub_cat').value;
@@ -2621,7 +2808,7 @@ function savePub(){
     else if(cat==='plan'){
         var title4=document.getElementById('proj_title').value.trim();if(!title4){alert('Enter a project title.');return;}
         collectTimelineData();
-        var coverSrc='';var coverEl=document.getElementById('proj_cover_preview');if(coverEl&&coverEl.src&&coverEl.style.display!=='none'&&coverEl.src.length>10)coverSrc=coverEl.src;
+        var coverSrc=_projCoverURL||'';
         var mediaList=JSON.parse(JSON.stringify(_projMedia));
         if(coverSrc&&(mediaList.length===0||mediaList[0].src!==coverSrc))mediaList.unshift({src:coverSrc,type:'image',name:'cover'});
         var pjDate=document.getElementById('proj_year').value;item={id:existingId,title:title4,desc:document.getElementById('proj_desc').value,year:pjDate,yearDisplay:formatDateDisplay(pjDate),cat:document.getElementById('proj_cat').value,community:document.getElementById('proj_community').value,status:document.getElementById('proj_status').value,pct:parseInt(document.getElementById('proj_pct').value)||0,budget:parseFloat(document.getElementById('proj_budget').value)||0,spent:parseFloat(document.getElementById('proj_spent').value)||0,funding:document.getElementById('proj_funding').value,contractor:document.getElementById('proj_contractor').value,start:document.getElementById('proj_start').value,end:document.getElementById('proj_end').value,lat:parseFloat(document.getElementById('proj_lat').value)||5.8978,lng:parseFloat(document.getElementById('proj_lng').value)||-0.8823,media:mediaList,timeline:JSON.parse(JSON.stringify(_projTimeline))};
