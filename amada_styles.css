@@ -63,7 +63,7 @@ a { text-decoration: none; color: inherit; }
 .section-title::after { content: ''; position: absolute; left: 0; bottom: 0; width: 52px; height: 3px; background: var(--accent); border-radius: 2px; }
 
 /* ===== HERO ===== */
-.hero { background: linear-gradient(rgba(31,107,58,0.48), rgba(31,107,58,0.58)), url('VIEW.png'); background-size: cover; background-position: center; color: var(--white); padding: 100px 0; text-align: center; }
+.hero { background: linear-gradient(rgba(31,107,58,0.48), rgba(31,107,58,0.58)), linear-gradient(135deg, #1F6B3A, #17532c); background-size: cover; background-position: center; color: var(--white); padding: 100px 0; text-align: center; }
 .hero-content h2 { font-size: 2.5rem; margin-bottom: 20px; color: var(--white); font-family: 'Lora', Georgia, serif; }
 .hero-content p { font-size: 1.15rem; max-width: 800px; margin: 0 auto 30px; opacity: 0.9; }
 .hero-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
