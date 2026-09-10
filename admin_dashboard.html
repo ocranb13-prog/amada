@@ -814,7 +814,7 @@
                 <div class="card"><div class="card-body">
                     <p style="font-size:0.85rem;color:var(--text3);margin-bottom:16px;">
                         Each news card shows on the home page exactly as it appears to visitors — with image/video gallery, category badge, title and date.
-                        Up to <strong>10 images/videos</strong> per card.
+                        Add as many images/videos as you need per card.
                     </p>
                     <div id="newsItemsEditor"></div>
                     <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
@@ -1446,7 +1446,7 @@
                 <!-- Images & Videos (1-10) -->
                 <div class="field-group">
                     <label>Project Images &amp; Videos <small style="color:var(--text3);font-weight:400;">(1–10 files, shown in View Details slider)</small></label>
-                    <div class="media-count-badge"><i class="fas fa-info-circle"></i> <span id="proj_media_count">0</span>/10 files added. Supports JPG, PNG, MP4, WEBM.</div>
+                    <div class="media-count-badge"><i class="fas fa-info-circle"></i> <span id="proj_media_count">0</span> file(s) added. Supports JPG, PNG, MP4, WEBM.</div>
                     <div class="proj-media-strip" id="proj_media_strip">
                         <label class="proj-media-add" id="proj_media_add_btn">
                             <i class="fas fa-plus" style="font-size:1.1rem;"></i>
@@ -1771,6 +1771,16 @@ function saveSection(section) {
         return; /* saveNewsItems handles Firebase write — stop here */
     }
 
+    /* 'leadership': the admin form stores flat fields (dce_name, dce_role...)
+       but the public leadership.html page reads sections/leadership as an
+       ARRAY of leader profile objects — writing the flat object there is
+       what caused "No leadership profiles found." Convert before sending. */
+    if (key === 'leadership') {
+        setLS('section_' + key, data);
+        syncLeadershipToFirebase();
+        return;
+    }
+
     // Save to localStorage (local backup)
     setLS('section_' + key, data);
     // Save to Firebase (shared, visible to all visitors)
@@ -1979,6 +1989,50 @@ function loadHeroImagesIntoGrid() {
 }
 
 /* ── 9. LEADER PHOTOS ── */
+/* Builds the leader-profile ARRAY that the public leadership.html page
+   actually reads (sections/leadership as an array of {name,role,bio,
+   phone,email,office,photo,badge}). The admin form itself stores flat
+   fields (dce_name, dce_role, ...) — this converts between the two shapes
+   so a save from EITHER the text-field form OR a photo upload always
+   pushes a complete, correctly-shaped array. */
+function getLeadershipData() {
+    var data = getLS('section_leadership', {});
+    (SECTION_FIELDS.leadership || []).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) data[id] = el.value;
+    });
+    (SECTION_FIELDS.leadership || []).forEach(function(id) {
+        if (data[id] === undefined) data[id] = SECTION_DEFAULTS[id] || '';
+    });
+    return data;
+}
+function buildLeadershipArray(data) {
+    var roles = [{ key:'dce', badge:true }, { key:'dcd', badge:false }, { key:'pm', badge:false }];
+    return roles.map(function(r) {
+        var k = r.key;
+        return {
+            role:   data[k+'_role']   || '',
+            name:   data[k+'_name']   || '',
+            bio:    data[k+'_bio']    || '',
+            phone:  data[k+'_phone']  || '',
+            email:  data[k+'_email']  || '',
+            office: data[k+'_office'] || '',
+            photo:  getLS('photo_'+k, ''),
+            badge:  r.badge
+        };
+    });
+}
+function syncLeadershipToFirebase() {
+    var arr = buildLeadershipArray(getLeadershipData());
+    if (!(window._fbDb && window._fbRef && window._fbSet)) return;
+    window._fbSet(window._fbRef(window._fbDb, 'sections/leadership'), arr)
+        .then(function() { showToast('✅ Leadership synced to public website'); })
+        .catch(function(e) {
+            console.error('Leadership Firebase sync failed:', e);
+            showToast('⚠️ Saved locally — Firebase sync failed');
+        });
+}
+
 function previewLeaderPhoto(role, input) {
     var file = input.files[0]; if (!file) return;
     if (file.size > 5*1024*1024) { alert('Max 5MB'); return; }
@@ -1990,23 +2044,11 @@ function previewLeaderPhoto(role, input) {
 
     function commit(src) {
         setLS('photo_'+role, src);
-        if (window._fbDb && window._fbRef && window._fbSet) {
-            /* Written directly to its own photos/<role> leaf — replacing it
-               is exactly how you swap the photo later, any time you want;
-               it never touches the other leaders' photos or text fields. */
-            window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), src)
-                .then(function() {
-                    showToast('✅ Photo uploaded & synced to public website');
-                    logActivity('Photo synced to Firebase for ' + role.toUpperCase());
-                })
-                .catch(function(err) {
-                    console.error('Firebase photo save failed:', err);
-                    showToast('⚠️ Photo saved locally — Firebase sync failed');
-                });
-        } else {
-            showToast('Photo uploaded');
-            logActivity('Photo uploaded for '+role.toUpperCase());
-        }
+        /* The live leadership page reads photo from INSIDE each leader's
+           record in sections/leadership — not from a separate photos/
+           path — so every photo change re-syncs the whole array. */
+        syncLeadershipToFirebase();
+        logActivity('Photo updated for ' + role.toUpperCase());
     }
 
     showToast('\u23eb Uploading photo\u2026');
@@ -2031,9 +2073,7 @@ function clearLeaderPhoto(role, e) {
     if (zone) zone.classList.remove('has-image');
     if (inp)  inp.value='';
     setLS('photo_'+role,'');
-    if (window._fbDb && window._fbRef && window._fbSet) {
-        window._fbSet(window._fbRef(window._fbDb, 'photos/' + role), '');
-    }
+    syncLeadershipToFirebase();
     showToast('Photo removed');
 }
 function loadLeaderPhotos() {
@@ -2147,18 +2187,16 @@ function renderNewsEditor() {
                 : '<img src="'+m.src+'" style="width:100%;height:100%;object-fit:cover;" alt="">';
             return '<div class="ncp-thumb">'+tag+'<button class="rm" onclick="removeNewsMedia('+i+','+mi+')">&times;</button></div>';
         }).join('');
-        var addBtn = media.length < 10
-            ? '<label style="width:80px;height:60px;border-radius:6px;border:2px dashed var(--gray3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:0.72rem;color:var(--text3);flex-shrink:0;background:var(--gray1);"><i class="fas fa-plus"></i><span>Add</span><input type="file" accept="image/*,video/*" multiple style="display:none;" onchange="addNewsMedia('+i+',this)"></label>'
-            : '';
+        var addBtn = '<label style="width:80px;height:60px;border-radius:6px;border:2px dashed var(--gray3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:0.72rem;color:var(--text3);flex-shrink:0;background:var(--gray1);"><i class="fas fa-plus"></i><span>Add</span><input type="file" accept="image/*,video/*" multiple style="display:none;" onchange="addNewsMedia('+i+',this)"></label>';
         var upBtn  = i > 0           ? '<button onclick="moveNews('+i+',-1)" class="btn btn-outline btn-sm" style="padding:3px 8px;">^</button>' : '';
         var dnBtn  = i < news.length-1 ? '<button onclick="moveNews('+i+',1)"  class="btn btn-outline btn-sm" style="padding:3px 8px;">v</button>' : '';
         return '<div class="news-card-preview">'
-            +'<div class="ncp-header"><span><i class="fas fa-newspaper" style="margin-right:6px;color:var(--gold);"></i>Card #'+(i+1)+' ('+media.length+'/10 media)</span>'
+            +'<div class="ncp-header"><span><i class="fas fa-newspaper" style="margin-right:6px;color:var(--gold);"></i>Card #'+(i+1)+' ('+media.length+' media)</span>'
             +'<div style="display:flex;gap:5px;">'+upBtn+dnBtn
             +'<button onclick="deleteNewsItem('+i+')" class="btn btn-danger btn-sm" style="padding:4px 10px;"><i class="fas fa-trash"></i></button>'
             +'</div></div>'
             +'<div class="ncp-body">'
-            +'<div class="field-group"><label style="font-size:0.74rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);">Images / Videos ('+media.length+'/10)</label>'
+            +'<div class="field-group"><label style="font-size:0.74rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);">Images / Videos ('+media.length+')</label>'
             +'<div class="ncp-img-strip">'+thumbs+addBtn+'</div></div>'
             +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
             +'<div class="field-group"><label>Title</label><input type="text" class="field-input" data-ni="'+i+'" data-field="title" value="'+escHtml(n.title||'')+'"></div>'
@@ -2251,9 +2289,8 @@ function addNewsMedia(idx, input) {
     var news  = getLS('home_news', DEFAULT_NEWS);
     if (!news[idx]) return;
     if (!news[idx].media) news[idx].media = [];
-    var rem = 10 - news[idx].media.length;
-    if (rem <= 0) { showToast('Max 10 media per card'); return; }
-    files = files.slice(0, rem);
+    /* No cap — add as many images/videos as needed. Each one uploads to
+       Cloudinary individually, so there's no size limit to worry about. */
     input.value = '';
 
     var total = files.length, done = 0;
@@ -2373,7 +2410,7 @@ function removeNewsMedia(ni, mi) {
     }
 }
 function moveNews(idx,dir){var news=getLS('home_news',DEFAULT_NEWS),ni=idx+dir;if(ni<0||ni>=news.length)return;var tmp=news[idx];news[idx]=news[ni];news[ni]=tmp;setLS('home_news',news);renderNewsEditor();}
-function addNewsItem(){var news=getLS('home_news',DEFAULT_NEWS);if(news.length>=10){showToast('Max 10');return;}news.push({title:'New Event',category:'Announcements',date:'',dateDisplay:'',content:'',media:[]});setLS('home_news',news);renderNewsEditor();}
+function addNewsItem(){var news=getLS('home_news',DEFAULT_NEWS);news.push({title:'New Event',category:'Announcements',date:'',dateDisplay:'',content:'',media:[]});setLS('home_news',news);renderNewsEditor();}
 function deleteNewsItem(i){if(!confirm('Remove?'))return;var news=getLS('home_news',DEFAULT_NEWS);news.splice(i,1);setLS('home_news',news);renderNewsEditor();}
 function addAnnouncement(){var a=getLS('home_anncs',DEFAULT_ANNCS);a.push({title:'New Announcement',date:'',dateDisplay:'',time:'',location:'',desc:''});setLS('home_anncs',a);renderNewsEditor();}
 function deleteAnnouncement(i){if(!confirm('Remove?'))return;var a=getLS('home_anncs',DEFAULT_ANNCS);a.splice(i,1);setLS('home_anncs',a);renderNewsEditor();}
@@ -2685,9 +2722,9 @@ function clearProjCover(e){if(e&&e.stopPropagation)e.stopPropagation();var prev=
 function updateProjProgressBar(){var pct=parseInt((document.getElementById('proj_pct')||{}).value)||0;pct=Math.max(0,Math.min(100,pct));var bar=document.getElementById('proj_progress_bar');if(bar){bar.style.width=pct+'%';bar.style.background=pct>=80?'#28a745':pct>=40?'#ffc107':'#dc3545';}}
 function updateProjProgressColor(){var sel=document.getElementById('proj_status');if(!sel)return;if(sel.value==='Completed'){var pp=document.getElementById('proj_pct');if(pp)pp.value=100;}else if(sel.value==='Planned'){var pp2=document.getElementById('proj_pct');if(pp2)pp2.value=0;}updateProjProgressBar();}
 function addProjMedia(input){
-    var files=Array.from(input.files),rem=10-_projMedia.length;
-    if(rem<=0){showToast('Max 10 files');return;}
-    files=files.slice(0,rem);
+    var files=Array.from(input.files);
+    /* No cap — every file uploads individually to Cloudinary, so there's no
+       reason to limit how many images/videos a project can have. */
     var total=files.length, done=0;
     function finishOne(){ done++; if(done===total){renderProjMediaStrip();showToast(done+' file(s) added');} }
     files.forEach(function(file){
@@ -2710,7 +2747,7 @@ function addProjMedia(input){
     input.value='';
 }
 function removeProjMedia(idx){_projMedia.splice(idx,1);renderProjMediaStrip();}
-function renderProjMediaStrip(){var strip=document.getElementById('proj_media_strip');if(!strip)return;var countEl=document.getElementById('proj_media_count');if(countEl)countEl.textContent=_projMedia.length;var thumbs=_projMedia.map(function(m,i){return '<div class="proj-media-thumb">'+(m.type==='video'?'<video src="'+m.src+'" style="width:100%;height:100%;object-fit:cover;"></video>':'<img src="'+m.src+'" style="width:100%;height:100%;object-fit:cover;" alt="">')+'<button class="pmr" onclick="removeProjMedia('+i+')">&times;</button><span class="pm-type">'+(m.type==='video'?'VID':'IMG')+'</span></div>';}).join('');var addBtn=_projMedia.length<10?'<label class="proj-media-add"><i class="fas fa-plus" style="font-size:1.1rem;"></i><span>Add</span><input type="file" accept="image/*,video/*" multiple onchange="addProjMedia(this)"></label>':'';strip.innerHTML=thumbs+addBtn;}
+function renderProjMediaStrip(){var strip=document.getElementById('proj_media_strip');if(!strip)return;var countEl=document.getElementById('proj_media_count');if(countEl)countEl.textContent=_projMedia.length;var thumbs=_projMedia.map(function(m,i){return '<div class="proj-media-thumb">'+(m.type==='video'?'<video src="'+m.src+'" style="width:100%;height:100%;object-fit:cover;"></video>':'<img src="'+m.src+'" style="width:100%;height:100%;object-fit:cover;" alt="">')+'<button class="pmr" onclick="removeProjMedia('+i+')">&times;</button><span class="pm-type">'+(m.type==='video'?'VID':'IMG')+'</span></div>';}).join('');var addBtn='<label class="proj-media-add"><i class="fas fa-plus" style="font-size:1.1rem;"></i><span>Add</span><input type="file" accept="image/*,video/*" multiple onchange="addProjMedia(this)"></label>';strip.innerHTML=thumbs+addBtn;}
 function addTimelineRow(label,date,color){_projTimeline.push({l:label||'',d:date||'',c:color||'#1F6B3A'});renderTimelineRows();}
 function removeTimelineRow(idx){_projTimeline.splice(idx,1);renderTimelineRows();}
 function renderTimelineRows(){var el=document.getElementById('proj_timeline_rows');if(!el)return;if(!_projTimeline.length){el.innerHTML='<p style="font-size:0.8rem;color:var(--text3);padding:8px 0;">No milestones yet. Click Add Milestone below.</p>';return;}el.innerHTML=_projTimeline.map(function(tl,i){return '<div class="tl-item-row">'+'<div class="field-group" style="margin:0;"><input type="text" class="field-input" style="font-size:0.82rem;padding:6px 10px;" placeholder="Milestone" data-tl="'+i+'" data-tlf="l" value="'+escHtml(tl.l)+'"></div>'+'<div class="field-group" style="margin:0;"><input type="text" class="field-input" style="font-size:0.82rem;padding:6px 10px;"  data-tl="'+i+'" data-tlf="d" value="'+escHtml(tl.d)+'"></div>'+'<div style="display:flex;align-items:center;gap:6px;"><input type="color" value="'+tl.c+'" style="width:32px;height:32px;border-radius:50%;border:2px solid #ccc;cursor:pointer;padding:0;" data-tl="'+i+'" data-tlf="c" oninput="updateTlColor('+i+',this.value)"><button class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="removeTimelineRow('+i+')" type="button"><i class="fas fa-times"></i></button></div>'+'</div>';}).join('');}
