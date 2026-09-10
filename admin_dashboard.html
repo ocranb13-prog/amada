@@ -1587,6 +1587,133 @@ var PANEL_LABELS = {
     'reports':'Reports','settings':'Settings'
 };
 
+/* Same fix as loadPubsFromFirebase: refresh localStorage from Firebase
+   BEFORE the Home panel (News, Announcements, hero images/text) renders,
+   so a fresh/incognito session never edits+saves on top of empty
+   localStorage defaults — which is what was silently wiping real News
+   and Announcements data whenever anyone saved from a browser that
+   hadn't loaded them yet. */
+function loadHomeDataFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    function toArr(v) {
+        if (Array.isArray(v)) return v;
+        if (!v) return null;
+        return Object.keys(v).sort(function(a,b){ return parseInt(a)-parseInt(b); }).map(function(k){ return v[k]; }).filter(Boolean);
+    }
+    Promise.all([
+        window._fbGet(window._fbRef(window._fbDb, 'home/news')).catch(function(){ return null; }),
+        window._fbGet(window._fbRef(window._fbDb, 'home/anncs')).catch(function(){ return null; }),
+        window._fbGet(window._fbRef(window._fbDb, 'sections/home')).catch(function(){ return null; })
+    ]).then(function(results) {
+        var newsSnap = results[0], anncsSnap = results[1], homeSnap = results[2];
+        if (newsSnap && newsSnap.exists())  { var n = toArr(newsSnap.val());  if (n)  setLS('home_news', n); }
+        if (anncsSnap && anncsSnap.exists()) { var a = toArr(anncsSnap.val()); if (a) setLS('home_anncs', a); }
+        if (homeSnap && homeSnap.exists()) {
+            var d = homeSnap.val();
+            setLS('section_home', d);
+            if (d.hero_images && Array.isArray(d.hero_images)) setLS('hero_images', d.hero_images);
+        }
+        if (cb) cb();
+    }).catch(function(e) {
+        console.error('Home data Firebase load failed:', e);
+        if (cb) cb();
+    });
+}
+
+/* ── Fetch-fresh-before-edit helpers (About, Contact, Leadership,
+   Services, Departments) — same protection Publications and Home
+   already have: pull real Firebase data into localStorage BEFORE the
+   editor renders, so a fresh/incognito/second-device session can never
+   save empty placeholder defaults on top of real content. ── */
+
+/* About / Contact: plain flat objects at sections/<key> */
+function loadFlatSectionFromFirebase(key, cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    window._fbGet(window._fbRef(window._fbDb, 'sections/' + key)).then(function(snap) {
+        if (snap.exists()) {
+            var d = snap.val();
+            if (d && typeof d === 'object' && !Array.isArray(d)) setLS('section_' + key, d);
+        }
+        if (cb) cb();
+    }).catch(function(e) { console.error('Section "'+key+'" Firebase load failed:', e); if (cb) cb(); });
+}
+
+/* Leadership: sections/leadership is an ARRAY (see buildLeadershipArray) —
+   convert back into the flat dce_, dcd_, pm_ prefixed fields the form uses, and
+   restore each leader's photo into its own photo_<role> localStorage slot. */
+function loadLeadershipFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    window._fbGet(window._fbRef(window._fbDb, 'sections/leadership')).then(function(snap) {
+        if (snap.exists()) {
+            var arr = snap.val();
+            if (Array.isArray(arr)) {
+                var keys = ['dce','dcd','pm'];
+                var data = getLS('section_leadership', {});
+                arr.forEach(function(leader, i) {
+                    var k = keys[i]; if (!k || !leader) return;
+                    data[k+'_role']   = leader.role   || '';
+                    data[k+'_name']   = leader.name   || '';
+                    data[k+'_bio']    = leader.bio    || '';
+                    data[k+'_phone']  = leader.phone  || '';
+                    data[k+'_email']  = leader.email  || '';
+                    data[k+'_office'] = leader.office || '';
+                    setLS('photo_'+k, leader.photo || '');
+                });
+                setLS('section_leadership', data);
+            }
+        }
+        if (cb) cb();
+    }).catch(function(e) { console.error('Leadership Firebase load failed:', e); if (cb) cb(); });
+}
+
+/* Services: sections/services_forms is an ARRAY (see saveFormsStatus) —
+   convert back into forms_list + forms_status the editor reads. */
+function loadServicesFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    window._fbGet(window._fbRef(window._fbDb, 'sections/services_forms')).then(function(snap) {
+        if (snap.exists()) {
+            var arr = snap.val();
+            if (Array.isArray(arr) && arr.length) {
+                var list = [], status = {};
+                arr.forEach(function(f) {
+                    if (!f || !f.key) return;
+                    list.push({ key: f.key, name: f.name, cat: f.cat, file: f.file });
+                    status[f.key+'_cat']    = f.cat    || '';
+                    status[f.key+'_status'] = f.status || 'soon';
+                    status[f.key+'_file']   = f.file   || '';
+                });
+                setLS('forms_list', list);
+                setLS('forms_status', status);
+            }
+        }
+        if (cb) cb();
+    }).catch(function(e) { console.error('Services Firebase load failed:', e); if (cb) cb(); });
+}
+
+/* Departments: sections/departments is an object keyed by dept key (text
+   fields) and dept_photos is a separate object keyed by dept key (base64
+   photos) — see saveDeptHeads. Merge both back into dept_data. */
+function loadDepartmentsFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    Promise.all([
+        window._fbGet(window._fbRef(window._fbDb, 'sections/departments')).catch(function(){ return null; }),
+        window._fbGet(window._fbRef(window._fbDb, 'dept_photos')).catch(function(){ return null; })
+    ]).then(function(results) {
+        var deptSnap = results[0], photoSnap = results[1];
+        var data = {};
+        if (deptSnap && deptSnap.exists()) data = deptSnap.val() || {};
+        if (photoSnap && photoSnap.exists()) {
+            var photos = photoSnap.val() || {};
+            Object.keys(photos).forEach(function(k) {
+                if (!data[k]) data[k] = {};
+                data[k].photo = photos[k];
+            });
+        }
+        setLS('dept_data', data);
+        if (cb) cb();
+    }).catch(function(e) { console.error('Departments Firebase load failed:', e); if (cb) cb(); });
+}
+
 function showPanel(name) {
     document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
     document.querySelectorAll('.sb-item').forEach(function(a){ a.classList.remove('active'); });
@@ -1599,20 +1726,42 @@ function showPanel(name) {
     var bc = document.getElementById('breadcrumbText');
     if (bc) bc.textContent = PANEL_LABELS[name] || name;
     if (name === 'applications' || name === 'reports') loadApplications();
-    if (name === 'edit-departments')  renderDeptHeads();
+    if (name === 'edit-departments') {
+        loadDepartmentsFromFirebase(function() { renderDeptHeads(); });
+    }
     if (name === 'edit-publications') {
         // Always sync from Firebase first so admin sees live data, not stale localStorage
         loadPubsFromFirebase(function() { renderPublications(); });
     }
     if (name === 'edit-home') {
-        renderNewsEditor();
-        setTimeout(loadHeroImagesIntoGrid, 100);
+        loadHomeDataFromFirebase(function() {
+            renderNewsEditor();
+            loadSectionData('home');
+            loadHeroImagesIntoGrid();
+        });
     }
-    if (name === 'edit-services')     renderFormsEditor();
+    if (name === 'edit-services') {
+        loadServicesFromFirebase(function() { renderFormsEditor(); });
+    }
     if (name === 'dashboard')         updateDashboardStats();
-    if (name === 'edit-leadership')   setTimeout(loadLeaderPhotos, 60);
-    if (name === 'edit-about')        setTimeout(loadMapImage, 60);
-    loadSectionData(name);
+    if (name === 'edit-leadership') {
+        loadLeadershipFromFirebase(function() {
+            loadSectionData('leadership');
+            setTimeout(loadLeaderPhotos, 60);
+        });
+    }
+    if (name === 'edit-about') {
+        loadFlatSectionFromFirebase('about', function() {
+            loadSectionData('about');
+            setTimeout(loadMapImage, 60);
+        });
+    }
+    if (name === 'edit-contact') {
+        loadFlatSectionFromFirebase('contact', function() { loadSectionData('contact'); });
+    }
+    if (name !== 'edit-home' && name !== 'edit-leadership' && name !== 'edit-about' && name !== 'edit-contact') {
+        loadSectionData(name); /* these four are loaded inside their own fetch-first callbacks above, using fresh data */
+    }
     window.scrollTo(0, 0);
 }
 
@@ -1758,6 +1907,16 @@ function saveSection(section) {
     var fields = SECTION_FIELDS[key] || [];
     var data   = getLS('section_' + key, {});
     fields.forEach(function(id) { var el=document.getElementById(id); if (el) data[id]=el.value; });
+
+    /* 'about' stores its map image under a separate localStorage key
+       (about_map_image, written directly by previewMapImage/clearMapImage
+       to its own Firebase leaf) — without re-including it here, this
+       generic full-object save would silently wipe the map image every
+       time About's text fields are saved, since Firebase set() replaces
+       the whole sections/about node. */
+    if (key === 'about') {
+        data.about_map_image = getLS('about_map_image', '');
+    }
 
     /* For 'home': saveNewsItems handles ALL Firebase writes (news, anncs, sections/home)
        including hero_images. We must NOT call the generic Firebase write below for 'home'
@@ -2879,16 +3038,91 @@ var FORMS_LIST=[{key:'marriage',name:'Marriage Registration Form',file:'MARRIAGE
 var DEFAULT_ONLINE_SVCS=['Marriage Registration','Birth Registration','Death Registration','Business Operating Permit','Building Permit','Development Permit','Signage Permit','General Enquiry'];
 function renderFormsEditor(){
     var saved=getLS('forms_status',{});var forms=getLS('forms_list',FORMS_LIST);var el=document.getElementById('formsStatusEditor');if(!el)return;
-    var html='<table class="data-table"><thead><tr><th>Form Name</th><th>Category</th><th>Status</th><th>File / Link</th><th></th></tr></thead><tbody>';
-    forms.forEach(function(f,fi){var status=saved[f.key+'_status']||(f.file?'available':'soon');var file=saved[f.key+'_file']||f.file||'';html+='<tr><td><strong>'+escHtml(f.name)+'</strong></td><td><input type="text" class="field-input" data-fkey="'+f.key+'_cat" style="width:110px;font-size:0.8rem;padding:5px 8px;" value="'+escHtml(saved[f.key+'_cat']||f.cat||'')+'"></td><td><select class="field-select" data-fkey="'+f.key+'_status" style="width:auto;padding:5px 24px 5px 8px;font-size:0.8rem;"><option value="available"'+(status==='available'?' selected':'')+'>Available</option><option value="soon"'+(status==='soon'?' selected':'')+'>Coming Soon</option></select></td><td><input type="text" class="field-input" data-fkey="'+f.key+'_file" value="'+escHtml(file)+'" placeholder="filename.pdf" style="font-size:0.82rem;padding:6px 10px;"></td><td><button class="btn btn-danger btn-sm" onclick="deleteForm('+fi+')"><i class="fas fa-trash"></i></button></td></tr>';});
+    var html='<table class="data-table"><thead><tr><th>Form Name</th><th>Category</th><th>Status</th><th>File</th><th></th></tr></thead><tbody>';
+    forms.forEach(function(f,fi){
+        var status=saved[f.key+'_status']||(f.file?'available':'soon');
+        var file=saved[f.key+'_file']||f.file||'';
+        var fileLabel = file ? (('' + file).split('/').pop().split('?')[0]) : 'No file uploaded';
+        html+='<tr><td><strong>'+escHtml(f.name)+'</strong></td>'
+            +'<td><input type="text" class="field-input" data-fkey="'+f.key+'_cat" style="width:110px;font-size:0.8rem;padding:5px 8px;" value="'+escHtml(saved[f.key+'_cat']||f.cat||'')+'"></td>'
+            +'<td><select class="field-select" data-fkey="'+f.key+'_status" style="width:auto;padding:5px 24px 5px 8px;font-size:0.8rem;"><option value="available"'+(status==='available'?' selected':'')+'>Available</option><option value="soon"'+(status==='soon'?' selected':'')+'>Coming Soon</option></select></td>'
+            +'<td style="min-width:210px;">'
+                +'<input type="hidden" data-fkey="'+f.key+'_file" value="'+escHtml(file)+'">'
+                +'<div data-form-file-cell="'+f.key+'" style="display:flex;align-items:center;gap:8px;">'
+                    +'<span class="form-file-name" style="font-size:0.78rem;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(fileLabel)+'</span>'
+                    +'<label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap;"><i class="fas fa-upload"></i> '+(file?'Replace':'Upload')+'<input type="file" accept="application/pdf" style="display:none;" onchange="uploadFormFile(\''+f.key+'\',this)"></label>'
+                +'</div>'
+            +'</td>'
+            +'<td><button class="btn btn-danger btn-sm" onclick="deleteForm('+fi+')"><i class="fas fa-trash"></i></button></td></tr>';
+    });
     html+='</tbody></table>';el.innerHTML=html;renderOnlineServices();
+}
+/* Uploads a form PDF straight to Cloudinary and drops the real hosted URL
+   into that row's hidden field — same pattern as the Publications PDF fix.
+   Automatically flips the row to "Available" once a file is attached. */
+function uploadFormFile(key, input) {
+    var file = input.files[0]; if (!file) return;
+    if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+        alert('Please upload a PDF file only.'); input.value=''; return;
+    }
+    if (file.size > 50*1024*1024) { alert('File too large. Max 50MB.'); input.value=''; return; }
+
+    var cell   = document.querySelector('[data-form-file-cell="'+key+'"]');
+    var nameEl = cell ? cell.querySelector('.form-file-name') : null;
+    if (nameEl) nameEl.textContent = 'Uploading\u2026';
+
+    showToast('\u23eb Uploading ' + file.name + '\u2026');
+    uploadToCloudinaryFile(file, 'amada_forms').then(function(res) {
+        var hidden = document.querySelector('[data-fkey="'+key+'_file"]');
+        if (hidden) hidden.value = res.url;
+        var statusSel = document.querySelector('[data-fkey="'+key+'_status"]');
+        if (statusSel) statusSel.value = 'available';
+        if (nameEl) nameEl.textContent = file.name;
+        showToast('\u2705 ' + file.name + ' uploaded \u2014 click Save Changes to go live');
+    }).catch(function(e) {
+        console.error('Form PDF Cloudinary upload failed:', e);
+        if (nameEl) nameEl.textContent = 'Upload failed';
+        showToast('\u26a0\ufe0f Upload failed \u2014 try again');
+    });
+    input.value = '';
 }
 function renderOnlineServices(){var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);var el=document.getElementById('onlineServicesEditor');if(!el)return;el.innerHTML='<table class="data-table"><thead><tr><th>#</th><th>Service Name</th><th>Status</th><th></th></tr></thead><tbody>'+svcs.map(function(s,i){return '<tr><td style="color:var(--text3);font-size:0.8rem;">'+(i+1)+'</td><td><input type="text" class="field-input" data-svc="'+i+'" value="'+escHtml(s)+'" style="font-size:0.88rem;padding:6px 10px;"></td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-danger btn-sm" onclick="deleteService('+i+')"><i class="fas fa-trash"></i></button></td></tr>';}).join('')+'</tbody></table>';}
 function addNewForm(){var name=prompt('Form name:');if(!name)return;var forms=getLS('forms_list',FORMS_LIST);forms.push({key:'form_'+Date.now(),name:name,file:'',cat:'General'});setLS('forms_list',forms);renderFormsEditor();showToast('Form added');}
 function deleteForm(fi){if(!confirm('Remove?'))return;var forms=getLS('forms_list',FORMS_LIST);forms.splice(fi,1);setLS('forms_list',forms);renderFormsEditor();showToast('Removed');}
 function addNewService(){var name=prompt('Service name:');if(!name)return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.push(name);setLS('online_services',svcs);renderOnlineServices();showToast('Service added');}
 function deleteService(i){if(!confirm('Remove?'))return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.splice(i,1);setLS('online_services',svcs);renderOnlineServices();}
-function saveFormsStatus(){var data={};document.querySelectorAll('[data-fkey]').forEach(function(el){data[el.dataset.fkey]=el.value;});setLS('forms_status',data);var svcs=[];document.querySelectorAll('[data-svc]').forEach(function(el){svcs[parseInt(el.dataset.svc)]=el.value;});if(svcs.length)setLS('online_services',svcs.filter(Boolean));logActivity('Services updated');showToast('Services saved');}
+function saveFormsStatus(){
+    var data={};document.querySelectorAll('[data-fkey]').forEach(function(el){data[el.dataset.fkey]=el.value;});
+    setLS('forms_status',data);
+    var svcs=[];document.querySelectorAll('[data-svc]').forEach(function(el){svcs[parseInt(el.dataset.svc)]=el.value;});
+    if(svcs.length)setLS('online_services',svcs.filter(Boolean));
+    logActivity('Services updated');
+
+    /* Build the canonical forms array the public Services page reads, and
+       push it to Firebase. Previously this function only ever wrote to
+       localStorage — nothing here ever reached the live site regardless
+       of what was uploaded or toggled. */
+    var forms=getLS('forms_list',FORMS_LIST);
+    var formsArr=forms.map(function(f){
+        return {
+            key:    f.key,
+            name:   f.name,
+            cat:    data[f.key+'_cat']    || f.cat  || '',
+            status: data[f.key+'_status'] || (f.file?'available':'soon'),
+            file:   data[f.key+'_file']   || f.file || ''
+        };
+    });
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'sections/services_forms'), formsArr)
+            .then(function() { showToast('✅ Forms saved & synced to public website'); })
+            .catch(function(e) {
+                console.error('Forms Firebase sync failed:', e);
+                showToast('⚠️ Saved locally — Firebase sync failed');
+            });
+    } else {
+        showToast('Services saved');
+    }
+}
 
 /* ── 16. APPLICATIONS ── */
 var _currentAppTracking=null;
