@@ -728,15 +728,15 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background:rgba(13,91,167,0.12);color:var(--blue);"><i class="fas fa-file-alt"></i></div>
-                    <div class="stat-body"><div class="stat-num">21</div><div class="stat-label">Publications</div><div class="stat-sub">Documents &amp; Reports</div></div>
+                    <div class="stat-body"><div class="stat-num" id="statPubsCount">0</div><div class="stat-label">Publications</div><div class="stat-sub">Documents &amp; Reports</div></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background:rgba(201,162,39,0.12);color:var(--gold);"><i class="fas fa-hard-hat"></i></div>
-                    <div class="stat-body"><div class="stat-num">8</div><div class="stat-label">Dev. Projects</div><div class="stat-sub">6 completed, 2 ongoing</div></div>
+                    <div class="stat-body"><div class="stat-num" id="statProjectsCount">0</div><div class="stat-label">Dev. Projects</div><div class="stat-sub" id="statProjectsSub">&nbsp;</div></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background:rgba(220,53,69,0.12);color:var(--red);"><i class="fas fa-newspaper"></i></div>
-                    <div class="stat-body"><div class="stat-num">3</div><div class="stat-label">News Items</div><div class="stat-sub">Latest events published</div></div>
+                    <div class="stat-body"><div class="stat-num" id="statNewsCount">0</div><div class="stat-label">News Items</div><div class="stat-sub">Latest events published</div></div>
                 </div>
             </div>
 
@@ -2029,12 +2029,16 @@ function getHeroImages() {
    the moment it changes — add/remove/reorder all go live immediately, so there's
    no separate "Save Changes" step to remember or forget. */
 function syncHeroImagesToFirebase(imgs) {
-    if (!(window._fbDb && window._fbRef && window._fbSet)) return;
+    if (!(window._fbDb && window._fbRef && window._fbSet)) {
+        showToast('⚠️ Firebase not connected — image saved to this browser only');
+        console.error('syncHeroImagesToFirebase: Firebase not initialized (window._fbDb/_fbRef/_fbSet missing)');
+        return;
+    }
     window._fbSet(window._fbRef(window._fbDb, 'sections/home/hero_images'), imgs)
         .then(function() { showToast('✅ Hero image(s) live on public website'); })
         .catch(function(e) {
             console.error('Hero images Firebase sync failed:', e);
-            showToast('⚠️ Saved locally — Firebase sync failed');
+            showToast('⚠️ Saved locally — Firebase sync failed: ' + (e && e.message ? e.message : 'unknown error'));
         });
 }
 
@@ -3078,7 +3082,11 @@ function uploadFormFile(key, input) {
         var statusSel = document.querySelector('[data-fkey="'+key+'_status"]');
         if (statusSel) statusSel.value = 'available';
         if (nameEl) nameEl.textContent = file.name;
-        showToast('\u2705 ' + file.name + ' uploaded \u2014 click Save Changes to go live');
+        /* Auto-sync immediately, same as hero images — otherwise the row
+           only LOOKS live in the admin panel while the actual public site
+           still shows "Coming Soon" until a separate Save Changes click,
+           which is easy to miss row-by-row. */
+        saveFormsStatus();
     }).catch(function(e) {
         console.error('Form PDF Cloudinary upload failed:', e);
         if (nameEl) nameEl.textContent = 'Upload failed';
@@ -3155,7 +3163,41 @@ function openModal(id){var el=document.getElementById(id);if(el){el.classList.ad
 function closeModal(id){var el=document.getElementById(id);if(el){el.classList.remove('open');document.body.style.overflow='';}}
 
 /* ── 19. DASHBOARD STATS ── */
-function updateDashboardStats(){var apps={};try{var r=localStorage.getItem('amada_applications');if(r)apps=JSON.parse(r);}catch(e){}var count=Object.keys(apps).length;var el=document.getElementById('statApps');if(el)el.textContent=count;var badge=document.getElementById('appBadge');if(badge)badge.textContent=count;renderActivityLog();}
+function updateDashboardStats(){
+    var apps={};try{var r=localStorage.getItem('amada_applications');if(r)apps=JSON.parse(r);}catch(e){}
+    var count=Object.keys(apps).length;
+    var el=document.getElementById('statApps');if(el)el.textContent=count;
+    var badge=document.getElementById('appBadge');if(badge)badge.textContent=count;
+
+    function refreshCounts(){
+        var pubs = getPubs();
+        var pubsCount = (pubs.budget||[]).length + (pubs.report||[]).length + (pubs.resolution||[]).length;
+        var projects  = pubs.plan || [];
+        var completed = projects.filter(function(p){ return (p.status||'')==='Completed'; }).length;
+        var ongoing   = projects.length - completed;
+
+        var pubsEl = document.getElementById('statPubsCount');
+        if (pubsEl) pubsEl.textContent = pubsCount;
+        var projEl = document.getElementById('statProjectsCount');
+        if (projEl) projEl.textContent = projects.length;
+        var projSub = document.getElementById('statProjectsSub');
+        if (projSub) projSub.textContent = completed + ' completed, ' + ongoing + ' ongoing';
+
+        var news = getLS('home_news', DEFAULT_NEWS);
+        var newsEl = document.getElementById('statNewsCount');
+        if (newsEl) newsEl.textContent = news.length;
+    }
+
+    /* Pull fresh data from Firebase first — these numbers were previously
+       hardcoded in the HTML (21 / 8 / 3, forever, no matter what was
+       actually uploaded) and never reflected real content at all. */
+    loadPubsFromFirebase(function() {
+        loadHomeDataFromFirebase(function() {
+            refreshCounts();
+            renderActivityLog();
+        });
+    });
+}
 
 /* ── 20. UTILITY ── */
 function formatDateDisplay(dateStr) {
