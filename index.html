@@ -448,8 +448,14 @@ var NEWS = {
             var firstImg = new Image();
             firstImg.onload = function() {
                 slideDiv.innerHTML = imgs.map(function(img, i) {
+                    /* Use single quotes for the CSS url() value — the
+                       previous version used JSON.stringify (double quotes),
+                       which collided with this style attribute's own double
+                       quotes and cut it off right at "url(", leaving every
+                       slide with an empty background. Single quotes inside
+                       a double-quoted HTML attribute don't have that problem. */
                     return '<div class="hero-slide" style="position:absolute;inset:0;'
-                        + 'background:linear-gradient(rgba(15,46,26,0.55),rgba(15,46,26,0.65)),url(' + JSON.stringify(img.src) + ') center/cover no-repeat;'
+                        + "background:linear-gradient(rgba(15,46,26,0.55),rgba(15,46,26,0.65)),url('" + img.src + "') center/cover no-repeat;"
                         + 'opacity:0;transition:opacity 1s ease-in-out;"></div>';
                 }).join('');
                 /* Now safe to remove the plain gradient default since the
