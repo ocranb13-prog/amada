@@ -229,6 +229,43 @@
   }
 
 
+  /* ── SERVICES ── */
+  function loadServices(db, ref, get) {
+    get(ref(db, 'sections/services_forms')).then(function (snap) {
+      if (!snap.exists()) return;
+      var forms = snap.val();
+      if (!Array.isArray(forms) || !forms.length) return;
+      renderFormsGrid(forms);
+    }).catch(function (e) {
+      console.warn('AMADA reader: services load failed', e.message);
+    });
+  }
+
+  function renderFormsGrid(forms) {
+    var grid = document.getElementById('formsGrid');
+    if (!grid) return;
+    var CAT_ICON = { registration: 'fa-file-signature', permit: 'fa-stamp', general: 'fa-question-circle' };
+    var html = forms.map(function (f) {
+      if (!f) return '';
+      var catKey      = (f.cat || '').toLowerCase();
+      var icon        = CAT_ICON[catKey] || 'fa-file-alt';
+      var isAvailable = f.status === 'available' && f.file;
+      var actionHtml  = isAvailable
+        ? '<a href="' + f.file + '" download target="_blank" rel="noopener noreferrer" class="form-download-btn"><i class="fas fa-download"></i> Download PDF</a>'
+        : '<span class="form-download-btn form-soon-btn"><i class="fas fa-clock"></i> Coming Soon</span>';
+      return '<div class="form-card' + (isAvailable ? '' : ' form-card-soon') + '" data-form-cat="' + catKey + '">'
+        + '<div class="form-card-icon" style="background:linear-gradient(135deg,#1F6B3A,#0f2e1a);"><i class="fas ' + icon + '"></i></div>'
+        + '<div class="form-card-info">'
+        + '<span class="form-card-category">' + (f.cat || '') + '</span>'
+        + '<h4 class="form-card-title">' + (f.name || '') + '</h4>'
+        + '<div class="form-card-meta"><span><i class="fas fa-file-pdf" style="color:#dc3545;"></i> PDF</span>'
+        + '<span>' + (isAvailable ? '<i class="fas fa-check-circle" style="color:#28a745;"></i> Available' : '<i class="fas fa-clock" style="color:#C9A227;"></i> Coming Soon') + '</span></div>'
+        + actionHtml
+        + '</div></div>';
+    }).join('');
+    if (html.trim()) grid.innerHTML = html;
+  }
+
   function loadContact(db, ref, get) {
     get(ref(db, 'sections/contact')).then(function (snap) {
       if (!snap.exists()) return;
