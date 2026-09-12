@@ -289,40 +289,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ── Load social links from Firebase and update every page footer ── */
 function loadSocialLinks() {
-    /* Use Firebase if already initialised on the page (index.html etc.)
-       Otherwise initialise a lightweight read-only instance */
-    function doLoad(db) {
-        db.ref('sections/contact').get().then(function(snap) {
-            if (!snap.exists()) return;
-            var d = snap.val();
+    /* Shared handler for the fetched snapshot, regardless of which SDK
+       style (compat vs modular) actually fetched it. */
+    function applySocialData(snap) {
+        if (!snap.exists()) return;
+        var d = snap.val();
 
-            var fbUrl = d.social_fb || '';
-            var twUrl = d.social_tw || '';
-            var igUrl = d.social_ig || '';
+        var fbUrl = d.social_fb || '';
+        var twUrl = d.social_tw || '';
+        var igUrl = d.social_ig || '';
 
-            /* Update every .social-btn.fb on the page */
-            document.querySelectorAll('a.social-btn.fb').forEach(function(el) {
-                if (fbUrl) {
-                    el.href   = fbUrl;
-                    el.target = '_blank';
-                    el.rel    = 'noopener noreferrer';
-                }
-            });
-            document.querySelectorAll('a.social-btn.tw').forEach(function(el) {
-                if (twUrl) {
-                    el.href   = twUrl;
-                    el.target = '_blank';
-                    el.rel    = 'noopener noreferrer';
-                }
-            });
-            document.querySelectorAll('a.social-btn.ig').forEach(function(el) {
-                if (igUrl) {
-                    el.href   = igUrl;
-                    el.target = '_blank';
-                    el.rel    = 'noopener noreferrer';
-                }
-            });
-        }).catch(function(e) {
+        document.querySelectorAll('a.social-btn.fb').forEach(function(el) {
+            if (fbUrl) { el.href = fbUrl; el.target = '_blank'; el.rel = 'noopener noreferrer'; }
+        });
+        document.querySelectorAll('a.social-btn.tw').forEach(function(el) {
+            if (twUrl) { el.href = twUrl; el.target = '_blank'; el.rel = 'noopener noreferrer'; }
+        });
+        document.querySelectorAll('a.social-btn.ig').forEach(function(el) {
+            if (igUrl) { el.href = igUrl; el.target = '_blank'; el.rel = 'noopener noreferrer'; }
+        });
+    }
+
+    /* Old compat SDK: db.ref(path).get() */
+    function doLoadCompat(db) {
+        db.ref('sections/contact').get().then(applySocialData).catch(function(e) {
+            console.warn('Social links load failed:', e);
+        });
+    }
+    /* Newer modular SDK: get(ref(db, path)) — used by amada_firebase_reader.js.
+       Calling db.ref(...) on this kind of instance throws "db.ref is not a
+       function", which is what was happening here before — this function
+       was assuming every page's Firebase instance was the older compat
+       style, but pages using the shared reader (services.html, about.html)
+       set up the modular style instead. */
+    function doLoadModular(db, ref, get) {
+        get(ref(db, 'sections/contact')).then(applySocialData).catch(function(e) {
             console.warn('Social links load failed:', e);
         });
     }
@@ -330,10 +331,10 @@ function loadSocialLinks() {
     /* Wait a tick to let each page's own Firebase init run first */
     setTimeout(function() {
         if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
-            doLoad(firebase.database());
-        } else if (typeof window._fbDb !== 'undefined' && window._fbDb) {
-            /* Modular-style wrapper used by some pages */
-            doLoad(window._fbDb);
+            doLoadCompat(firebase.database());
+        } else if (window._fbDb && window._fbRef && window._fbGet) {
+            /* Modular-style wrapper used by amada_firebase_reader.js */
+            doLoadModular(window._fbDb, window._fbRef, window._fbGet);
         } else {
             /* Initialise Firebase just for this read */
             var script1 = document.createElement('script');
@@ -348,7 +349,7 @@ function loadSocialLinks() {
                         databaseURL: "https://asmda-website-default-rtdb.firebaseio.com",
                         projectId:   "asmda-website"
                     });
-                    doLoad(firebase.database());
+                    doLoadCompat(firebase.database());
                 };
                 document.head.appendChild(script2);
             };
