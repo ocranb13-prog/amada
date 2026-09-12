@@ -453,6 +453,34 @@
 <script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();
 document.addEventListener('DOMContentLoaded', function(){ amadaLoadPage('services'); });</script>
 <script>
+/* ── Firebase for saving submitted applications (shared, visible to
+   admin regardless of which device/browser the citizen used) ── */
+var _appsDb = null;
+(function() {
+    var s1 = document.createElement('script');
+    s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+    s1.onload = function() {
+        var s2 = document.createElement('script');
+        s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
+        s2.onload = function() {
+            try {
+                var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp({
+                    apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+                    authDomain:"asmda-website.firebaseapp.com",
+                    databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
+                    projectId:"asmda-website",
+                    storageBucket:"asmda-website.firebasestorage.app",
+                    messagingSenderId:"699818483381",
+                    appId:"1:699818483381:web:09c926a48830d46ae228fc"
+                });
+                _appsDb = firebase.database();
+            } catch(e) { console.warn('Applications Firebase init failed:', e.message); }
+        };
+        document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+})();
+
 /* ═══════════════════════════════════════════════════════
    SERVICE FORM DEFINITIONS
    Each service has: icon, notice, sections[], each with fields[]
@@ -837,23 +865,31 @@ function submitApplication() {
     document.getElementById('slipDetailsContent').innerHTML = html;
     document.getElementById('slipTrackingNum').textContent = _state.tracking;
 
-    /* Save to localStorage for tracking */
+    /* Save to localStorage (offline/local cache) AND Firebase (shared —
+       this is what makes it actually reach the admin, since a citizen's
+       browser and the admin's browser can never share localStorage). */
+    var appRecord = {
+        tracking: _state.tracking,
+        service:  _state.service,
+        dateSubmitted: dateStr + ' at ' + timeStr,
+        status: 'submitted',
+        statusHistory: [
+            { status:'submitted', date: dateStr, note:'Application submitted via online portal' }
+        ],
+        formData: _state.formData
+    };
     try {
         var apps = {};
         var raw = localStorage.getItem('amada_applications');
         if (raw) apps = JSON.parse(raw);
-        apps[_state.tracking] = {
-            tracking: _state.tracking,
-            service:  _state.service,
-            dateSubmitted: dateStr + ' at ' + timeStr,
-            status: 'submitted',
-            statusHistory: [
-                { status:'submitted', date: dateStr, note:'Application submitted via online portal' }
-            ],
-            formData: _state.formData
-        };
+        apps[_state.tracking] = appRecord;
         localStorage.setItem('amada_applications', JSON.stringify(apps));
     } catch(e) { console.warn('Could not save to localStorage:', e); }
+    if (_appsDb) {
+        _appsDb.ref('applications/' + _state.tracking).set(appRecord).catch(function(e) {
+            console.warn('Could not sync application to Firebase:', e);
+        });
+    }
 
     // Close portal, open slip
     closePortal();
