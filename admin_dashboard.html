@@ -1725,7 +1725,9 @@ function showPanel(name) {
     });
     var bc = document.getElementById('breadcrumbText');
     if (bc) bc.textContent = PANEL_LABELS[name] || name;
-    if (name === 'applications' || name === 'reports') loadApplications();
+    if (name === 'applications' || name === 'reports') {
+        loadApplicationsFromFirebase(function() { loadApplications(); });
+    }
     if (name === 'edit-departments') {
         loadDepartmentsFromFirebase(function() { renderDeptHeads(); });
     }
@@ -3134,6 +3136,28 @@ function saveFormsStatus(){
 
 /* ── 16. APPLICATIONS ── */
 var _currentAppTracking=null;
+/* Applications: shared object keyed by tracking number at applications/.
+   Written by services.html on submission, read by track.html for status
+   lookups. Previously the admin only ever read its OWN browser's
+   localStorage — meaning real citizen submissions from other devices
+   were completely invisible here, regardless of anything else. */
+function loadApplicationsFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    window._fbGet(window._fbRef(window._fbDb, 'applications')).then(function(snap) {
+        if (snap.exists()) {
+            var remote = snap.val() || {};
+            var local = {};
+            try { var r = localStorage.getItem('amada_applications'); if (r) local = JSON.parse(r); } catch(e) {}
+            /* Merge: Firebase is the source of truth for anything it has;
+               keep any purely-local entries Firebase doesn't know about
+               (e.g. offline submissions that haven't synced yet). */
+            var merged = Object.assign({}, local, remote);
+            localStorage.setItem('amada_applications', JSON.stringify(merged));
+        }
+        if (cb) cb();
+    }).catch(function(e) { console.error('Applications Firebase load failed:', e); if (cb) cb(); });
+}
+
 function loadApplications(){
     var apps={};try{var r=localStorage.getItem('amada_applications');if(r)apps=JSON.parse(r);}catch(e){}
     var keys=Object.keys(apps);var count=keys.length;
@@ -3151,7 +3175,18 @@ function loadApplications(){
 function renderApplicationsByService(byService,total){var el=document.getElementById('rpt_byService');if(!el)return;var skeys=Object.keys(byService);if(!skeys.length){el.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text3);">No data yet</td></tr>';return;}el.innerHTML=skeys.map(function(s){var pct=total?Math.round((byService[s]/total)*100):0;return '<tr><td>'+escHtml(s)+'</td><td><strong>'+byService[s]+'</strong></td><td>'+pct+'%</td></tr>';}).join('');}
 function viewApp(tracking){var apps={};try{var r=localStorage.getItem('amada_applications');if(r)apps=JSON.parse(r);}catch(e){}var a=apps[tracking];if(!a)return;_currentAppTracking=tracking;var html='<div style="background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:10px;padding:16px 20px;margin-bottom:18px;"><div style="color:#fff;font-weight:700;">'+escHtml(a.service)+'</div><div style="color:rgba(255,255,255,0.7);font-size:0.82rem;margin-top:4px;">'+escHtml(a.dateSubmitted)+'</div><div style="background:var(--gold);color:#1a1a1a;padding:4px 12px;border-radius:4px;font-weight:800;font-family:monospace;margin-top:8px;display:inline-block;">'+escHtml(tracking)+'</div></div><table class="data-table"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>';Object.keys(a.formData||{}).forEach(function(k){var fd=a.formData[k];if(fd&&fd.value)html+='<tr><td>'+escHtml(fd.label)+'</td><td>'+escHtml(fd.value)+'</td></tr>';});html+='</tbody></table>';document.getElementById('appViewContent').innerHTML=html;var btn=document.getElementById('appStatusBtn');if(btn){btn.textContent='Mark as '+getNextStatus(a.status);}openModal('appViewModal');}
 function getNextStatus(current){var order=['submitted','received','processing','verification','approved','completed'];var idx=order.indexOf(current||'submitted');var next=order[idx<order.length-1?idx+1:order.length-1];return next.charAt(0).toUpperCase()+next.slice(1);}
-function changeAppStatus(tracking,newStatus){if(!newStatus)return;var apps={};try{var r=localStorage.getItem('amada_applications');if(r)apps=JSON.parse(r);}catch(e){}if(!apps[tracking])return;apps[tracking].status=newStatus;apps[tracking].statusHistory=apps[tracking].statusHistory||[];apps[tracking].statusHistory.push({status:newStatus,date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),note:'Updated by '+(_session?_session.name:'Admin')});localStorage.setItem('amada_applications',JSON.stringify(apps));logActivity('Application '+tracking+' updated to '+newStatus);showToast('Status: '+newStatus);loadApplications();}
+function changeAppStatus(tracking,newStatus){if(!newStatus)return;var apps={};try{var r=localStorage.getItem('amada_applications');if(r)apps=JSON.parse(r);}catch(e){}if(!apps[tracking])return;apps[tracking].status=newStatus;apps[tracking].statusHistory=apps[tracking].statusHistory||[];apps[tracking].statusHistory.push({status:newStatus,date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),note:'Updated by '+(_session?_session.name:'Admin')});localStorage.setItem('amada_applications',JSON.stringify(apps));logActivity('Application '+tracking+' updated to '+newStatus);
+    /* Push the status change back to Firebase so the citizen's own Track
+       lookup (a different browser entirely) sees the update — previously
+       this only ever updated the admin's own local copy. */
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'applications/' + tracking), apps[tracking])
+            .then(function(){ showToast('Status: '+newStatus+' — synced'); })
+            .catch(function(e){ console.error('Application status Firebase sync failed:', e); showToast('Status: '+newStatus+' (saved locally — Firebase sync failed)'); });
+    } else {
+        showToast('Status: '+newStatus);
+    }
+    loadApplications();}
 function updateAppStatus(){if(!_currentAppTracking)return;var apps={};try{var r=localStorage.getItem('amada_applications');if(r)apps=JSON.parse(r);}catch(e){}var a=apps[_currentAppTracking];if(!a)return;var order=['submitted','received','processing','verification','approved','completed'];var idx=order.indexOf(a.status||'submitted');changeAppStatus(_currentAppTracking,order[idx<order.length-1?idx+1:order.length-1]);closeModal('appViewModal');}
 
 /* ── 17. PRINT ── */
@@ -3191,10 +3226,16 @@ function updateDashboardStats(){
     /* Pull fresh data from Firebase first — these numbers were previously
        hardcoded in the HTML (21 / 8 / 3, forever, no matter what was
        actually uploaded) and never reflected real content at all. */
-    loadPubsFromFirebase(function() {
-        loadHomeDataFromFirebase(function() {
-            refreshCounts();
-            renderActivityLog();
+    loadApplicationsFromFirebase(function() {
+        var apps2={};try{var r2=localStorage.getItem('amada_applications');if(r2)apps2=JSON.parse(r2);}catch(e){}
+        var count2=Object.keys(apps2).length;
+        var el2=document.getElementById('statApps');if(el2)el2.textContent=count2;
+        var badge2=document.getElementById('appBadge');if(badge2)badge2.textContent=count2;
+        loadPubsFromFirebase(function() {
+            loadHomeDataFromFirebase(function() {
+                refreshCounts();
+                renderActivityLog();
+            });
         });
     });
 }
