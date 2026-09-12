@@ -449,6 +449,8 @@
 
 
 <script src="amada_shared.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="amada_firebase_reader.js"></script>
 <script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();
 document.addEventListener('DOMContentLoaded', function(){ amadaLoadPage('services'); });</script>
@@ -908,45 +910,132 @@ function printSlip() {
     window.print();
 }
 function downloadSlip() {
-    /* Build a complete self-contained HTML file and download it directly as .html
-       The user opens it in a browser and uses Ctrl+P / Print to PDF if they want a PDF.
-       This avoids the popup-blocker issue and does NOT auto-open a print dialog. */
-    var slipHTML = document.getElementById('slipContent').innerHTML;
-    var fullHTML = '<!DOCTYPE html><html><head>'
-        + '<meta charset="UTF-8">'
-        + '<title>AMADA Application Slip — ' + _state.tracking + '<\/title>'
-        + '<style>'
-        + 'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;margin:0;padding:0;background:#fff;color:#333;}'
-        + '.slip-letterhead{background:linear-gradient(135deg,#1F6B3A,#0f2e1a);padding:24px 32px;display:flex;align-items:center;gap:18px;}'
-        + '.slip-logo{width:68px;height:68px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:4px;flex-shrink:0;}'
-        + '.slip-logo img{width:100%;height:100%;object-fit:contain;}'
-        + '.slip-org h2{font-size:1.05rem;font-weight:800;margin:0 0 3px;color:#fff;}'
-        + '.slip-org p{font-size:0.76rem;color:rgba(255,255,255,0.7);margin:0;}'
-        + '.slip-title-bar{background:#C9A227;padding:10px 32px;display:flex;justify-content:space-between;align-items:center;}'
-        + '.slip-title-bar h3{font-size:0.86rem;font-weight:800;color:#1a1a1a;text-transform:uppercase;letter-spacing:0.06em;margin:0;}'
-        + '.slip-tracking{font-size:1.05rem;font-weight:900;color:#1a1a1a;font-family:monospace;letter-spacing:0.1em;}'
-        + '.slip-body{padding:22px 32px;}'
-        + '.slip-status-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(40,167,69,0.1);border:1.5px solid #28a745;color:#28a745;padding:8px 16px;border-radius:6px;font-size:0.85rem;font-weight:700;margin-bottom:18px;}'
-        + '.slip-detail-table{width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #e0e8e0;border-radius:6px;overflow:hidden;}'
-        + '.slip-detail-table th{background:#f4f6f4;padding:10px 14px;font-size:0.76rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#7a8e7a;text-align:left;border-bottom:1px solid #e0e8e0;}'
-        + '.slip-detail-table td{padding:10px 14px;font-size:0.88rem;color:#0f2e1a;border-bottom:1px solid #f0f4f0;font-weight:500;}'
-        + '.slip-detail-table tr:last-child td{border-bottom:none;}'
-        + '.slip-detail-table td.label{font-weight:700;color:#7a8e7a;font-size:0.82rem;width:36%;}'
-        + '.slip-disclaimer{background:#fff8e6;border:1px solid #C9A227;border-radius:8px;padding:14px 16px;margin-top:16px;font-size:0.82rem;color:#3d4e3d;line-height:1.65;}'
-        + '.slip-footer-bar{background:#f4f6f4;border-top:1px dashed #e0e8e0;padding:13px 32px;text-align:center;font-size:0.75rem;color:#9aa89a;}'
-        + '@media print{body{margin:0;}}'
-        + '<\/style>'
-        + '<\/head><body>' + slipHTML + '<\/body><\/html>';
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF library failed to load. Please check your internet connection and try again.');
+        return;
+    }
+    var jsPDFCtor = window.jspdf.jsPDF;
+    var doc = new jsPDFCtor({ unit: 'pt', format: 'a4' });
+    var pageWidth  = doc.internal.pageSize.getWidth();
+    var pageHeight = doc.internal.pageSize.getHeight();
+    var margin = 40;
 
-    /* Create a Blob and trigger a real file download */
-    var blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    a.href     = url;
-    a.download = 'AMADA_Application_Slip_' + _state.tracking + '.html';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+    function buildPdf(logoDataUrl) {
+        var y;
+
+        /* ── Letterhead ── */
+        doc.setFillColor(31, 107, 58);
+        doc.rect(0, 0, pageWidth, 78, 'F');
+        if (logoDataUrl) {
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(margin, 14, 50, 50, 4, 4, 'F');
+            try { doc.addImage(logoDataUrl, 'JPEG', margin + 3, 17, 44, 44); } catch (e) {}
+        }
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+        doc.text('Asene Manso Akroso District Assembly', margin + 62, 32);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+        doc.setTextColor(220, 230, 220);
+        doc.text('PMB, Akim Manso, Eastern Region, Ghana  |  GPS: EB-0702-1681', margin + 62, 46);
+        doc.text('Tel: +233 552 455 666  |  Local Government Service, Ghana', margin + 62, 58);
+
+        /* ── Title bar ── */
+        doc.setFillColor(201, 162, 39);
+        doc.rect(0, 78, pageWidth, 26, 'F');
+        doc.setTextColor(26, 26, 26);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+        doc.text('APPLICATION ACKNOWLEDGEMENT SLIP', margin, 95);
+        doc.setFont('courier', 'bold'); doc.setFontSize(11);
+        doc.text(_state.tracking, pageWidth - margin, 95, { align: 'right' });
+
+        y = 120;
+
+        /* ── Status badge ── */
+        doc.setDrawColor(40, 167, 69); doc.setFillColor(230, 247, 234);
+        doc.roundedRect(margin, y, 270, 24, 4, 4, 'FD');
+        doc.setTextColor(40, 167, 69); doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+        doc.text('Application Received & Acknowledged', margin + 10, y + 16);
+        y += 40;
+
+        var now = new Date();
+        var dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        var timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+        var tableOpts = {
+            theme: 'grid',
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 9, cellPadding: 6, textColor: [15, 46, 26], lineColor: [224, 232, 224] },
+            headStyles: { fillColor: [244, 246, 244], textColor: [122, 142, 122], fontStyle: 'bold', fontSize: 8 },
+            columnStyles: { 0: { fontStyle: 'bold', textColor: [122, 142, 122], cellWidth: 170 } }
+        };
+
+        /* ── Application Summary ── */
+        doc.autoTable(Object.assign({}, tableOpts, {
+            startY: y,
+            head: [['Application Summary', '']],
+            body: [
+                ['Tracking Number', _state.tracking],
+                ['Service Applied For', _state.service],
+                ['Date Submitted', dateStr + ' at ' + timeStr],
+                ['Submit To', 'Asene Manso Akroso District Assembly, Akim Manso']
+            ]
+        }));
+        y = doc.lastAutoTable.finalY + 16;
+
+        /* ── Application Details, sectioned by the same form config used on-screen ── */
+        var conf = SERVICE_FORMS[_state.service];
+        var body = [];
+        conf.sections.forEach(function(sec) {
+            body.push([{ content: sec.title.toUpperCase(), colSpan: 2, styles: { fillColor: [244, 246, 244], textColor: [31, 107, 58], fontStyle: 'bold', fontSize: 8 } }]);
+            sec.fields.forEach(function(f) {
+                var val = (_state.formData[f.id] && _state.formData[f.id].value) ? _state.formData[f.id].value : '\u2014';
+                body.push([f.label, val]);
+            });
+        });
+        doc.autoTable(Object.assign({}, tableOpts, {
+            startY: y,
+            head: [['Application Details', '']],
+            body: body
+        }));
+        y = doc.lastAutoTable.finalY + 16;
+
+        /* ── Disclaimer ── */
+        var disclaimer = 'DISCLAIMER & NEXT STEPS: This is an auto-generated acknowledgement slip confirming receipt of your application. Submission does not constitute approval. Visit the Asene Manso Akroso District Assembly office with this slip and all original supporting documents for physical verification and further processing. Keep this slip \u2014 your tracking number is ' + _state.tracking + '.';
+        var lines = doc.splitTextToSize(disclaimer, pageWidth - margin * 2 - 24);
+        var boxH = lines.length * 12 + 20;
+        if (y + boxH > pageHeight - 60) { doc.addPage(); y = 40; }
+        doc.setDrawColor(201, 162, 39); doc.setFillColor(255, 248, 230);
+        doc.roundedRect(margin, y, pageWidth - margin * 2, boxH, 4, 4, 'FD');
+        doc.setTextColor(61, 78, 61); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+        doc.text(lines, margin + 12, y + 16);
+
+        /* ── Footer ── */
+        var footerY = pageHeight - 30;
+        doc.setDrawColor(224, 232, 224);
+        doc.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
+        doc.setTextColor(154, 168, 154); doc.setFontSize(7.5);
+        doc.text('Asene Manso Akroso District Assembly  |  PMB, Akim Manso, Eastern Region, Ghana  |  GPS: EB-0702-1681  |  Tel: +233 552 455 666', pageWidth / 2, footerY, { align: 'center' });
+
+        doc.save('AMADA_Application_Slip_' + _state.tracking + '.pdf');
+    }
+
+    /* Embed the logo as base64 pixel data so it's baked directly into the
+       PDF file itself — a relative "LOGO.jpg" path only resolves while
+       viewing the live site; a standalone downloaded file has nothing on
+       disk for that path to point to, which is why the logo went blank
+       after downloading. */
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+        try {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            buildPdf(canvas.toDataURL('image/jpeg', 0.92));
+        } catch (e) { buildPdf(null); }
+    };
+    img.onerror = function() { buildPdf(null); };
+    img.src = 'LOGO.jpg';
 }
 
 /* ═══════════════════════════════════════════════════════
