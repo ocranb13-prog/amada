@@ -232,12 +232,33 @@
 <a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" target="_blank" rel="noopener noreferrer" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
 
 <script src="amada_shared.js"></script>
+<!-- EmailJS: sends the "Send Us a Message" form to a real inbox -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+/* ── EmailJS setup ──
+   1. Create a free account at https://www.emailjs.com
+   2. Add an Email Service (e.g. connect your Gmail) — copy its Service ID below.
+   3. Create an Email Template with variables: {{from_name}} {{from_email}}
+      {{phone}} {{subject}} {{message}} {{to_email}} — set the template's
+      "To Email" field to {{to_email}} so it always goes to whatever address
+      is currently set as the Contact Email in the admin panel.
+      Copy the Template ID below.
+   4. Account → General → copy your Public Key below.
+   Until these three placeholders are filled in, messages will still save
+   correctly to the admin panel — only the email notification is skipped. */
+var EMAILJS_PUBLIC_KEY  = 'iYUkkYRK2y2FPHpSl';
+var EMAILJS_SERVICE_ID  = 'service_yqk3tl2';
+var EMAILJS_TEMPLATE_ID = 'template_3wrn3pe';
+if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+}
+</script>
 <script type="module">
 /* ═══════════════════════════════════════════════════════════
    CONTACT PAGE — Load contact details from Firebase
 ═══════════════════════════════════════════════════════════ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
+import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
@@ -312,6 +333,55 @@ get(ref(db, 'sections/contact')).then(function(snap) {
 }).catch(function(err) {
     console.warn('Firebase contact read failed, using defaults.', err);
 });
+
+/* ── "Send Us a Message" form — saves to Firebase (visible in the admin
+   panel) and best-effort emails whoever is set as the Contact Email.
+   Replaces the old handleContactForm from amada_shared.js, which only
+   ever showed a fake "Message Sent" toast and discarded the message. */
+window.handleContactForm = function(e) {
+    e.preventDefault();
+    var name    = document.getElementById('contactName').value.trim();
+    var phone   = document.getElementById('contactPhone').value.trim();
+    var email   = document.getElementById('contactEmail').value.trim();
+    var subject = document.getElementById('contactSubject').value.trim();
+    var message = document.getElementById('contactMessage').value.trim();
+    if (!name || !email || !subject || !message) return;
+
+    var now = new Date();
+    var record = {
+        name: name, phone: phone, email: email, subject: subject, message: message,
+        date: now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + ' at ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        read: false
+    };
+
+    var newRef = push(ref(db, 'messages'));
+    set(newRef, record).then(function() {
+        showToast('<i class="fas fa-check-circle"></i> <strong>Message Sent!</strong><br><span style="opacity:0.85;font-size:0.85rem;">Thank you, ' + name + '. We will respond shortly.</span>');
+        document.getElementById('contactForm').reset();
+
+        /* Best-effort email notification — the message is already safely
+           saved above regardless of whether this part succeeds. Always
+           reads the CURRENT Contact Email at send-time, so changing it in
+           the admin panel takes effect immediately, no code changes ever
+           needed. */
+        get(ref(db, 'sections/contact/contact_email')).then(function(snap) {
+            var toEmail = snap.exists() ? snap.val() : '';
+            if (!toEmail || typeof emailjs === 'undefined' || typeof EMAILJS_SERVICE_ID === 'undefined' || EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID') return;
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                to_email:   toEmail,
+                name:       name,
+                from_email: email,
+                phone:      phone,
+                subject:    subject,
+                message:    message,
+                time:       record.date
+            }).catch(function(err) { console.warn('Email notification failed (message was still saved):', err); });
+        });
+    }).catch(function(err) {
+        console.error('Message save failed:', err);
+        alert('Sorry, something went wrong sending your message. Please try again or call us directly.');
+    });
+};
 </script>
 
 <a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
