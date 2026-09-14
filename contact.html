@@ -101,8 +101,8 @@
                             <input type="text" id="contactName" class="form-control" placeholder="Enter your full name" required>
                         </div>
                         <div class="form-group">
-                            <label>Phone Number</label>
-                            <input type="tel" id="contactPhone" class="form-control" placeholder="+233 XXX XXX XXX">
+                            <label>Phone Number <span style="color:#dc3545;">*</span></label>
+                            <input type="tel" id="contactPhone" class="form-control" placeholder="+233 XXX XXX XXX" required>
                         </div>
                     </div>
                     <div class="form-group">
@@ -345,7 +345,7 @@ window.handleContactForm = function(e) {
     var email   = document.getElementById('contactEmail').value.trim();
     var subject = document.getElementById('contactSubject').value.trim();
     var message = document.getElementById('contactMessage').value.trim();
-    if (!name || !email || !subject || !message) return;
+    if (!name || !phone || !email || !subject || !message) return;
 
     var now = new Date();
     var record = {
