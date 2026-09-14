@@ -613,6 +613,10 @@
         </a>
 
         <div class="sb-section-label">Management</div>
+        <a class="sb-item" onclick="showPanel('messages')" href="#">
+            <span class="sb-item-icon"><i class="fas fa-envelope-open-text"></i></span> Messages
+            <span class="sb-item-badge" id="msgBadge">0</span>
+        </a>
         <a class="sb-item" onclick="showPanel('applications')" href="#">
             <span class="sb-item-icon"><i class="fas fa-clipboard-list"></i></span> Applications
             <span class="sb-item-badge" id="appBadge">0</span>
@@ -1119,6 +1123,24 @@
 
 
         <!-- ══ APPLICATIONS ══ -->
+        <div class="panel" id="panel-messages">
+            <div class="page-hdr">
+                <div class="page-hdr-left"><h1><i class="fas fa-envelope-open-text" style="color:var(--green);margin-right:8px;"></i>Messages</h1><p>Messages submitted through the "Send Us a Message" contact form</p></div>
+                <div class="page-hdr-right">
+                    <button class="btn btn-outline btn-sm" onclick="loadMessages()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-inbox"></i> Inbox</h3><span id="msgCount" class="badge badge-blue">0 total</span></div>
+                <div class="card-body table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>From</th><th>Subject</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="msgsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:30px;">No messages yet.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="panel" id="panel-applications">
             <div class="page-hdr">
                 <div class="page-hdr-left"><h1><i class="fas fa-clipboard-list" style="color:var(--green);margin-right:8px;"></i>Online Applications</h1><p>Applications submitted through the online portal</p></div>
@@ -1467,6 +1489,17 @@
 </div>
 
 <!-- View Application Modal -->
+<div class="modal-overlay" id="msgViewModal">
+    <div class="modal-box" style="max-width:680px;">
+        <div class="modal-hdr"><h3>Message</h3><button class="modal-close" onclick="closeModal('msgViewModal')">&times;</button></div>
+        <div class="modal-body" id="msgViewContent"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline btn-sm" onclick="closeModal('msgViewModal')">Close</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMessage(_currentMsgId, true)"><i class="fas fa-trash"></i> Delete</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="appViewModal">
     <div class="modal-box" style="max-width:760px;">
         <div class="modal-hdr"><h3>Application Details</h3><button class="modal-close" onclick="closeModal('appViewModal')">&times;</button></div>
@@ -1725,6 +1758,9 @@ function showPanel(name) {
     });
     var bc = document.getElementById('breadcrumbText');
     if (bc) bc.textContent = PANEL_LABELS[name] || name;
+    if (name === 'messages') {
+        loadMessagesFromFirebase(function() { loadMessages(); });
+    }
     if (name === 'applications' || name === 'reports') {
         loadApplicationsFromFirebase(function() { loadApplications(); });
     }
@@ -3141,6 +3177,89 @@ var _currentAppTracking=null;
    lookups. Previously the admin only ever read its OWN browser's
    localStorage — meaning real citizen submissions from other devices
    were completely invisible here, regardless of anything else. */
+/* Messages: shared object keyed by push-id at messages/. Written by
+   contact.html when a visitor submits "Send Us a Message". */
+var _currentMsgId = null;
+function loadMessagesFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    window._fbGet(window._fbRef(window._fbDb, 'messages')).then(function(snap) {
+        if (snap.exists()) {
+            localStorage.setItem('amada_messages', JSON.stringify(snap.val() || {}));
+        }
+        if (cb) cb();
+    }).catch(function(e) { console.error('Messages Firebase load failed:', e); if (cb) cb(); });
+}
+function getMessages() {
+    var msgs = {};
+    try { var r = localStorage.getItem('amada_messages'); if (r) msgs = JSON.parse(r); } catch(e) {}
+    return msgs;
+}
+function loadMessages() {
+    var msgs = getMessages();
+    var keys = Object.keys(msgs).sort().reverse(); /* newest first — push ids sort chronologically */
+    var tbody = document.getElementById('msgsTableBody');
+    var countEl = document.getElementById('msgCount');
+    var unread = keys.filter(function(k){ return !msgs[k].read; }).length;
+    if (countEl) countEl.textContent = keys.length + ' total' + (unread ? ' — ' + unread + ' unread' : '');
+    var badge = document.getElementById('msgBadge');
+    if (badge) badge.textContent = unread;
+
+    if (!keys.length) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:30px;">No messages yet.</td></tr>';
+        return;
+    }
+    var rows = keys.map(function(k) {
+        var m = msgs[k];
+        var statusBadge = m.read ? '<span class="badge badge-gray">Read</span>' : '<span class="badge badge-green">Unread</span>';
+        return '<tr' + (m.read ? '' : ' style="font-weight:600;"') + '><td>' + escHtml(m.name) + '<br><span style="font-size:0.76rem;color:var(--text3);font-weight:400;">' + escHtml(m.email) + '</span></td>'
+             + '<td>' + escHtml(m.subject) + '</td>'
+             + '<td>' + escHtml(m.date) + '</td>'
+             + '<td>' + statusBadge + '</td>'
+             + '<td style="white-space:nowrap;"><button class="btn btn-outline btn-sm" onclick="viewMessage(\'' + k + '\')"><i class="fas fa-eye"></i> View</button></td></tr>';
+    }).join('');
+    if (tbody) tbody.innerHTML = rows;
+}
+function viewMessage(id) {
+    var msgs = getMessages();
+    var m = msgs[id]; if (!m) return;
+    _currentMsgId = id;
+    var html = '<div style="background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:10px;padding:16px 20px;margin-bottom:18px;">'
+        + '<div style="color:#fff;font-weight:700;">' + escHtml(m.subject) + '</div>'
+        + '<div style="color:rgba(255,255,255,0.7);font-size:0.82rem;margin-top:4px;">' + escHtml(m.date) + '</div></div>'
+        + '<table class="data-table"><tbody>'
+        + '<tr><td style="width:120px;font-weight:700;color:var(--text3);">Name</td><td>' + escHtml(m.name) + '</td></tr>'
+        + '<tr><td style="font-weight:700;color:var(--text3);">Email</td><td><a href="mailto:' + escHtml(m.email) + '">' + escHtml(m.email) + '</a></td></tr>'
+        + (m.phone ? '<tr><td style="font-weight:700;color:var(--text3);">Phone</td><td>' + escHtml(m.phone) + '</td></tr>' : '')
+        + '</tbody></table>'
+        + '<div style="margin-top:16px;padding:14px 16px;background:var(--gray1);border-radius:8px;white-space:pre-wrap;line-height:1.7;">' + escHtml(m.message) + '</div>';
+    document.getElementById('msgViewContent').innerHTML = html;
+    openModal('msgViewModal');
+
+    if (!m.read) {
+        m.read = true;
+        msgs[id] = m;
+        localStorage.setItem('amada_messages', JSON.stringify(msgs));
+        if (window._fbDb && window._fbRef && window._fbSet) {
+            window._fbSet(window._fbRef(window._fbDb, 'messages/' + id + '/read'), true).catch(function(e){ console.error('Mark-as-read sync failed:', e); });
+        }
+        loadMessages();
+    }
+}
+function deleteMessage(id, closeAfter) {
+    if (!id) return;
+    if (!confirm('Delete this message permanently?')) return;
+    var msgs = getMessages();
+    delete msgs[id];
+    localStorage.setItem('amada_messages', JSON.stringify(msgs));
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'messages/' + id), null)
+            .then(function(){ showToast('Message deleted'); })
+            .catch(function(e){ console.error('Message delete sync failed:', e); showToast('Deleted locally — Firebase sync failed'); });
+    }
+    if (closeAfter) closeModal('msgViewModal');
+    loadMessages();
+}
+
 function loadApplicationsFromFirebase(cb) {
     if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
     window._fbGet(window._fbRef(window._fbDb, 'applications')).then(function(snap) {
@@ -3226,6 +3345,12 @@ function updateDashboardStats(){
     /* Pull fresh data from Firebase first — these numbers were previously
        hardcoded in the HTML (21 / 8 / 3, forever, no matter what was
        actually uploaded) and never reflected real content at all. */
+    loadMessagesFromFirebase(function() {
+        var msgs2 = getMessages();
+        var unread2 = Object.keys(msgs2).filter(function(k){ return !msgs2[k].read; }).length;
+        var msgBadge2 = document.getElementById('msgBadge');
+        if (msgBadge2) msgBadge2.textContent = unread2;
+    });
     loadApplicationsFromFirebase(function() {
         var apps2={};try{var r2=localStorage.getItem('amada_applications');if(r2)apps2=JSON.parse(r2);}catch(e){}
         var count2=Object.keys(apps2).length;
