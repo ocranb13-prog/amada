@@ -222,11 +222,11 @@
             <p>Fill and submit applications online for permits, registration and enquiries.</p>
             <span class="service-overview-btn">Apply Online <i class="fas fa-arrow-right"></i></span>
         </div>
-        <div class="service-overview-card" style="cursor:default;">
+        <div class="service-overview-card" onclick="openPaymentPortal()">
             <div class="service-overview-icon"><i class="fas fa-credit-card"></i></div>
             <h3>Online Payments</h3>
             <p>Pay property rates, business licenses and other Assembly fees securely.</p>
-            <span class="service-overview-btn" style="opacity:0.45;cursor:default;">Coming Soon</span>
+            <span class="service-overview-btn">Pay Now <i class="fas fa-arrow-right"></i></span>
         </div>
     </div>
 </div></div>
@@ -404,6 +404,83 @@
 </div><!-- /portal-box -->
 </div><!-- /portal-overlay -->
 
+<!-- ═══════════════════════════════════════════════
+     ONLINE PAYMENTS PORTAL
+═══════════════════════════════════════════════ -->
+<div class="portal-overlay" id="paymentPortal">
+    <div class="portal-box" style="max-width:560px;">
+        <div class="portal-header">
+            <div>
+                <h3><i class="fas fa-credit-card" style="margin-right:8px;"></i>Pay Assembly Fees</h3>
+                <p>Asene Manso Akroso District Assembly — Official Payments</p>
+            </div>
+            <button class="portal-close" onclick="closePaymentPortal()">&times;</button>
+        </div>
+        <div class="portal-body">
+            <!-- Step 1: select fee + payer details -->
+            <div class="portal-panel active" id="pay-step-form">
+                <div class="notice-box">
+                    <p><strong>Secure Payment.</strong> Payments are processed by Paystack and independently verified by our server before any receipt is issued. We never see or store your card or Mobile Money PIN.</p>
+                </div>
+                <form class="app-form" id="paymentForm" onsubmit="return false;">
+                    <div class="form-group">
+                        <label>What are you paying for? <span class="req">*</span></label>
+                        <select class="form-control" id="payFeeSelect" onchange="onPayFeeChange()" required>
+                            <option value="">Select a fee...</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="payAmountRow" style="display:none;">
+                        <label>Amount Due</label>
+                        <div style="font-size:1.5rem;font-weight:800;color:var(--primary);" id="payAmountDisplay">GHS 0.00</div>
+                    </div>
+                    <div class="form-section-title">Your Details</div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Full Name <span class="req">*</span></label>
+                            <input type="text" class="form-control" id="payName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number <span class="req">*</span></label>
+                            <input type="tel" class="form-control" id="payPhone" placeholder="+233 XXX XXX XXX" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address <span class="req">*</span></label>
+                        <input type="email" class="form-control" id="payEmail" placeholder="Paystack sends your receipt here too" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Property / Business Reference Number <span style="color:#9aa89a;font-weight:400;">(if applicable)</span></label>
+                        <input type="text" class="form-control" id="payRef" placeholder="e.g. Rating number, permit number">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: confirmation / receipt -->
+            <div class="portal-panel" id="pay-step-done">
+                <div class="review-header">
+                    <h4><i class="fas fa-check-circle"></i> Payment Successful</h4>
+                    <p>Your payment has been received and verified.</p>
+                    <div class="review-tracking" id="payReceiptRef">—</div>
+                </div>
+                <table class="review-table" id="payReceiptTable" style="width:100%;border-collapse:collapse;"></table>
+            </div>
+        </div>
+        <div class="slip-actions" id="payFooterForm">
+            <span>All fields are required</span>
+            <div class="slip-actions-btns">
+                <button class="btn btn-small" id="payNowBtn" style="background:#28a745;" onclick="startPayment()"><i class="fas fa-lock"></i> Pay Securely Now</button>
+            </div>
+        </div>
+        <div class="slip-actions" id="payFooterDone" style="display:none;">
+            <span>Keep this reference for your records</span>
+            <div class="slip-actions-btns">
+                <button class="slip-btn print" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Download Receipt</button>
+                <button class="btn btn-small" onclick="closePaymentPortal()">Done</button>
+            </div>
+        </div>
+    </div>
+</div><!-- /paymentPortal -->
+
 
 <!-- ═══════════════════════════════════════════════
      ACKNOWLEDGEMENT SLIP OVERLAY
@@ -451,6 +528,7 @@
 <script src="amada_shared.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script src="amada_firebase_reader.js"></script>
 <script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();
 document.addEventListener('DOMContentLoaded', function(){ amadaLoadPage('services'); });</script>
@@ -1064,6 +1142,254 @@ function goToTracker() {
     } else {
         window.location.href = 'track.html';
     }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ONLINE PAYMENTS
+   Flow: pick a fee → enter details → Paystack popup collects
+   payment → reference sent to /api/verify-payment, which
+   independently confirms with Paystack server-side (using a
+   secret key that never reaches the browser) before any
+   receipt is shown or recorded. The browser is never trusted
+   to say "payment succeeded" on its own.
+═══════════════════════════════════════════════════════ */
+
+/* Paystack public key — safe to expose client-side (unlike the secret
+   key, which only lives in the server function's environment variables).
+   Get this from your Paystack dashboard → Settings → API Keys & Webhooks. */
+var PAYSTACK_PUBLIC_KEY = 'YOUR_PAYSTACK_PUBLIC_KEY';
+
+var _feesList = [];
+var _selectedFee = null;
+var _lastPayment = null;
+var DEFAULT_FEES_FALLBACK = [
+    { key:'property_rate',      name:'Property Rate',                    cat:'Rates',   amount:150 },
+    { key:'business_permit',    name:'Business Operating Permit',        cat:'License',  amount:200 },
+    { key:'building_permit_fee',name:'Building Permit Fee',              cat:'License',  amount:500 },
+    { key:'signage_fee',        name:'Signage / Billboard Permit Fee',   cat:'License',  amount:300 },
+    { key:'market_toll',        name:'Market Toll / Trading License',    cat:'Toll',     amount:50  }
+];
+
+function openPaymentPortal() {
+    document.getElementById('paymentPortal').classList.add('open');
+    document.getElementById('pay-step-form').classList.add('active');
+    document.getElementById('pay-step-done').classList.remove('active');
+    document.getElementById('payFooterForm').style.display = 'flex';
+    document.getElementById('payFooterDone').style.display = 'none';
+    document.getElementById('paymentForm').reset();
+    document.getElementById('payAmountRow').style.display = 'none';
+    _selectedFee = null;
+    loadFeesIntoSelect();
+}
+function closePaymentPortal() {
+    document.getElementById('paymentPortal').classList.remove('open');
+}
+document.getElementById('paymentPortal').addEventListener('click', function(e){ if (e.target === this) closePaymentPortal(); });
+
+function loadFeesIntoSelect() {
+    var sel = document.getElementById('payFeeSelect');
+    sel.innerHTML = '<option value="">Loading fees...</option>';
+    function render() {
+        sel.innerHTML = '<option value="">Select a fee...</option>' + _feesList.map(function(f, i) {
+            return '<option value="' + i + '">' + f.name + ' \u2014 GHS ' + (parseFloat(f.amount) || 0).toFixed(2) + '</option>';
+        }).join('');
+    }
+    if (_appsDb) {
+        _appsDb.ref('sections/services_fees').get().then(function(snap) {
+            var v = snap.val();
+            _feesList = (snap.exists() && Array.isArray(v) && v.length) ? v.filter(Boolean) : DEFAULT_FEES_FALLBACK;
+            render();
+        }).catch(function() { _feesList = DEFAULT_FEES_FALLBACK; render(); });
+    } else {
+        _feesList = DEFAULT_FEES_FALLBACK;
+        render();
+    }
+}
+
+function onPayFeeChange() {
+    var idx = document.getElementById('payFeeSelect').value;
+    if (idx === '') {
+        document.getElementById('payAmountRow').style.display = 'none';
+        _selectedFee = null;
+        return;
+    }
+    _selectedFee = _feesList[parseInt(idx)];
+    document.getElementById('payAmountDisplay').textContent = 'GHS ' + (parseFloat(_selectedFee.amount) || 0).toFixed(2);
+    document.getElementById('payAmountRow').style.display = 'block';
+}
+
+function startPayment() {
+    var form = document.getElementById('paymentForm');
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    if (!_selectedFee) { alert('Please select what you are paying for.'); return; }
+
+    if (typeof PaystackPop === 'undefined' || PAYSTACK_PUBLIC_KEY === 'YOUR_PAYSTACK_PUBLIC_KEY') {
+        alert('Online payments are still being set up and are not active yet. Please try again soon, or pay in person at the Assembly office.');
+        return;
+    }
+
+    var name   = document.getElementById('payName').value.trim();
+    var phone  = document.getElementById('payPhone').value.trim();
+    var email  = document.getElementById('payEmail').value.trim();
+    var ref    = document.getElementById('payRef').value.trim();
+    var amount = parseFloat(_selectedFee.amount) || 0;
+
+    var btn = document.getElementById('payNowBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+    var handler = PaystackPop.setup({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: email,
+        amount: Math.round(amount * 100), /* Paystack uses pesewas (smallest unit) */
+        currency: 'GHS',
+        ref: 'AMADA-PAY-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+        metadata: {
+            custom_fields: [
+                { display_name: 'Fee',          variable_name: 'fee_name',     value: _selectedFee.name },
+                { display_name: 'Payer Phone',  variable_name: 'payer_phone',  value: phone }
+            ]
+        },
+        callback: function(response) {
+            verifyAndRecordPayment(response.reference, amount, name, phone, email, ref);
+        },
+        onClose: function() {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-lock"></i> Pay Securely Now';
+        }
+    });
+    handler.openIframe();
+}
+
+function verifyAndRecordPayment(reference, expectedAmount, name, phone, email, propertyRef) {
+    var btn = document.getElementById('payNowBtn');
+    fetch('/api/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            reference:      reference,
+            expectedAmount: expectedAmount,
+            feeName:        _selectedFee.name,
+            feeCategory:    _selectedFee.cat || '',
+            payerName:      name,
+            payerPhone:     phone,
+            payerEmail:     email,
+            propertyRef:    propertyRef
+        })
+    }).then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-lock"></i> Pay Securely Now'; }
+        if (!data.success) {
+            alert('We could not verify your payment: ' + (data.error || 'Unknown error') + '. If money left your account, please contact us with reference ' + reference + '.');
+            return;
+        }
+        _lastPayment = data.payment;
+        showPaymentReceipt(data.payment);
+    }).catch(function(e) {
+        console.error('Payment verification request failed:', e);
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-lock"></i> Pay Securely Now'; }
+        alert('We could not confirm your payment due to a connection issue. If money left your account, please contact us with reference ' + reference + ' and we will verify it manually.');
+    });
+}
+
+function showPaymentReceipt(p) {
+    document.getElementById('pay-step-form').classList.remove('active');
+    document.getElementById('pay-step-done').classList.add('active');
+    document.getElementById('payFooterForm').style.display = 'none';
+    document.getElementById('payFooterDone').style.display = 'flex';
+    document.getElementById('payReceiptRef').textContent = p.reference;
+    var rows = [
+        ['Fee', p.feeName],
+        ['Amount Paid', 'GHS ' + (parseFloat(p.amount) || 0).toFixed(2)],
+        ['Payer', p.payerName],
+        ['Phone', p.payerPhone],
+        ['Channel', p.channel || '\u2014'],
+        ['Date', p.paidAt ? new Date(p.paidAt).toLocaleString('en-GB') : '']
+    ];
+    document.getElementById('payReceiptTable').innerHTML = rows.map(function(r) {
+        return '<tr><td style="padding:8px 0;font-weight:700;color:#7a8e7a;width:40%;">' + r[0] + '</td><td style="padding:8px 0;">' + (r[1] || '\u2014') + '</td></tr>';
+    }).join('');
+}
+
+function downloadPaymentReceipt() {
+    if (!_lastPayment || !window.jspdf || !window.jspdf.jsPDF) return;
+    var p = _lastPayment;
+    var jsPDFCtor = window.jspdf.jsPDF;
+    var doc = new jsPDFCtor({ unit: 'pt', format: 'a4' });
+    var pageWidth  = doc.internal.pageSize.getWidth();
+    var pageHeight = doc.internal.pageSize.getHeight();
+    var margin = 40;
+
+    function buildPdf(logoDataUrl) {
+        doc.setFillColor(31, 107, 58);
+        doc.rect(0, 0, pageWidth, 78, 'F');
+        if (logoDataUrl) {
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(margin, 14, 50, 50, 4, 4, 'F');
+            try { doc.addImage(logoDataUrl, 'JPEG', margin + 3, 17, 44, 44); } catch (e) {}
+        }
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+        doc.text('Asene Manso Akroso District Assembly', margin + 62, 32);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+        doc.setTextColor(220, 230, 220);
+        doc.text('PMB, Akim Manso, Eastern Region, Ghana  |  GPS: EB-0702-1681', margin + 62, 46);
+        doc.text('Tel: +233 552 455 666  |  Local Government Service, Ghana', margin + 62, 58);
+
+        doc.setFillColor(40, 167, 69);
+        doc.rect(0, 78, pageWidth, 26, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+        doc.text('PAYMENT RECEIPT', margin, 95);
+        doc.setFont('courier', 'bold'); doc.setFontSize(10.5);
+        doc.text(p.reference, pageWidth - margin, 95, { align: 'right' });
+
+        var y = 120;
+        doc.autoTable({
+            startY: y,
+            margin: { left: margin, right: margin },
+            theme: 'grid',
+            styles: { fontSize: 9, cellPadding: 7, textColor: [15, 46, 26], lineColor: [224, 232, 224] },
+            headStyles: { fillColor: [244, 246, 244], textColor: [122, 142, 122], fontStyle: 'bold', fontSize: 8 },
+            columnStyles: { 0: { fontStyle: 'bold', textColor: [122, 142, 122], cellWidth: 170 } },
+            head: [['Payment Details', '']],
+            body: [
+                ['Reference', p.reference],
+                ['Fee', p.feeName],
+                ['Category', p.feeCategory || '\u2014'],
+                ['Amount Paid', 'GHS ' + (parseFloat(p.amount) || 0).toFixed(2)],
+                ['Payer Name', p.payerName],
+                ['Phone', p.payerPhone],
+                ['Property/Ref No.', p.propertyRef || '\u2014'],
+                ['Payment Channel', p.channel || '\u2014'],
+                ['Date & Time', p.paidAt ? new Date(p.paidAt).toLocaleString('en-GB') : '']
+            ]
+        });
+        y = doc.lastAutoTable.finalY + 20;
+        doc.setDrawColor(40, 167, 69); doc.setFillColor(230, 247, 234);
+        doc.roundedRect(margin, y, pageWidth - margin * 2, 40, 4, 4, 'FD');
+        doc.setTextColor(40, 167, 69); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+        doc.text('This payment has been verified and confirmed by the District Assembly.', margin + 14, y + 24);
+
+        var footerY = pageHeight - 30;
+        doc.setDrawColor(224, 232, 224);
+        doc.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
+        doc.setTextColor(154, 168, 154); doc.setFontSize(7.5);
+        doc.text('Asene Manso Akroso District Assembly  |  PMB, Akim Manso, Eastern Region, Ghana  |  GPS: EB-0702-1681  |  Tel: +233 552 455 666', pageWidth / 2, footerY, { align: 'center' });
+
+        doc.save('AMADA_Payment_Receipt_' + p.reference + '.pdf');
+    }
+
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+        try {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            buildPdf(canvas.toDataURL('image/jpeg', 0.92));
+        } catch (e) { buildPdf(null); }
+    };
+    img.onerror = function() { buildPdf(null); };
+    img.src = 'LOGO.jpg';
 }
 </script>
 
