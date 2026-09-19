@@ -1,36 +1,55 @@
 {
   "rules": {
+    "admins": {
+      ".read": "auth != null",
+      ".write": false
+    },
     "sections": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "photos": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "dept_photos": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "home": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "publications": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "projects": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "applications": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$trackingId": {
+        ".read": true,
+        ".write": "auth != null || !data.exists()"
+      }
+    },
+    "messages": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$messageId": {
+        ".write": "auth != null || !data.exists()"
+      }
+    },
+    "payments": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "activity_log": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }
