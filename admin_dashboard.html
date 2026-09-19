@@ -613,6 +613,10 @@
         </a>
 
         <div class="sb-section-label">Management</div>
+        <a class="sb-item" onclick="showPanel('payments')" href="#">
+            <span class="sb-item-icon"><i class="fas fa-money-check-dollar"></i></span> Payments
+            <span class="sb-item-badge" id="payBadge">0</span>
+        </a>
         <a class="sb-item" onclick="showPanel('messages')" href="#">
             <span class="sb-item-icon"><i class="fas fa-envelope-open-text"></i></span> Messages
             <span class="sb-item-badge" id="msgBadge">0</span>
@@ -1011,6 +1015,18 @@
                     <div id="onlineServicesEditor"></div>
                 </div>
             </div>
+
+            <!-- Section 4: Fee Schedule (Online Payments) -->
+            <div class="svc-admin-section">
+                <div class="svc-admin-section-hdr">
+                    <h4><i class="fas fa-credit-card"></i> Section 4 — Fee Schedule (Online Payments)</h4>
+                    <button class="btn btn-primary btn-sm" onclick="addNewFee()"><i class="fas fa-plus"></i> Add Fee</button>
+                </div>
+                <div class="svc-admin-section-body">
+                    <p style="font-size:0.83rem;color:var(--text3);margin-bottom:14px;">The fees citizens can pay online through the Payments portal. Amounts are in Ghana Cedis (GHS).</p>
+                    <div id="feesEditor"></div>
+                </div>
+            </div>
         </div>
 
 
@@ -1123,6 +1139,28 @@
 
 
         <!-- ══ APPLICATIONS ══ -->
+        <div class="panel" id="panel-payments">
+            <div class="page-hdr">
+                <div class="page-hdr-left"><h1><i class="fas fa-money-check-dollar" style="color:var(--green);margin-right:8px;"></i>Payments</h1><p>Fees paid online by citizens through Paystack, verified server-side</p></div>
+                <div class="page-hdr-right">
+                    <button class="btn btn-outline btn-sm" onclick="loadPayments()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+            </div>
+            <div class="stats-grid" style="margin-bottom:18px;">
+                <div class="stat-card"><div class="stat-icon" style="background:rgba(40,167,69,0.12);color:#28a745;"><i class="fas fa-check-circle"></i></div><div class="stat-body"><div class="stat-num" id="payCountTotal">0</div><div class="stat-label">Payments Received</div><div class="stat-sub">All time</div></div></div>
+                <div class="stat-card"><div class="stat-icon" style="background:rgba(201,162,39,0.12);color:var(--gold);"><i class="fas fa-coins"></i></div><div class="stat-body"><div class="stat-num" id="payTotalAmount">GHS 0</div><div class="stat-label">Total Collected</div><div class="stat-sub">All time</div></div></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-receipt"></i> Payment History</h3><span id="payCount" class="badge badge-blue">0 total</span></div>
+                <div class="card-body table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Reference</th><th>Fee</th><th>Payer</th><th>Amount</th><th>Channel</th><th>Date</th></tr></thead>
+                        <tbody id="paymentsTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:30px;">No payments yet.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="panel" id="panel-messages">
             <div class="page-hdr">
                 <div class="page-hdr-left"><h1><i class="fas fa-envelope-open-text" style="color:var(--green);margin-right:8px;"></i>Messages</h1><p>Messages submitted through the "Send Us a Message" contact form</p></div>
@@ -1703,9 +1741,13 @@ function loadLeadershipFromFirebase(cb) {
    convert back into forms_list + forms_status the editor reads. */
 function loadServicesFromFirebase(cb) {
     if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
-    window._fbGet(window._fbRef(window._fbDb, 'sections/services_forms')).then(function(snap) {
-        if (snap.exists()) {
-            var arr = snap.val();
+    Promise.all([
+        window._fbGet(window._fbRef(window._fbDb, 'sections/services_forms')).catch(function(){ return null; }),
+        window._fbGet(window._fbRef(window._fbDb, 'sections/services_fees')).catch(function(){ return null; })
+    ]).then(function(results) {
+        var formsSnap = results[0], feesSnap = results[1];
+        if (formsSnap && formsSnap.exists()) {
+            var arr = formsSnap.val();
             if (Array.isArray(arr) && arr.length) {
                 var list = [], status = {};
                 arr.forEach(function(f) {
@@ -1717,6 +1759,12 @@ function loadServicesFromFirebase(cb) {
                 });
                 setLS('forms_list', list);
                 setLS('forms_status', status);
+            }
+        }
+        if (feesSnap && feesSnap.exists()) {
+            var feesArr = feesSnap.val();
+            if (Array.isArray(feesArr) && feesArr.length) {
+                setLS('fees_list', feesArr.filter(Boolean));
             }
         }
         if (cb) cb();
@@ -1758,6 +1806,9 @@ function showPanel(name) {
     });
     var bc = document.getElementById('breadcrumbText');
     if (bc) bc.textContent = PANEL_LABELS[name] || name;
+    if (name === 'payments') {
+        loadPaymentsFromFirebase(function() { loadPayments(); });
+    }
     if (name === 'messages') {
         loadMessagesFromFirebase(function() { loadMessages(); });
     }
@@ -3078,6 +3129,13 @@ function deletePub(cat,idx){if(!confirm('Delete this publication?'))return;var p
 /* ── 15. SERVICES ── */
 var FORMS_LIST=[{key:'marriage',name:'Marriage Registration Form',file:'MARRIAGE_REGISTRATION_FORM.pdf',cat:'Registration'},{key:'birth',name:'Birth Registration Form',file:'',cat:'Registration'},{key:'death',name:'Death Registration Form',file:'',cat:'Registration'},{key:'business',name:'Business Operating Permit Form',file:'',cat:'Permit'},{key:'building',name:'Building Permit Application Form',file:'',cat:'Permit'},{key:'signage',name:'Signage Permit Application Form',file:'',cat:'Permit'},{key:'enquiry',name:'General Enquiry Form',file:'',cat:'General'}];
 var DEFAULT_ONLINE_SVCS=['Marriage Registration','Birth Registration','Death Registration','Business Operating Permit','Building Permit','Development Permit','Signage Permit','General Enquiry'];
+var DEFAULT_FEES=[
+    {key:'property_rate',name:'Property Rate',cat:'Rates',amount:150},
+    {key:'business_permit',name:'Business Operating Permit',cat:'License',amount:200},
+    {key:'building_permit_fee',name:'Building Permit Fee',cat:'License',amount:500},
+    {key:'signage_fee',name:'Signage / Billboard Permit Fee',cat:'License',amount:300},
+    {key:'market_toll',name:'Market Toll / Trading License',cat:'Toll',amount:50}
+];
 function renderFormsEditor(){
     var saved=getLS('forms_status',{});var forms=getLS('forms_list',FORMS_LIST);var el=document.getElementById('formsStatusEditor');if(!el)return;
     var html='<table class="data-table"><thead><tr><th>Form Name</th><th>Category</th><th>Status</th><th>File</th><th></th></tr></thead><tbody>';
@@ -3097,7 +3155,7 @@ function renderFormsEditor(){
             +'</td>'
             +'<td><button class="btn btn-danger btn-sm" onclick="deleteForm('+fi+')"><i class="fas fa-trash"></i></button></td></tr>';
     });
-    html+='</tbody></table>';el.innerHTML=html;renderOnlineServices();
+    html+='</tbody></table>';el.innerHTML=html;renderOnlineServices();renderFeesEditor();
 }
 /* Uploads a form PDF straight to Cloudinary and drops the real hosted URL
    into that row's hidden field — same pattern as the Publications PDF fix.
@@ -3137,11 +3195,45 @@ function addNewForm(){var name=prompt('Form name:');if(!name)return;var forms=ge
 function deleteForm(fi){if(!confirm('Remove?'))return;var forms=getLS('forms_list',FORMS_LIST);forms.splice(fi,1);setLS('forms_list',forms);renderFormsEditor();showToast('Removed');}
 function addNewService(){var name=prompt('Service name:');if(!name)return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.push(name);setLS('online_services',svcs);renderOnlineServices();showToast('Service added');}
 function deleteService(i){if(!confirm('Remove?'))return;var svcs=getLS('online_services',DEFAULT_ONLINE_SVCS);svcs.splice(i,1);setLS('online_services',svcs);renderOnlineServices();}
+function renderFeesEditor(){
+    var fees=getLS('fees_list',DEFAULT_FEES);var el=document.getElementById('feesEditor');if(!el)return;
+    var html='<table class="data-table"><thead><tr><th>Fee Name</th><th>Category</th><th>Amount (GHS)</th><th></th></tr></thead><tbody>';
+    fees.forEach(function(f,fi){
+        html+='<tr><td><input type="text" class="field-input" data-feekey="'+fi+'_name" style="font-size:0.88rem;padding:6px 10px;" value="'+escHtml(f.name)+'"></td>'
+            +'<td><input type="text" class="field-input" data-feekey="'+fi+'_cat" style="width:120px;font-size:0.85rem;padding:6px 8px;" value="'+escHtml(f.cat||'')+'"></td>'
+            +'<td><input type="number" min="0" step="0.01" class="field-input" data-feekey="'+fi+'_amount" style="width:120px;font-size:0.88rem;padding:6px 10px;" value="'+(f.amount||0)+'"></td>'
+            +'<td><button class="btn btn-danger btn-sm" onclick="deleteFee('+fi+')"><i class="fas fa-trash"></i></button></td></tr>';
+    });
+    html+='</tbody></table>';el.innerHTML=html;
+}
+function addNewFee(){
+    var name=prompt('Fee name:');if(!name)return;
+    var amountStr=prompt('Amount in GHS (e.g. 150):','0');
+    var amount=parseFloat(amountStr)||0;
+    var fees=getLS('fees_list',DEFAULT_FEES);
+    fees.push({key:'fee_'+Date.now(),name:name,cat:'General',amount:amount});
+    setLS('fees_list',fees);renderFeesEditor();showToast('Fee added');
+}
+function deleteFee(fi){if(!confirm('Remove this fee?'))return;var fees=getLS('fees_list',DEFAULT_FEES);fees.splice(fi,1);setLS('fees_list',fees);renderFeesEditor();showToast('Removed');}
 function saveFormsStatus(){
     var data={};document.querySelectorAll('[data-fkey]').forEach(function(el){data[el.dataset.fkey]=el.value;});
     setLS('forms_status',data);
     var svcs=[];document.querySelectorAll('[data-svc]').forEach(function(el){svcs[parseInt(el.dataset.svc)]=el.value;});
     if(svcs.length)setLS('online_services',svcs.filter(Boolean));
+
+    /* Collect fee rows */
+    var feeData={};document.querySelectorAll('[data-feekey]').forEach(function(el){feeData[el.dataset.feekey]=el.value;});
+    var feesBase=getLS('fees_list',DEFAULT_FEES);
+    var feesArr=feesBase.map(function(f,fi){
+        return {
+            key:    f.key,
+            name:   feeData[fi+'_name']   || f.name || '',
+            cat:    feeData[fi+'_cat']    || f.cat  || '',
+            amount: parseFloat(feeData[fi+'_amount']) || f.amount || 0
+        };
+    });
+    setLS('fees_list', feesArr);
+
     logActivity('Services updated');
 
     /* Build the canonical forms array the public Services page reads, and
@@ -3159,12 +3251,14 @@ function saveFormsStatus(){
         };
     });
     if (window._fbDb && window._fbRef && window._fbSet) {
-        window._fbSet(window._fbRef(window._fbDb, 'sections/services_forms'), formsArr)
-            .then(function() { showToast('✅ Forms saved & synced to public website'); })
-            .catch(function(e) {
-                console.error('Forms Firebase sync failed:', e);
+        Promise.all([
+            window._fbSet(window._fbRef(window._fbDb, 'sections/services_forms'), formsArr),
+            window._fbSet(window._fbRef(window._fbDb, 'sections/services_fees'), feesArr)
+        ]).then(function() { showToast('✅ Services saved & synced to public website'); })
+          .catch(function(e) {
+                console.error('Services Firebase sync failed:', e);
                 showToast('⚠️ Saved locally — Firebase sync failed');
-            });
+          });
     } else {
         showToast('Services saved');
     }
@@ -3180,6 +3274,51 @@ var _currentAppTracking=null;
 /* Messages: shared object keyed by push-id at messages/. Written by
    contact.html when a visitor submits "Send Us a Message". */
 var _currentMsgId = null;
+/* Payments: written ONLY by the server-side /api/verify-payment function
+   (or manually by an authenticated admin) — never by a citizen's browser
+   directly. See database.rules.json. */
+function loadPaymentsFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    window._fbGet(window._fbRef(window._fbDb, 'payments')).then(function(snap) {
+        if (snap.exists()) {
+            localStorage.setItem('amada_payments', JSON.stringify(snap.val() || {}));
+        }
+        if (cb) cb();
+    }).catch(function(e) { console.error('Payments Firebase load failed:', e); if (cb) cb(); });
+}
+function getPayments() {
+    var p = {};
+    try { var r = localStorage.getItem('amada_payments'); if (r) p = JSON.parse(r); } catch(e) {}
+    return p;
+}
+function loadPayments() {
+    var pays = getPayments();
+    var keys = Object.keys(pays).sort().reverse();
+    var tbody = document.getElementById('paymentsTableBody');
+    var countEl = document.getElementById('payCount');
+    var total = keys.reduce(function(sum, k){ return sum + (parseFloat(pays[k].amount) || 0); }, 0);
+
+    if (countEl) countEl.textContent = keys.length + ' total';
+    var totalEl = document.getElementById('payCountTotal'); if (totalEl) totalEl.textContent = keys.length;
+    var amtEl = document.getElementById('payTotalAmount'); if (amtEl) amtEl.textContent = 'GHS ' + total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    var badge = document.getElementById('payBadge'); if (badge) badge.textContent = keys.length;
+
+    if (!keys.length) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:30px;">No payments yet.</td></tr>';
+        return;
+    }
+    var rows = keys.map(function(k) {
+        var p = pays[k];
+        return '<tr><td style="font-family:monospace;font-size:0.8rem;">' + escHtml(p.reference) + '</td>'
+             + '<td>' + escHtml(p.feeName) + '<br><span style="font-size:0.76rem;color:var(--text3);">' + escHtml(p.feeCategory||'') + '</span></td>'
+             + '<td>' + escHtml(p.payerName||'') + '<br><span style="font-size:0.76rem;color:var(--text3);">' + escHtml(p.payerPhone||'') + '</span></td>'
+             + '<td style="font-weight:700;">GHS ' + (parseFloat(p.amount)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>'
+             + '<td><span class="badge badge-blue">' + escHtml(p.channel||'—') + '</span></td>'
+             + '<td>' + escHtml(p.paidAt ? new Date(p.paidAt).toLocaleString('en-GB') : '') + '</td></tr>';
+    }).join('');
+    if (tbody) tbody.innerHTML = rows;
+}
+
 function loadMessagesFromFirebase(cb) {
     if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
     window._fbGet(window._fbRef(window._fbDb, 'messages')).then(function(snap) {
@@ -3350,6 +3489,11 @@ function updateDashboardStats(){
         var unread2 = Object.keys(msgs2).filter(function(k){ return !msgs2[k].read; }).length;
         var msgBadge2 = document.getElementById('msgBadge');
         if (msgBadge2) msgBadge2.textContent = unread2;
+    });
+    loadPaymentsFromFirebase(function() {
+        var pays2 = getPayments();
+        var payBadge2 = document.getElementById('payBadge');
+        if (payBadge2) payBadge2.textContent = Object.keys(pays2).length;
     });
     loadApplicationsFromFirebase(function() {
         var apps2={};try{var r2=localStorage.getItem('amada_applications');if(r2)apps2=JSON.parse(r2);}catch(e){}
