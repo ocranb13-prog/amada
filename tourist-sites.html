@@ -37,6 +37,14 @@
         .ts-highlights li:last-child { border-bottom: none; }
         .ts-highlights li i { color: #C9A227; margin-top: 3px; }
         .ts-modal-close { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.4); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .ts-modal-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; padding: 12px; background: #0f2e1a; }
+        .ts-modal-gallery-item { position: relative; height: 110px; border-radius: 6px; overflow: hidden; background: #000; cursor: pointer; }
+        .ts-modal-gallery-item img, .ts-modal-gallery-item video { width: 100%; height: 100%; object-fit: cover; }
+        .ts-modal-gallery-item .ts-vid-badge { position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .ts-lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 3000; align-items: center; justify-content: center; padding: 30px; }
+        .ts-lightbox.open { display: flex; }
+        .ts-lightbox img, .ts-lightbox video { max-width: 100%; max-height: 100%; border-radius: 6px; }
+        .ts-lightbox-close { position: absolute; top: 20px; right: 24px; color: #fff; font-size: 1.8rem; background: none; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -67,7 +75,7 @@
 <div class="ts-modal-overlay" id="tsModal">
     <div class="ts-modal" style="position:relative;">
         <button class="ts-modal-close" onclick="closeTsModal()">&times;</button>
-        <div id="tsModalImgWrap"></div>
+        <div class="ts-modal-gallery" id="tsModalGallery"></div>
         <div class="ts-modal-body">
             <span class="ts-modal-cat" id="tsModalCat"></span>
             <h3 id="tsModalName"></h3>
@@ -76,6 +84,12 @@
             <ul class="ts-highlights" id="tsModalHighlights"></ul>
         </div>
     </div>
+</div>
+
+<!-- Simple lightbox for tapping a gallery item -->
+<div class="ts-lightbox" id="tsLightbox" onclick="if(event.target===this)closeTsLightbox()">
+    <button class="ts-lightbox-close" onclick="closeTsLightbox()">&times;</button>
+    <div id="tsLightboxContent"></div>
 </div>
 
 <!-- FOOTER -->
@@ -96,14 +110,21 @@
 var TS_PLACEHOLDERS = [
     { key:'placeholder_1', name:'Akroso Falls', category:'Natural', location:'Near Akim Akroso',
       desc:'A placeholder entry for a natural attraction in the district — replace this description with real details once available.',
-      highlights:['Add a highlight about this site','Add another highlight'], photo:'' },
+      highlights:['Add a highlight about this site','Add another highlight'], media:[] },
     { key:'placeholder_2', name:'Manso Heritage Site', category:'Historical', location:'Akim Manso',
       desc:'A placeholder entry for a historical or heritage site — replace this description with the real history and significance of the site.',
-      highlights:['Add a highlight about this site','Add another highlight'], photo:'' },
+      highlights:['Add a highlight about this site','Add another highlight'], media:[] },
     { key:'placeholder_3', name:'District Cultural Grounds', category:'Cultural', location:'Location to be added',
       desc:'A placeholder entry for a cultural site or festival ground — replace this description once the real details are ready.',
-      highlights:['Add a highlight about this site','Add another highlight'], photo:'' }
+      highlights:['Add a highlight about this site','Add another highlight'], media:[] }
 ];
+
+/* A site's cover thumbnail: first media item, or the old single "photo"
+   field for sites saved before multi-media support was added. */
+function tsCoverSrc(s) {
+    if (Array.isArray(s.media) && s.media.length) return s.media[0].src;
+    return s.photo || '';
+}
 
 (function() {
     var cfg = {
@@ -137,8 +158,9 @@ var TS_PLACEHOLDERS = [
             return;
         }
         grid.innerHTML = sites.map(function(s, i) {
-            var imgHtml = s.photo
-                ? '<img src="' + s.photo + '" alt="' + escAttr(s.name) + '">'
+            var cover = tsCoverSrc(s);
+            var imgHtml = cover
+                ? '<img src="' + cover + '" alt="' + escAttr(s.name) + '">'
                 : '<div class="ts-noimg"><i class="fas fa-image"></i></div>';
             return '<div class="ts-card">'
                 + '<div class="ts-card-img-wrap">' + imgHtml + (s.category ? '<span class="ts-card-cat">' + escAttr(s.category) + '</span>' : '') + '</div>'
@@ -157,9 +179,21 @@ var TS_PLACEHOLDERS = [
 
     window.openTsModal = function(i) {
         var s = _sites[i]; if (!s) return;
-        document.getElementById('tsModalImgWrap').innerHTML = s.photo
-            ? '<img class="ts-modal-img" src="' + s.photo + '" alt="' + escAttr(s.name) + '">'
-            : '';
+        var media = Array.isArray(s.media) && s.media.length ? s.media : (s.photo ? [{src:s.photo, type:'image'}] : []);
+        window._tsGalleryMedia = media;
+        var galleryEl = document.getElementById('tsModalGallery');
+        if (!media.length) {
+            galleryEl.style.display = 'none';
+        } else {
+            galleryEl.style.display = 'grid';
+            galleryEl.innerHTML = media.map(function(m, idx) {
+                return '<div class="ts-modal-gallery-item" onclick="openTsLightbox(' + idx + ')">'
+                    + (m.type === 'video'
+                        ? '<video src="' + m.src + '" muted></video><span class="ts-vid-badge"><i class="fas fa-play"></i> VIDEO</span>'
+                        : '<img src="' + m.src + '" alt="">')
+                    + '</div>';
+            }).join('');
+        }
         document.getElementById('tsModalCat').textContent  = s.category || '';
         document.getElementById('tsModalCat').style.display = s.category ? 'inline-block' : 'none';
         document.getElementById('tsModalName').textContent = s.name || '';
@@ -174,6 +208,18 @@ var TS_PLACEHOLDERS = [
     };
     window.closeTsModal = function() {
         document.getElementById('tsModal').classList.remove('open');
+    };
+    window.openTsLightbox = function(idx) {
+        var media = window._tsGalleryMedia || [];
+        var m = media[idx]; if (!m) return;
+        document.getElementById('tsLightboxContent').innerHTML = m.type === 'video'
+            ? '<video src="' + m.src + '" controls autoplay></video>'
+            : '<img src="' + m.src + '" alt="">';
+        document.getElementById('tsLightbox').classList.add('open');
+    };
+    window.closeTsLightbox = function() {
+        document.getElementById('tsLightbox').classList.remove('open');
+        document.getElementById('tsLightboxContent').innerHTML = '';
     };
     document.getElementById('tsModal').addEventListener('click', function(e) {
         if (e.target === this) closeTsModal();
