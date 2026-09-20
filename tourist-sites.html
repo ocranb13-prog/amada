@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    <meta name="description" content="Discover tourist and heritage sites in the Asene Manso Akroso District — natural attractions, historical landmarks and cultural sites worth visiting.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourist Sites</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="amada_styles.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <style>
+        .ts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; }
+        .ts-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,0.08); transition: transform 0.25s, box-shadow 0.25s; display: flex; flex-direction: column; }
+        .ts-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.14); }
+        .ts-card-img-wrap { position: relative; height: 200px; background: linear-gradient(135deg, #1F6B3A, #0f2e1a); overflow: hidden; }
+        .ts-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .ts-card-img-wrap .ts-noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 2.4rem; }
+        .ts-card-cat { position: absolute; top: 12px; left: 12px; background: rgba(201,162,39,0.95); color: #1a1a1a; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 12px; border-radius: 20px; }
+        .ts-card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; flex: 1; }
+        .ts-card-body h3 { font-size: 1.08rem; font-weight: 800; color: #0f2e1a; margin: 0 0 6px; }
+        .ts-card-loc { font-size: 0.78rem; color: #7a8e7a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .ts-card-desc { font-size: 0.87rem; color: #4a5a4a; line-height: 1.6; margin-bottom: 14px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .ts-card-btn { align-self: flex-start; background: var(--primary); color: #fff; border: none; padding: 9px 18px; border-radius: 7px; font-size: 0.83rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: background 0.2s; }
+        .ts-card-btn:hover { background: #17532c; }
+
+        .ts-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,46,26,0.75); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .ts-modal-overlay.open { display: flex; }
+        .ts-modal { background: #fff; border-radius: 14px; max-width: 640px; width: 100%; max-height: 88vh; overflow-y: auto; }
+        .ts-modal-img { width: 100%; height: 260px; object-fit: cover; display: block; }
+        .ts-modal-body { padding: 24px 28px 28px; }
+        .ts-modal-body h3 { font-size: 1.3rem; font-weight: 800; color: #0f2e1a; margin: 0 0 6px; }
+        .ts-modal-cat { display: inline-block; background: rgba(201,162,39,0.15); color: #a5821f; font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
+        .ts-modal-loc { font-size: 0.85rem; color: #7a8e7a; margin-bottom: 16px; display: flex; align-items: center; gap: 7px; }
+        .ts-modal-desc { font-size: 0.92rem; color: #333; line-height: 1.75; margin-bottom: 18px; white-space: pre-wrap; }
+        .ts-highlights { list-style: none; padding: 0; margin: 0; }
+        .ts-highlights li { padding: 7px 0; font-size: 0.88rem; color: #3d4e3d; display: flex; align-items: flex-start; gap: 9px; border-bottom: 1px solid #f0f4f0; }
+        .ts-highlights li:last-child { border-bottom: none; }
+        .ts-highlights li i { color: #C9A227; margin-top: 3px; }
+        .ts-modal-close { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.4); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="top-bar"><div class="container"><div class="top-bar-content"><span><i class="fas fa-phone-alt"></i> +233 552 455 666</span><span id="liveClock"><i class="fas fa-clock"></i></span></div></div></div>
+    <nav class="navbar"><div class="container nav-container">
+        <a href="index.html" class="logo"><div class="logo-icon"><img src="LOGO.jpg" alt="AMADA Logo"></div><div class="logo-text"><h1>Asene Manso Akroso District Assembly</h1><p>Local Government Service, Ghana</p></div></a>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li><li><a href="leadership.html">Leadership</a></li><li><a href="departments.html">Departments</a></li><li><a href="tourist-sites.html" class="active">Tourist Sites</a></li><li><a href="publications.html">Publications</a></li><li><a href="track.html"><i class="fas fa-search" style="font-size:0.75rem;margin-right:4px;"></i>Track</a></li>
+            <li><a href="services.html">Services</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li>
+        </ul>
+    </div></nav>
+</header>
+
+<div class="page-banner"><div class="container"><h2>Tourist Sites</h2><p>Discover the natural beauty, heritage and cultural sites of the Asene Manso Akroso District.</p></div></div>
+
+<div class="section"><div class="container">
+<div class="ts-grid" id="tsGrid">
+    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:#1F6B3A;margin-bottom:16px;display:block;"></i>
+        Loading tourist sites...
+    </div>
+</div>
+</div></div>
+
+<!-- Detail modal (single, reused for whichever site is opened) -->
+<div class="ts-modal-overlay" id="tsModal">
+    <div class="ts-modal" style="position:relative;">
+        <button class="ts-modal-close" onclick="closeTsModal()">&times;</button>
+        <div id="tsModalImgWrap"></div>
+        <div class="ts-modal-body">
+            <span class="ts-modal-cat" id="tsModalCat"></span>
+            <h3 id="tsModalName"></h3>
+            <div class="ts-modal-loc" id="tsModalLoc"></div>
+            <div class="ts-modal-desc" id="tsModalDesc"></div>
+            <ul class="ts-highlights" id="tsModalHighlights"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer><div class="footer-top"><div class="container"><div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div><div class="footer-divider"></div><div class="footer-grid"><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="tourist-sites.html"><i class="fas fa-chevron-right"></i> Tourist Sites</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div></div></div></div><div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit</p></div></div></footer>
+<a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" target="_blank" rel="noopener noreferrer" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+<script src="amada_shared.js"></script>
+<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
+
+<a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+/* Seed placeholders — shown until the admin adds real sites (or edits/
+   replaces these) in Admin → Tourist Sites. Clearly generic on purpose;
+   replace name/photo/description with the real thing whenever ready. */
+var TS_PLACEHOLDERS = [
+    { key:'placeholder_1', name:'Akroso Falls', category:'Natural', location:'Near Akim Akroso',
+      desc:'A placeholder entry for a natural attraction in the district — replace this description with real details once available.',
+      highlights:['Add a highlight about this site','Add another highlight'], photo:'' },
+    { key:'placeholder_2', name:'Manso Heritage Site', category:'Historical', location:'Akim Manso',
+      desc:'A placeholder entry for a historical or heritage site — replace this description with the real history and significance of the site.',
+      highlights:['Add a highlight about this site','Add another highlight'], photo:'' },
+    { key:'placeholder_3', name:'District Cultural Grounds', category:'Cultural', location:'Location to be added',
+      desc:'A placeholder entry for a cultural site or festival ground — replace this description once the real details are ready.',
+      highlights:['Add a highlight about this site','Add another highlight'], photo:'' }
+];
+
+(function() {
+    var cfg = {
+        apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+        authDomain:"asmda-website.firebaseapp.com",
+        databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
+        projectId:"asmda-website",
+        storageBucket:"asmda-website.firebasestorage.app",
+        messagingSenderId:"699818483381",
+        appId:"1:699818483381:web:09c926a48830d46ae228fc"
+    };
+    var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
+    var db  = firebase.database();
+    var _sites = [];
+
+    db.ref('sections/tourist_sites').get().then(function(snap) {
+        var arr = snap.exists() ? snap.val() : null;
+        _sites = (Array.isArray(arr) && arr.length) ? arr.filter(Boolean) : TS_PLACEHOLDERS;
+        renderSites(_sites);
+    }).catch(function(e) {
+        console.warn('Tourist sites load failed, showing placeholders.', e);
+        _sites = TS_PLACEHOLDERS;
+        renderSites(_sites);
+    });
+
+    function renderSites(sites) {
+        var grid = document.getElementById('tsGrid');
+        if (!grid) return;
+        if (!sites.length) {
+            grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">No tourist sites added yet.</p>';
+            return;
+        }
+        grid.innerHTML = sites.map(function(s, i) {
+            var imgHtml = s.photo
+                ? '<img src="' + s.photo + '" alt="' + escAttr(s.name) + '">'
+                : '<div class="ts-noimg"><i class="fas fa-image"></i></div>';
+            return '<div class="ts-card">'
+                + '<div class="ts-card-img-wrap">' + imgHtml + (s.category ? '<span class="ts-card-cat">' + escAttr(s.category) + '</span>' : '') + '</div>'
+                + '<div class="ts-card-body">'
+                + '<h3>' + escAttr(s.name) + '</h3>'
+                + (s.location ? '<div class="ts-card-loc"><i class="fas fa-map-marker-alt"></i> ' + escAttr(s.location) + '</div>' : '')
+                + '<div class="ts-card-desc">' + escAttr(s.desc || '') + '</div>'
+                + '<button class="ts-card-btn" onclick="openTsModal(' + i + ')"><i class="fas fa-info-circle"></i> Learn More</button>'
+                + '</div></div>';
+        }).join('');
+    }
+
+    function escAttr(s) {
+        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    window.openTsModal = function(i) {
+        var s = _sites[i]; if (!s) return;
+        document.getElementById('tsModalImgWrap').innerHTML = s.photo
+            ? '<img class="ts-modal-img" src="' + s.photo + '" alt="' + escAttr(s.name) + '">'
+            : '';
+        document.getElementById('tsModalCat').textContent  = s.category || '';
+        document.getElementById('tsModalCat').style.display = s.category ? 'inline-block' : 'none';
+        document.getElementById('tsModalName').textContent = s.name || '';
+        var locEl = document.getElementById('tsModalLoc');
+        locEl.innerHTML = s.location ? '<i class="fas fa-map-marker-alt"></i> ' + escAttr(s.location) : '';
+        document.getElementById('tsModalDesc').textContent = s.desc || '';
+        var hl = Array.isArray(s.highlights) ? s.highlights.filter(Boolean) : [];
+        document.getElementById('tsModalHighlights').innerHTML = hl.map(function(h) {
+            return '<li><i class="fas fa-check-circle"></i> ' + escAttr(h) + '</li>';
+        }).join('');
+        document.getElementById('tsModal').classList.add('open');
+    };
+    window.closeTsModal = function() {
+        document.getElementById('tsModal').classList.remove('open');
+    };
+    document.getElementById('tsModal').addEventListener('click', function(e) {
+        if (e.target === this) closeTsModal();
+    });
+})();
+</script>
+
+</body></html>
