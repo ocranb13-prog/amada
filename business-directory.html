@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    <meta name="description" content="Local Business Directory — discover businesses and services in the Asene Manso Akroso District and neighbouring districts, or list your own business.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Directory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="amada_styles.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <style>
+        .bd-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 26px; }
+        .bd-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+        .bd-filter-btn { background: #fff; border: 1.5px solid #e0e8e0; color: #4a5a4a; padding: 7px 16px; border-radius: 20px; font-size: 0.83rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .bd-filter-btn.active, .bd-filter-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .bd-list-btn { background: #C9A227; color: #1a1a1a; border: none; padding: 11px 22px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: filter 0.2s; }
+        .bd-list-btn:hover { filter: brightness(0.94); }
+
+        .bd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; }
+        .bd-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.07); display: flex; flex-direction: column; }
+        .bd-card-top { height: 150px; background: linear-gradient(135deg, #1F6B3A, #0f2e1a); position: relative; }
+        .bd-card-top img { width: 100%; height: 100%; object-fit: cover; }
+        .bd-card-top .bd-noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 2rem; }
+        .bd-card-cat { position: absolute; top: 12px; left: 12px; background: rgba(201,162,39,0.95); color: #1a1a1a; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 11px; border-radius: 18px; }
+        .bd-card-body { padding: 16px 18px 18px; flex: 1; display: flex; flex-direction: column; }
+        .bd-card-body h3 { font-size: 1.03rem; font-weight: 800; color: #0f2e1a; margin: 0 0 6px; }
+        .bd-card-loc { font-size: 0.78rem; color: #7a8e7a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .bd-card-desc { font-size: 0.85rem; color: #4a5a4a; line-height: 1.6; margin-bottom: 14px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .bd-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .bd-card-actions a { flex: 1; text-align: center; padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .bd-card-actions .bd-call { background: rgba(13,91,167,0.1); color: var(--blue); }
+        .bd-card-actions .bd-wa { background: rgba(37,211,102,0.12); color: #25D366; }
+
+        /* Submission modal */
+        .bd-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,46,26,0.75); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .bd-modal-overlay.open { display: flex; }
+        .bd-modal { background: #fff; border-radius: 14px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .bd-modal-hdr { background: linear-gradient(135deg, var(--primary), var(--green-dark)); color: #fff; padding: 20px 24px; border-radius: 14px 14px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .bd-modal-hdr h3 { margin: 0; font-size: 1.1rem; }
+        .bd-modal-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; }
+        .bd-modal-body { padding: 22px 24px; }
+        .bd-photo-zone { width: 100%; height: 130px; border: 2px dashed #d5ddd5; border-radius: 8px; background: #f4f6f4; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; margin-bottom: 16px; position: relative; }
+        .bd-photo-zone img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .bd-done-box { text-align: center; padding: 20px 10px; }
+        .bd-done-box i { font-size: 2.6rem; color: #28a745; margin-bottom: 12px; display: block; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="top-bar"><div class="container"><div class="top-bar-content"><span><i class="fas fa-phone-alt"></i> +233 552 455 666</span><span id="liveClock"><i class="fas fa-clock"></i></span></div></div></div>
+    <nav class="navbar"><div class="container nav-container">
+        <a href="index.html" class="logo"><div class="logo-icon"><img src="LOGO.jpg" alt="AMADA Logo"></div><div class="logo-text"><h1>Asene Manso Akroso District Assembly</h1><p>Local Government Service, Ghana</p></div></a>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li><li><a href="leadership.html">Leadership</a></li><li><a href="departments.html">Departments</a></li><li><a href="tourist-sites.html">Tourist Sites</a></li><li><a href="business-directory.html" class="active">Business Directory</a></li><li><a href="publications.html">Publications</a></li><li><a href="track.html"><i class="fas fa-search" style="font-size:0.75rem;margin-right:4px;"></i>Track</a></li>
+            <li><a href="services.html">Services</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li>
+        </ul>
+    </div></nav>
+</header>
+
+<div class="page-banner"><div class="container"><h2>Business Directory</h2><p>Discover local businesses in the Asene Manso Akroso District and neighbouring districts.</p></div></div>
+
+<div class="section"><div class="container">
+    <div class="bd-toolbar">
+        <div class="bd-filters" id="bdFilters">
+            <button class="bd-filter-btn active" onclick="filterBd('all', this)">All</button>
+        </div>
+        <button class="bd-list-btn" onclick="openListingModal()"><i class="fas fa-plus-circle"></i> List Your Business</button>
+    </div>
+
+    <div class="bd-grid" id="bdGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">
+            <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:#1F6B3A;margin-bottom:16px;display:block;"></i>
+            Loading businesses...
+        </div>
+    </div>
+
+    <div style="margin-top:40px;background:#fff8e6;border:1px solid #C9A227;border-radius:10px;padding:16px 20px;font-size:0.85rem;color:#3d4e3d;line-height:1.6;">
+        <strong><i class="fas fa-info-circle" style="color:#C9A227;"></i> How listings work:</strong> every business submission is reviewed by the Assembly before it appears here. This usually takes a short while — you don't need to resubmit.
+    </div>
+</div></div>
+
+<!-- Submission modal -->
+<div class="bd-modal-overlay" id="bdModal">
+    <div class="bd-modal">
+        <div class="bd-modal-hdr">
+            <h3><i class="fas fa-store" style="margin-right:8px;"></i>List Your Business</h3>
+            <button class="bd-modal-close" onclick="closeListingModal()">&times;</button>
+        </div>
+        <div class="bd-modal-body" id="bdFormWrap">
+            <div class="bd-photo-zone" id="bdPhotoZone" onclick="document.getElementById('bdPhotoFile').click()">
+                <img id="bdPhotoPreview" src="" alt="">
+                <div id="bdPhotoPlaceholder" style="text-align:center;color:#9aa89a;"><i class="fas fa-image" style="font-size:1.5rem;display:block;margin-bottom:5px;"></i>Add a business photo or logo (optional)</div>
+                <input type="file" id="bdPhotoFile" accept="image/*" style="display:none;" onchange="previewBdPhoto(this)">
+            </div>
+            <form id="bdForm" onsubmit="return false;">
+                <div class="form-group"><label>Business Name <span class="req">*</span></label><input type="text" class="form-control" id="bdName" required></div>
+                <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="form-group"><label>Category <span class="req">*</span></label><input type="text" class="form-control" id="bdCategory" placeholder="e.g. Retail, Food, Services" required></div>
+                    <div class="form-group"><label>Location <span class="req">*</span></label><input type="text" class="form-control" id="bdLocation" placeholder="e.g. Akim Manso" required></div>
+                </div>
+                <div class="form-group"><label>Description <span class="req">*</span></label><textarea class="form-control" id="bdDesc" rows="3" placeholder="What does this business offer?" required></textarea></div>
+                <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="form-group"><label>Phone Number <span class="req">*</span></label><input type="tel" class="form-control" id="bdPhone" placeholder="+233 XXX XXX XXX" required></div>
+                    <div class="form-group"><label>WhatsApp Number <span style="color:#9aa89a;font-weight:400;">(optional)</span></label><input type="tel" class="form-control" id="bdWhatsapp" placeholder="+233 XXX XXX XXX"></div>
+                </div>
+                <div class="form-group"><label>Your Name <span class="req">*</span></label><input type="text" class="form-control" id="bdOwnerName" required></div>
+            </form>
+        </div>
+        <div class="bd-modal-body bd-done-box" id="bdDoneWrap" style="display:none;">
+            <i class="fas fa-check-circle"></i>
+            <h3 style="margin:0 0 8px;color:#0f2e1a;">Submitted for Review</h3>
+            <p style="color:#4a5a4a;font-size:0.9rem;">Thank you! Your listing has been sent to the Assembly for approval and will appear here once reviewed.</p>
+            <button class="bd-list-btn" style="margin:16px auto 0;" onclick="closeListingModal()">Done</button>
+        </div>
+        <div class="bd-modal-body" style="padding-top:0;" id="bdFooterForm">
+            <button class="bd-list-btn" style="width:100%;justify-content:center;" id="bdSubmitBtn" onclick="submitBusinessListing()"><i class="fas fa-paper-plane"></i> Submit for Review</button>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer><div class="footer-top"><div class="container"><div class="footer-brand"><div class="footer-logo-wrap"><img src="LOGO.jpg" alt="AMADA Logo"></div><div><h2 class="footer-brand-name">Asene Manso Akroso<br>District Assembly</h2><p class="footer-brand-sub">Local Government Service, Ghana</p></div></div><div class="footer-divider"></div><div class="footer-grid"><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-address-book"></i> Contact Us</h3><ul class="footer-contact-list"><li><i class="fas fa-map-marker-alt"></i><span>PMB, Akim Manso, Eastern Region, Ghana<br><small style="color:rgba(255,255,255,0.55);font-size:0.75rem;"><i class="fas fa-location-arrow" style="margin-right:3px;color:var(--accent);"></i>GPS: EB-0702-1681</small></span></li><li><i class="fas fa-phone-alt"></i><span>+233 552 455 666</span></li><li><i class="fas fa-clock"></i><span>Mon – Fri: 8:00 AM – 5:00 PM</span></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-link"></i> Quick Links</h3><ul class="footer-links"><li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li><li><a href="leadership.html"><i class="fas fa-chevron-right"></i> Leadership</a></li><li><a href="departments.html"><i class="fas fa-chevron-right"></i> Departments</a></li><li><a href="tourist-sites.html"><i class="fas fa-chevron-right"></i> Tourist Sites</a></li><li><a href="business-directory.html"><i class="fas fa-chevron-right"></i> Business Directory</a></li><li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li><li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li><li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-folder-open"></i> Publications</h3><ul class="footer-links"><li><a href="publications.html"><i class="fas fa-chevron-right"></i> All Publications</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Reports</a></li><li><a href="publications.html"><i class="fas fa-chevron-right"></i> Dev. Projects</a></li></ul></div><div class="footer-col"><h3 class="footer-col-title"><i class="fas fa-share-alt"></i> Follow Us</h3><div class="footer-socials"><a href="#" class="social-btn fb"><i class="fab fa-facebook-f"></i></a><a href="#" class="social-btn tw"><i class="fab fa-twitter"></i></a><a href="#" class="social-btn ig"><i class="fab fa-instagram"></i></a><a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" class="social-btn wa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div><h3 class="footer-col-title" style="margin-top:20px;"><i class="fas fa-paper-plane"></i> Newsletter</h3><p class="footer-newsletter-text">Get official updates to your inbox.</p><form class="footer-newsletter-form" onsubmit="handleNewsletter(event)"><input type="email" placeholder="Enter your email" aria-label="Newsletter email address" required><button type="submit"><i class="fas fa-arrow-right"></i></button></form></div></div></div></div><div class="footer-bottom"><div class="container footer-bottom-inner"><p>&copy; <span id="currentYear">2026</span> Asene Manso Akroso District Assembly. All Rights Reserved.</p><p id="footerClock"><i class="fas fa-clock"></i></p><p>Developed by AMADA MIS Unit</p></div></div></footer>
+<a href="https://whatsapp.com/channel/0029Vb7EO2uDTkJwg6sRIN0F" target="_blank" rel="noopener noreferrer" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+<script src="amada_shared.js"></script>
+<script>markActiveNav(); initMobileNav(); startClock(); initModalOverlayClose(); initEscClose();</script>
+
+<a href="admin.html" title="Staff Portal" style="position:fixed;bottom:90px;right:28px;width:46px;height:46px;border-radius:50%;background:#0f2e1a;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:998;transition:all 0.25s;border:2px solid rgba(201,162,39,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.background='#1F6B3A'" onmouseout="this.style.transform='';this.style.background='#0f2e1a'" ><i class="fas fa-lock" style="font-size:0.85rem;"></i></a>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+(function() {
+    var cfg = {
+        apiKey:"AIzaSyCNt_ha80WaLVujbc2ryDSFMAOBdzLVXtA",
+        authDomain:"asmda-website.firebaseapp.com",
+        databaseURL:"https://asmda-website-default-rtdb.firebaseio.com",
+        projectId:"asmda-website",
+        storageBucket:"asmda-website.firebasestorage.app",
+        messagingSenderId:"699818483381",
+        appId:"1:699818483381:web:09c926a48830d46ae228fc"
+    };
+    var app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(cfg);
+    var db  = firebase.database();
+    var _listings = [];
+    var _bdPhotoURL = '';
+
+    /* ── Cloudinary upload (same unsigned preset used across the rest of
+       the site — see admin_dashboard.html for the identical pattern) ── */
+    function uploadToCloudinary(file, folder) {
+        return new Promise(function(resolve, reject) {
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'amada_unsigned');
+            if (folder) formData.append('folder', folder);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://api.cloudinary.com/v1_1/dk1ishou6/upload', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try { resolve(JSON.parse(xhr.responseText)); } catch (e) { reject(e); }
+                } else { reject(new Error(xhr.responseText || ('HTTP ' + xhr.status))); }
+            };
+            xhr.onerror = function() { reject(new Error('Network error')); };
+            xhr.send(formData);
+        });
+    }
+
+    function escAttr(s) {
+        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    /* ── Load approved listings (sections/business_directory — public,
+       admin-managed, same pattern as Tourist Sites) ── */
+    db.ref('sections/business_directory').get().then(function(snap) {
+        var arr = snap.exists() ? snap.val() : null;
+        _listings = (Array.isArray(arr) && arr.length) ? arr.filter(Boolean) : [];
+        renderFilters();
+        renderListings(_listings);
+    }).catch(function(e) {
+        console.warn('Business directory load failed.', e);
+        document.getElementById('bdGrid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">Could not load listings right now — please try again shortly.</p>';
+    });
+
+    function renderFilters() {
+        var cats = [];
+        _listings.forEach(function(l) { if (l.category && cats.indexOf(l.category) === -1) cats.push(l.category); });
+        var el = document.getElementById('bdFilters');
+        el.innerHTML = '<button class="bd-filter-btn active" onclick="filterBd(\'all\', this)">All</button>'
+            + cats.map(function(c) { return '<button class="bd-filter-btn" onclick="filterBd(\'' + escAttr(c) + '\', this)">' + escAttr(c) + '</button>'; }).join('');
+    }
+
+    function renderListings(list) {
+        var grid = document.getElementById('bdGrid');
+        if (!list.length) {
+            grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;padding:30px 0;">No businesses listed yet. Be the first — click "List Your Business" above.</p>';
+            return;
+        }
+        grid.innerHTML = list.map(function(l) {
+            var imgHtml = l.photo ? '<img src="' + l.photo + '" alt="' + escAttr(l.businessName) + '">' : '<div class="bd-noimg"><i class="fas fa-store"></i></div>';
+            var waNum = (l.whatsapp || '').replace(/[^0-9]/g, '');
+            return '<div class="bd-card" data-cat="' + escAttr(l.category || '') + '">'
+                + '<div class="bd-card-top">' + imgHtml + (l.category ? '<span class="bd-card-cat">' + escAttr(l.category) + '</span>' : '') + '</div>'
+                + '<div class="bd-card-body">'
+                + '<h3>' + escAttr(l.businessName) + '</h3>'
+                + (l.location ? '<div class="bd-card-loc"><i class="fas fa-map-marker-alt"></i> ' + escAttr(l.location) + '</div>' : '')
+                + '<div class="bd-card-desc">' + escAttr(l.description || '') + '</div>'
+                + '<div class="bd-card-actions">'
+                + (l.phone ? '<a class="bd-call" href="tel:' + escAttr(l.phone) + '"><i class="fas fa-phone"></i> Call</a>' : '')
+                + (waNum ? '<a class="bd-wa" href="https://wa.me/' + waNum + '" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i> Chat</a>' : '')
+                + '</div></div></div>';
+        }).join('');
+    }
+
+    window.filterBd = function(cat, btn) {
+        document.querySelectorAll('.bd-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        if (btn) btn.classList.add('active');
+        var filtered = cat === 'all' ? _listings : _listings.filter(function(l) { return l.category === cat; });
+        renderListings(filtered);
+    };
+
+    /* ── Submission modal ── */
+    window.openListingModal = function() {
+        document.getElementById('bdModal').classList.add('open');
+        document.getElementById('bdFormWrap').style.display = 'block';
+        document.getElementById('bdFooterForm').style.display = 'block';
+        document.getElementById('bdDoneWrap').style.display = 'none';
+        document.getElementById('bdForm').reset();
+        document.getElementById('bdPhotoPreview').style.display = 'none';
+        document.getElementById('bdPhotoPlaceholder').style.display = 'block';
+        _bdPhotoURL = '';
+    };
+    window.closeListingModal = function() {
+        document.getElementById('bdModal').classList.remove('open');
+    };
+    document.getElementById('bdModal').addEventListener('click', function(e) { if (e.target === this) closeListingModal(); });
+
+    window.previewBdPhoto = function(input) {
+        var file = input.files[0]; if (!file) return;
+        if (file.size > 8 * 1024 * 1024) { alert('Max 8MB'); return; }
+        var prev = document.getElementById('bdPhotoPreview');
+        var placeholder = document.getElementById('bdPhotoPlaceholder');
+        var url = URL.createObjectURL(file);
+        prev.src = url; prev.style.display = 'block'; placeholder.style.display = 'none';
+        uploadToCloudinary(file, 'amada_business_directory').then(function(res) {
+            _bdPhotoURL = res.secure_url;
+        }).catch(function(e) {
+            console.warn('Business photo upload failed:', e);
+            _bdPhotoURL = '';
+        });
+    };
+
+    window.submitBusinessListing = function() {
+        var form = document.getElementById('bdForm');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+
+        var record = {
+            businessName: document.getElementById('bdName').value.trim(),
+            category:     document.getElementById('bdCategory').value.trim(),
+            location:     document.getElementById('bdLocation').value.trim(),
+            description:  document.getElementById('bdDesc').value.trim(),
+            phone:        document.getElementById('bdPhone').value.trim(),
+            whatsapp:     document.getElementById('bdWhatsapp').value.trim(),
+            ownerName:    document.getElementById('bdOwnerName').value.trim(),
+            photo:        _bdPhotoURL || '',
+            status:       'pending',
+            submittedAt:  new Date().toISOString()
+        };
+
+        var btn = document.getElementById('bdSubmitBtn');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+        var newRef = db.ref('business_listings_pending').push();
+        newRef.set(record).then(function() {
+            document.getElementById('bdFormWrap').style.display = 'none';
+            document.getElementById('bdFooterForm').style.display = 'none';
+            document.getElementById('bdDoneWrap').style.display = 'block';
+        }).catch(function(e) {
+            console.error('Business listing submission failed:', e);
+            alert('Sorry, something went wrong submitting your listing. Please try again.');
+        }).finally(function() {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit for Review';
+        });
+    };
+})();
+</script>
+
+</body></html>
