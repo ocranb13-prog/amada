@@ -602,6 +602,10 @@
         <a class="sb-item" onclick="showPanel('edit-tourist-sites')" href="#">
             <span class="sb-item-icon"><i class="fas fa-mountain-sun"></i></span> Tourist Sites
         </a>
+        <a class="sb-item" onclick="showPanel('edit-business-directory')" href="#">
+            <span class="sb-item-icon"><i class="fas fa-store"></i></span> Business Directory
+            <span class="sb-item-badge" id="bdBadge">0</span>
+        </a>
         <a class="sb-item" onclick="showPanel('edit-publications')" href="#">
             <span class="sb-item-icon"><i class="fas fa-file-alt"></i></span> Publications
         </a>
@@ -941,6 +945,36 @@
                     <table class="data-table">
                         <thead><tr><th>Photo</th><th>Name</th><th>Category</th><th>Location</th><th></th></tr></thead>
                         <tbody id="tsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:30px;">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ EDIT: BUSINESS DIRECTORY ══ -->
+        <div class="panel" id="panel-edit-business-directory">
+            <div class="page-hdr">
+                <div class="page-hdr-left"><h1><i class="fas fa-store" style="color:var(--green);margin-right:8px;"></i>Business Directory</h1><p>Review submitted listings before they go live, and manage what's currently published</p></div>
+                <div class="page-hdr-right">
+                    <a href="business-directory.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i> Preview</a>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px;">
+                <div class="card-header"><h3><i class="fas fa-hourglass-half"></i> Pending Review</h3><span id="bdPendingCount" class="badge badge-gold">0 pending</span></div>
+                <div class="card-body table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Business</th><th>Category</th><th>Submitted By</th><th>Contact</th><th>Date</th><th></th></tr></thead>
+                        <tbody id="bdPendingTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:30px;">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-check-circle"></i> Published Listings</h3><span id="bdPublishedCount" class="badge badge-green">0 live</span></div>
+                <div class="card-body table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Photo</th><th>Business</th><th>Category</th><th>Location</th><th></th></tr></thead>
+                        <tbody id="bdPublishedTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:30px;">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -1549,6 +1583,18 @@
 </div>
 
 <!-- View Application Modal -->
+<div class="modal-overlay" id="bdReviewModal">
+    <div class="modal-box" style="max-width:600px;">
+        <div class="modal-hdr"><h3>Review Listing</h3><button class="modal-close" onclick="closeModal('bdReviewModal')">&times;</button></div>
+        <div class="modal-body" id="bdReviewContent"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline btn-sm" onclick="closeModal('bdReviewModal')">Close</button>
+            <button class="btn btn-danger btn-sm" onclick="rejectBdListing(_currentBdKey, true)"><i class="fas fa-times"></i> Reject</button>
+            <button class="btn btn-primary btn-sm" onclick="approveBdListing(_currentBdKey, true)"><i class="fas fa-check"></i> Approve &amp; Publish</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="tsEditModal">
     <div class="modal-box" style="max-width:640px;">
         <div class="modal-hdr"><h3 id="tsModalTitle">Add Tourist Site</h3><button class="modal-close" onclick="closeModal('tsEditModal')">&times;</button></div>
@@ -1698,7 +1744,7 @@ function doLogout() {
 /* ── 2. PANEL NAVIGATION ── */
 var PANEL_LABELS = {
     'dashboard':'Dashboard','edit-home':'Home Page','edit-leadership':'Leadership',
-    'edit-departments':'Departments','edit-tourist-sites':'Tourist Sites','edit-publications':'Publications','edit-services':'Services',
+    'edit-departments':'Departments','edit-tourist-sites':'Tourist Sites','edit-business-directory':'Business Directory','edit-publications':'Publications','edit-services':'Services',
     'edit-about':'About Page','edit-contact':'Contact Page','applications':'Applications',
     'reports':'Reports','settings':'Settings'
 };
@@ -1865,6 +1911,9 @@ function showPanel(name) {
     }
     if (name === 'edit-tourist-sites') {
         loadTouristSitesFromFirebase(function() { renderTsTable(); });
+    }
+    if (name === 'edit-business-directory') {
+        loadBusinessDirectoryFromFirebase(function() { renderBdTables(); });
     }
     if (name === 'edit-publications') {
         // Always sync from Firebase first so admin sees live data, not stale localStorage
@@ -2946,6 +2995,138 @@ function deleteTs(i) {
     renderTsTable();
     syncTouristSitesToFirebase();
 }
+
+/* ── 13c. BUSINESS DIRECTORY ── */
+var _bdPending = {};
+var _bdPublished = [];
+var _currentBdKey = null;
+
+function loadBusinessDirectoryFromFirebase(cb) {
+    if (!window._fbDb || !window._fbRef || !window._fbGet) { if (cb) cb(); return; }
+    Promise.all([
+        window._fbGet(window._fbRef(window._fbDb, 'business_listings_pending')).catch(function(){ return null; }),
+        window._fbGet(window._fbRef(window._fbDb, 'sections/business_directory')).catch(function(){ return null; })
+    ]).then(function(results) {
+        var pendingSnap = results[0], pubSnap = results[1];
+        _bdPending = (pendingSnap && pendingSnap.exists()) ? (pendingSnap.val() || {}) : {};
+        var pubArr = (pubSnap && pubSnap.exists()) ? pubSnap.val() : null;
+        _bdPublished = (Array.isArray(pubArr) && pubArr.length) ? pubArr.filter(Boolean) : [];
+        if (cb) cb();
+    }).catch(function(e) { console.error('Business directory load failed:', e); if (cb) cb(); });
+}
+
+function renderBdTables() {
+    var pendKeys = Object.keys(_bdPending).sort().reverse();
+    var pendTbody = document.getElementById('bdPendingTableBody');
+    var pendCountEl = document.getElementById('bdPendingCount');
+    if (pendCountEl) pendCountEl.textContent = pendKeys.length + ' pending';
+    var bdBadge = document.getElementById('bdBadge'); if (bdBadge) bdBadge.textContent = pendKeys.length;
+
+    if (!pendKeys.length) {
+        pendTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:26px;">Nothing waiting for review.</td></tr>';
+    } else {
+        pendTbody.innerHTML = pendKeys.map(function(k) {
+            var l = _bdPending[k];
+            return '<tr><td><strong>' + escHtml(l.businessName) + '</strong></td>'
+                + '<td>' + escHtml(l.category || '') + '</td>'
+                + '<td>' + escHtml(l.ownerName || '') + '</td>'
+                + '<td>' + escHtml(l.phone || '') + '</td>'
+                + '<td>' + (l.submittedAt ? new Date(l.submittedAt).toLocaleDateString('en-GB') : '') + '</td>'
+                + '<td style="white-space:nowrap;"><button class="btn btn-outline btn-sm" onclick="reviewBdListing(\'' + k + '\')"><i class="fas fa-eye"></i> Review</button></td></tr>';
+        }).join('');
+    }
+
+    var pubTbody = document.getElementById('bdPublishedTableBody');
+    var pubCountEl = document.getElementById('bdPublishedCount');
+    if (pubCountEl) pubCountEl.textContent = _bdPublished.length + ' live';
+    if (!_bdPublished.length) {
+        pubTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:26px;">No published listings yet.</td></tr>';
+    } else {
+        pubTbody.innerHTML = _bdPublished.map(function(l, i) {
+            var thumb = l.photo
+                ? '<img src="' + l.photo + '" style="width:48px;height:48px;border-radius:6px;object-fit:cover;">'
+                : '<div style="width:48px;height:48px;border-radius:6px;background:var(--gray2);display:flex;align-items:center;justify-content:center;color:var(--text3);"><i class="fas fa-store"></i></div>';
+            return '<tr><td>' + thumb + '</td>'
+                + '<td><strong>' + escHtml(l.businessName) + '</strong></td>'
+                + '<td>' + escHtml(l.category || '') + '</td>'
+                + '<td>' + escHtml(l.location || '') + '</td>'
+                + '<td><button class="btn btn-danger btn-sm" onclick="removeBdListing(' + i + ')"><i class="fas fa-trash"></i></button></td></tr>';
+        }).join('');
+    }
+}
+
+function reviewBdListing(key) {
+    var l = _bdPending[key]; if (!l) return;
+    _currentBdKey = key;
+    var waNum = (l.whatsapp || '').replace(/[^0-9]/g, '');
+    var html = (l.photo ? '<img src="' + l.photo + '" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:16px;">' : '')
+        + '<table class="data-table"><tbody>'
+        + '<tr><td style="width:130px;font-weight:700;color:var(--text3);">Business</td><td><strong>' + escHtml(l.businessName) + '</strong></td></tr>'
+        + '<tr><td style="font-weight:700;color:var(--text3);">Category</td><td>' + escHtml(l.category || '') + '</td></tr>'
+        + '<tr><td style="font-weight:700;color:var(--text3);">Location</td><td>' + escHtml(l.location || '') + '</td></tr>'
+        + '<tr><td style="font-weight:700;color:var(--text3);">Phone</td><td>' + escHtml(l.phone || '') + '</td></tr>'
+        + (l.whatsapp ? '<tr><td style="font-weight:700;color:var(--text3);">WhatsApp</td><td>' + escHtml(l.whatsapp) + '</td></tr>' : '')
+        + '<tr><td style="font-weight:700;color:var(--text3);">Submitted By</td><td>' + escHtml(l.ownerName || '') + '</td></tr>'
+        + '</tbody></table>'
+        + '<div style="margin-top:14px;padding:12px 14px;background:var(--gray1);border-radius:8px;white-space:pre-wrap;line-height:1.7;">' + escHtml(l.description || '') + '</div>';
+    document.getElementById('bdReviewContent').innerHTML = html;
+    openModal('bdReviewModal');
+}
+
+function approveBdListing(key, closeAfter) {
+    var l = _bdPending[key]; if (!l) return;
+    var published = {
+        key:          key,
+        businessName: l.businessName,
+        category:     l.category,
+        location:     l.location,
+        description:  l.description,
+        phone:        l.phone,
+        whatsapp:     l.whatsapp || '',
+        photo:        l.photo || '',
+        approvedAt:   new Date().toISOString()
+    };
+    _bdPublished.push(published);
+    delete _bdPending[key];
+
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        Promise.all([
+            window._fbSet(window._fbRef(window._fbDb, 'sections/business_directory'), _bdPublished),
+            window._fbSet(window._fbRef(window._fbDb, 'business_listings_pending/' + key), null)
+        ]).then(function() { showToast('✅ Listing approved & published'); })
+          .catch(function(e) { console.error('Approve failed:', e); showToast('⚠️ Approved locally — Firebase sync failed'); });
+    }
+    logActivity('Approved business listing: ' + l.businessName);
+    if (closeAfter) closeModal('bdReviewModal');
+    renderBdTables();
+}
+
+function rejectBdListing(key, closeAfter) {
+    var l = _bdPending[key]; if (!l) return;
+    if (!confirm('Reject this listing? The business will not appear on the public directory.')) return;
+    delete _bdPending[key];
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'business_listings_pending/' + key), null)
+            .then(function() { showToast('Listing rejected'); })
+            .catch(function(e) { console.error('Reject failed:', e); showToast('⚠️ Removed locally — Firebase sync failed'); });
+    }
+    logActivity('Rejected business listing: ' + l.businessName);
+    if (closeAfter) closeModal('bdReviewModal');
+    renderBdTables();
+}
+
+function removeBdListing(i) {
+    if (!confirm('Remove this published listing from the public directory?')) return;
+    var l = _bdPublished[i];
+    _bdPublished.splice(i, 1);
+    if (window._fbDb && window._fbRef && window._fbSet) {
+        window._fbSet(window._fbRef(window._fbDb, 'sections/business_directory'), _bdPublished)
+            .then(function() { showToast('✅ Listing removed'); })
+            .catch(function(e) { console.error('Remove failed:', e); showToast('⚠️ Removed locally — Firebase sync failed'); });
+    }
+    if (l) logActivity('Removed business listing: ' + l.businessName);
+    renderBdTables();
+}
 var _pdfStore = { pub:'', rep:'', res:'' }; // stores base64 or filename
 
 function handlePdfUpload(prefix, input) {
@@ -3684,6 +3865,10 @@ function updateDashboardStats(){
         var pays2 = getPayments();
         var payBadge2 = document.getElementById('payBadge');
         if (payBadge2) payBadge2.textContent = Object.keys(pays2).length;
+    });
+    loadBusinessDirectoryFromFirebase(function() {
+        var bdBadge2 = document.getElementById('bdBadge');
+        if (bdBadge2) bdBadge2.textContent = Object.keys(_bdPending).length;
     });
     loadApplicationsFromFirebase(function() {
         var apps2={};try{var r2=localStorage.getItem('amada_applications');if(r2)apps2=JSON.parse(r2);}catch(e){}
