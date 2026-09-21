@@ -9,10 +9,10 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
-        .ts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; }
+        .ts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 360px)); gap: 26px; justify-content: center; }
         .ts-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,0.08); transition: transform 0.25s, box-shadow 0.25s; display: flex; flex-direction: column; }
         .ts-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.14); }
-        .ts-card-img-wrap { position: relative; height: 200px; background: linear-gradient(135deg, #1F6B3A, #0f2e1a); overflow: hidden; }
+        .ts-card-img-wrap { position: relative; aspect-ratio: 16 / 10; background: linear-gradient(135deg, #1F6B3A, #0f2e1a); overflow: hidden; }
         .ts-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .ts-card-img-wrap .ts-noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 2.4rem; }
         .ts-card-cat { position: absolute; top: 12px; left: 12px; background: rgba(201,162,39,0.95); color: #1a1a1a; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 12px; border-radius: 20px; }
