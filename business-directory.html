@@ -30,6 +30,17 @@
         .bd-card-actions a { flex: 1; text-align: center; padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .bd-card-actions .bd-call { background: rgba(13,91,167,0.1); color: var(--blue); }
         .bd-card-actions .bd-wa { background: rgba(37,211,102,0.12); color: #25D366; }
+        .bd-read-more { background: none; border: none; color: var(--primary); font-weight: 700; font-size: 0.8rem; cursor: pointer; padding: 0; margin-bottom: 12px; text-align: left; }
+        .bd-detail-overlay { display: none; position: fixed; inset: 0; background: rgba(15,46,26,0.75); z-index: 2100; align-items: center; justify-content: center; padding: 20px; }
+        .bd-detail-overlay.open { display: flex; }
+        .bd-detail-box { background: #fff; border-radius: 14px; max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto; position: relative; }
+        .bd-detail-img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
+        .bd-detail-close { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.4); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 2; }
+        .bd-detail-body { padding: 24px 26px; }
+        .bd-detail-body h3 { font-size: 1.25rem; font-weight: 800; color: #0f2e1a; margin: 0 0 6px; }
+        .bd-detail-cat { display: inline-block; background: rgba(201,162,39,0.15); color: #a5821f; font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
+        .bd-detail-loc { font-size: 0.85rem; color: #7a8e7a; margin-bottom: 16px; display: flex; align-items: center; gap: 7px; }
+        .bd-detail-desc { font-size: 0.92rem; color: #333; line-height: 1.75; margin-bottom: 20px; white-space: pre-wrap; }
 
         /* Submission modal */
         .bd-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,46,26,0.75); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
@@ -79,6 +90,21 @@
         <strong><i class="fas fa-info-circle" style="color:#C9A227;"></i> How listings work:</strong> every business submission is reviewed by the Assembly before it appears here. This usually takes a short while — you don't need to resubmit.
     </div>
 </div></div>
+
+<!-- Full listing detail modal -->
+<div class="bd-detail-overlay" id="bdDetailModal">
+    <div class="bd-detail-box">
+        <button class="bd-detail-close" onclick="closeBdDetail()">&times;</button>
+        <div id="bdDetailImgWrap"></div>
+        <div class="bd-detail-body">
+            <span class="bd-detail-cat" id="bdDetailCat"></span>
+            <h3 id="bdDetailName"></h3>
+            <div class="bd-detail-loc" id="bdDetailLoc"></div>
+            <div class="bd-detail-desc" id="bdDetailDesc"></div>
+            <div class="bd-card-actions" id="bdDetailActions"></div>
+        </div>
+    </div>
+</div>
 
 <!-- Submission modal -->
 <div class="bd-modal-overlay" id="bdModal">
@@ -191,12 +217,13 @@
     }
 
     function renderListings(list) {
+        window._bdCurrentList = list;
         var grid = document.getElementById('bdGrid');
         if (!list.length) {
             grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;padding:30px 0;">No businesses listed yet. Be the first — click "List Your Business" above.</p>';
             return;
         }
-        grid.innerHTML = list.map(function(l) {
+        grid.innerHTML = list.map(function(l, i) {
             var imgHtml = l.photo ? '<img src="' + l.photo + '" alt="' + escAttr(l.businessName) + '">' : '<div class="bd-noimg"><i class="fas fa-store"></i></div>';
             var waNum = (l.whatsapp || '').replace(/[^0-9]/g, '');
             return '<div class="bd-card" data-cat="' + escAttr(l.category || '') + '">'
@@ -205,12 +232,35 @@
                 + '<h3>' + escAttr(l.businessName) + '</h3>'
                 + (l.location ? '<div class="bd-card-loc"><i class="fas fa-map-marker-alt"></i> ' + escAttr(l.location) + '</div>' : '')
                 + '<div class="bd-card-desc">' + escAttr(l.description || '') + '</div>'
+                + '<button class="bd-read-more" onclick="openBdDetail(' + i + ')">Read More <i class="fas fa-chevron-right" style="font-size:0.7rem;"></i></button>'
                 + '<div class="bd-card-actions">'
                 + (l.phone ? '<a class="bd-call" href="tel:' + escAttr(l.phone) + '"><i class="fas fa-phone"></i> Call</a>' : '')
                 + (waNum ? '<a class="bd-wa" href="https://wa.me/' + waNum + '" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i> Chat</a>' : '')
                 + '</div></div></div>';
         }).join('');
     }
+
+    window.openBdDetail = function(i) {
+        var l = (window._bdCurrentList || [])[i]; if (!l) return;
+        document.getElementById('bdDetailImgWrap').innerHTML = l.photo
+            ? '<img class="bd-detail-img" src="' + l.photo + '" alt="' + escAttr(l.businessName) + '">'
+            : '';
+        document.getElementById('bdDetailCat').textContent = l.category || '';
+        document.getElementById('bdDetailCat').style.display = l.category ? 'inline-block' : 'none';
+        document.getElementById('bdDetailName').textContent = l.businessName || '';
+        var locEl = document.getElementById('bdDetailLoc');
+        locEl.innerHTML = l.location ? '<i class="fas fa-map-marker-alt"></i> ' + escAttr(l.location) : '';
+        document.getElementById('bdDetailDesc').textContent = l.description || '';
+        var waNum = (l.whatsapp || '').replace(/[^0-9]/g, '');
+        document.getElementById('bdDetailActions').innerHTML =
+            (l.phone ? '<a class="bd-call" href="tel:' + escAttr(l.phone) + '"><i class="fas fa-phone"></i> Call</a>' : '')
+            + (waNum ? '<a class="bd-wa" href="https://wa.me/' + waNum + '" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i> Chat</a>' : '');
+        document.getElementById('bdDetailModal').classList.add('open');
+    };
+    window.closeBdDetail = function() {
+        document.getElementById('bdDetailModal').classList.remove('open');
+    };
+    document.getElementById('bdDetailModal').addEventListener('click', function(e) { if (e.target === this) closeBdDetail(); });
 
     window.filterBd = function(cat, btn) {
         document.querySelectorAll('.bd-filter-btn').forEach(function(b) { b.classList.remove('active'); });
