@@ -43,6 +43,13 @@
         ".write": "auth != null || !data.exists()"
       }
     },
+    "business_listings_pending": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$listingId": {
+        ".write": "auth != null || !data.exists()"
+      }
+    },
     "payments": {
       ".read": "auth != null",
       ".write": "auth != null"
